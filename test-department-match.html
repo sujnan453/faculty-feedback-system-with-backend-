@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Matching Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .result {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .match {
+            border-left-color: #10b981;
+        }
+
+        .no-match {
+            border-left-color: #ef4444;
+        }
+
+        h2 {
+            color: #7c3aed;
+        }
+
+        pre {
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 Department Matching Diagnostic Tool</h1>
+
+    <div class="section">
+        <h2>Current User Info</h2>
+        <div id="userInfo"></div>
+    </div>
+
+    <div class="section">
+        <h2>All Surveys in Database</h2>
+        <div id="surveysInfo"></div>
+    </div>
+
+    <div class="section">
+        <h2>Matching Results</h2>
+        <div id="matchResults"></div>
+    </div>
+
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth } from './js/firebase-auth.js';
+
+        window.Storage = Storage;
+
+        async function runDiagnostics() {
+            // Get current user
+            const currentUser = await checkAuth('student', false);
+            
+            if (!currentUser) {
+                document.getElementById('userInfo').innerHTML = '<p style="color: red;">No student logged in. Please login first.</p>';
+                return;
+            }
+
+            // Display user info
+            document.getElementById('userInfo').innerHTML = `
+                <pre>${JSON.stringify(currentUser, null, 2)}</pre>
+                <p><strong>Department:</strong> "${currentUser.department}"</p>
+            `;
+
+            // Get all surveys
+            const allSurveys = await Storage.getSurveys();
+            
+            document.getElementById('surveysInfo').innerHTML = `
+                <p><strong>Total Surveys:</strong> ${allSurveys.length}</p>
+                ${allSurveys.map((s, i) => `
+                    <div class="result">
+                        <strong>Survey ${i + 1}:</strong> ${s.department}<br>
+                        <small>ID: ${s.id}, Active: ${s.isActive !== false}</small>
+                    </div>
+                `).join('')}
+            `;
+
+            // Test matching
+            const matchedSurveys = await Storage.getSurveysByDepartment(currentUser.department);
+            
+            document.getElementById('matchResults').innerHTML = `
+                <p><strong>Matched Surveys:</strong> ${matchedSurveys.length}</p>
+                ${matchedSurveys.length > 0 ? 
+                    matchedSurveys.map(s => `
+                        <div class="result match">
+                            ✅ <strong>Matched:</strong> ${s.department}
+                        </div>
+                    `).join('') :
+                    '<div class="result no-match">❌ No surveys matched</div>'
+                }
+                <h3>Detailed Comparison:</h3>
+                ${allSurveys.map(s => {
+                    const matched = matchedSurveys.some(m => m.id === s.id);
+                    return `
+                        <div class="result ${matched ? 'match' : 'no-match'}">
+                            ${matched ? '✅' : '❌'} 
+                            Student: "${currentUser.department}" vs Survey: "${s.department}"
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        // Run diagnostics when page loads
+        runDiagnostics();
+    </script>
+</body>
+
+</html>

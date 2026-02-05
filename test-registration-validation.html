@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Registration Validations</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .test-case {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-case h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .test-case p {
+            margin: 8px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .test-case code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .expected {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .info-box strong {
+            color: #1976D2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>🧪 Registration Validation Tests</h1>
+        <p class="subtitle">Testing email and roll number duplicate detection</p>
+
+        <div class="info-box">
+            <strong>📋 Test Instructions:</strong><br>
+            1. Go to <a href="student-register.html" target="_blank">Student Registration Page</a><br>
+            2. Try the test cases below<br>
+            3. Verify you get the expected error messages
+        </div>
+
+        <div class="test-case">
+            <h3>✅ Test Case 1: Duplicate Email Detection</h3>
+            <p><strong>Action:</strong> Register with an email that already exists</p>
+            <p><strong>Expected Result:</strong> <code>❌ Email already registered! Please use a different email or login.</code></p>
+            <p><strong>Steps:</strong></p>
+            <ol>
+                <li>Register a student with email: <code>test@example.com</code></li>
+                <li>Try to register another student with the same email</li>
+                <li>Should show error immediately</li>
+            </ol>
+            <span class="status pending">Manual Test Required</span>
+        </div>
+
+        <div class="test-case">
+            <h3>✅ Test Case 2: Duplicate Roll Number in Same Department</h3>
+            <p><strong>Action:</strong> Register with a roll number that exists in the SAME department</p>
+            <p><strong>Expected Result:</strong> <code>❌ Roll number [NUMBER] is already registered in [DEPARTMENT] department!</code></p>
+            <p><strong>Steps:</strong></p>
+            <ol>
+                <li>Register Student A: Roll Number <code>21CS001</code>, Department <code>Computer Science</code></li>
+                <li>Try to register Student B: Roll Number <code>21CS001</code>, Department <code>Computer Science</code></li>
+                <li>Should show error with department name</li>
+            </ol>
+            <span class="status pending">Manual Test Required</span>
+        </div>
+
+        <div class="test-case expected">
+            <h3>✅ Test Case 3: Same Roll Number in Different Department (SHOULD WORK)</h3>
+            <p><strong>Action:</strong> Register with a roll number that exists in a DIFFERENT department</p>
+            <p><strong>Expected Result:</strong> <code>✅ Registration successful!</code></p>
+            <p><strong>Steps:</strong></p>
+            <ol>
+                <li>Register Student A: Roll Number <code>21001</code>, Department <code>Computer Science</code></li>
+                <li>Register Student B: Roll Number <code>21001</code>, Department <code>Mechanical Engineering</code></li>
+                <li>Should succeed - same roll number allowed in different departments</li>
+            </ol>
+            <span class="status pending">Manual Test Required</span>
+        </div>
+
+        <div class="test-case">
+            <h3>✅ Test Case 4: Case Insensitive Email Check</h3>
+            <p><strong>Action:</strong> Register with email in different case</p>
+            <p><strong>Expected Result:</strong> <code>❌ Email already registered!</code></p>
+            <p><strong>Steps:</strong></p>
+            <ol>
+                <li>Register with email: <code>john@example.com</code></li>
+                <li>Try to register with: <code>JOHN@example.com</code></li>
+                <li>Should detect as duplicate (case insensitive)</li>
+            </ol>
+            <span class="status pending">Manual Test Required</span>
+        </div>
+
+        <div class="test-case">
+            <h3>✅ Test Case 5: Roll Number Case Handling</h3>
+            <p><strong>Action:</strong> Register with roll number in different case</p>
+            <p><strong>Expected Result:</strong> <code>❌ Roll number already registered!</code></p>
+            <p><strong>Steps:</strong></p>
+            <ol>
+                <li>Register with roll number: <code>21cs001</code> (lowercase)</li>
+                <li>Try to register with: <code>21CS001</code> (uppercase)</li>
+                <li>Should detect as duplicate (stored as uppercase)</li>
+            </ol>
+            <span class="status pending">Manual Test Required</span>
+        </div>
+
+        <button onclick="window.open('student-register.html', '_blank')">
+            🚀 Open Registration Page
+        </button>
+
+        <button onclick="window.open('student-login.html', '_blank')">
+            🔐 Open Login Page
+        </button>
+    </div>
+
+    <div class="test-container">
+        <h2>📝 Validation Logic Summary</h2>
+
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px;">
+            <h3 style="margin-top: 0;">Email Validation:</h3>
+            <ul>
+                <li>✅ Checks if email already exists in database</li>
+                <li>✅ Case-insensitive comparison (john@test.com = JOHN@test.com)</li>
+                <li>✅ Shows clear error message with ❌ icon</li>
+            </ul>
+
+            <h3>Roll Number Validation:</h3>
+            <ul>
+                <li>✅ Checks if roll number exists <strong>within the same department</strong></li>
+                <li>✅ Allows same roll number in different departments</li>
+                <li>✅ Case-insensitive input (converts to uppercase)</li>
+                <li>✅ Shows error with department name in message</li>
+            </ul>
+
+            <h3>Updated in Files:</h3>
+            <ul>
+                <li><code>js/firebase-auth.js</code> - Firebase version</li>
+                <li><code>js/auth.js</code> - LocalStorage version</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔍 How to Verify</h2>
+        <ol>
+            <li><strong>Open Browser Console</strong> (F12) to see validation logs</li>
+            <li><strong>Register a test student</strong> with known details</li>
+            <li><strong>Try to register again</strong> with:
+                <ul>
+                    <li>Same email → Should fail</li>
+                    <li>Same roll number + same department → Should fail</li>
+                    <li>Same roll number + different department → Should succeed</li>
+                </ul>
+            </li>
+            <li><strong>Check error messages</strong> appear correctly on the page</li>
+        </ol>
+    </div>
+</body>
+
+</html>

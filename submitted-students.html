@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submitted Students - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        .students-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #7c3aed;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .filter-group select {
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: #1a202c;
+            font-weight: 500;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .btn-search,
+        .btn-reset {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #1a202c;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+            border-color: #7c3aed;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 5px solid #7c3aed;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .summary-card h4 {
+            color: #718096;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 0 0 12px 0;
+            letter-spacing: 0.6px;
+        }
+
+        .summary-card .value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #7c3aed;
+            margin: 0 0 8px 0;
+        }
+
+        .summary-card .subtext {
+            font-size: 13px;
+            color: #718096;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .students-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+            border-top: 4px solid #7c3aed;
+        }
+
+        .table-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+            border-bottom: 2px solid #7c3aed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .table-header h3 {
+            margin: 0;
+            color: #1a202c;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .table-header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-csv,
+        .btn-print {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(17, 153, 142, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-csv:hover,
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .students-table thead {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+        }
+
+        .students-table th {
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .students-table tbody tr {
+            border-bottom: 1px solid #e8e8e8;
+            transition: all 0.3s ease;
+        }
+
+        .students-table tbody tr:hover {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+        }
+
+        .students-table td {
+            padding: 16px 12px;
+            font-size: 14px;
+            color: #1a202c;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            color: #1a202c;
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        @media print {
+
+            .filters-section,
+            .stats-summary,
+            .table-header-actions,
+            .sidebar,
+            .top-bar {
+                display: none !important;
+            }
+
+            .students-table-container {
+                box-shadow: none;
+                border: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .students-container {
+                padding: 0 10px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .students-table {
+                font-size: 12px;
+            }
+
+            .students-table th,
+            .students-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="visualization.html" class="nav-item">
+                    <span class="icon">📈</span>
+                    <span>Visualizations</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item active">
+                    <span class="icon">📝</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>Submitted Students</h1>
+                    <p>View students who have submitted feedback</p>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="students-container">
+                    <!-- Filters Section -->
+                    <div class="filters-section">
+                        <h3 style="margin-top: 0; color: #1a202c; border-bottom: 2px solid #7c3aed; padding-bottom: 15px;">Filters</h3>
+                        <div class="filters-grid">
+                            <div class="filter-group">
+                                <label for="deptFilter">Department</label>
+                                <select id="deptFilter" onchange="applyFilters()">
+                                    <option value="">All Departments</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="btn-search" onclick="applyFilters()">Search</button>
+                            <button class="btn-reset" onclick="resetFilters()">Reset</button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Stats -->
+                    <div class="stats-summary">
+                        <div class="summary-card">
+                            <h4>Total Students</h4>
+                            <p class="value" id="totalStudents">0</p>
+                            <p class="subtext">Submitted feedback</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Departments</h4>
+                            <p class="value" id="totalDepts">0</p>
+                            <p class="subtext">Active departments</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Latest Submission</h4>
+                            <p class="value" id="latestSubmission">-</p>
+                            <p class="subtext">Most recent feedback</p>
+                        </div>
+                    </div>
+
+                    <!-- Students Table -->
+                    <div class="students-table-container">
+                        <div class="table-header">
+                            <div class="table-header-left">
+                                <span style="font-size: 24px;">📝</span>
+                                <h3>Submitted Students Data</h3>
+                            </div>
+                            <div class="table-header-actions">
+                                <button class="btn-csv" onclick="exportToCSV()" title="Export to CSV">
+                                    <span>📊</span>
+                                    <span>CSV</span>
+                                </button>
+                                <button class="btn-print" onclick="printTable()" title="Print report">
+                                    <span>🖨️</span>
+                                    <span>Print</span>
+                                </button>
+                            </div>
+                        </div>
+                        <table class="students-table" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Student Name</th>
+                                    <th>Roll Number</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Year</th>
+                                    <th>Submission Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <tr>
+                                    <td colspan="7" class="empty-state">
+                                        <div class="empty-state-icon">📭</div>
+                                        <h3>No Data Available</h3>
+                                        <p>No students have submitted feedback yet.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+    <script src="js/mobile-nav.js"></script>
+    <script>
+        let allStudentsData = [];
+        let filteredStudentsData = [];
+
+        function waitForModules() {
+            return new Promise((resolve) => {
+                const checkModules = () => {
+                    if (typeof window.Storage !== 'undefined' && typeof window.checkAuth !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(checkModules, 100);
+                    }
+                };
+                checkModules();
+            });
+        }
+
+        if (typeof window.showAlert === 'undefined') {
+            window.showAlert = function(message, type = 'info') {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            };
+        }
+
+        async function loadSubmittedStudents() {
+            await waitForModules();
+
+            try {
+                console.log('🔍 Starting to load submitted students...');
+
+                const feedbacks = await Storage.getFeedbacks() || [];
+                console.log('📊 Feedbacks loaded:', feedbacks.length);
+
+                const users = await Storage.getUsers() || [];
+                console.log('👥 Users loaded:', users.length);
+
+                // Create a map of unique students who submitted feedback
+                const studentMap = new Map();
+
+                feedbacks.forEach((feedback, index) => {
+                    console.log(`Processing feedback ${index + 1}:`, {
+                        studentId: feedback.studentId,
+                        studentName: feedback.studentName,
+                        studentDepartment: feedback.studentDepartment,
+                        studentYear: feedback.studentYear
+                    });
+
+                    if (!studentMap.has(feedback.studentId)) {
+                        // Find user details
+                        const user = users.find(u => u.id === feedback.studentId);
+
+                        const yearSuffix = feedback.studentYear === 1 ? 'st' :
+                            feedback.studentYear === 2 ? 'nd' :
+                            feedback.studentYear === 3 ? 'rd' : 'th';
+
+                        studentMap.set(feedback.studentId, {
+                            id: feedback.studentId,
+                            name: feedback.studentName || 'Unknown',
+                            rollNumber: user?.rollNumber || 'N/A',
+                            email: user?.email || 'N/A',
+                            department: feedback.studentDepartment || 'Unknown',
+                            year: feedback.studentYear || 0,
+                            displayDept: `${feedback.studentYear}${yearSuffix} Year - ${feedback.studentDepartment}`,
+                            submissionDate: feedback.submittedAt || feedback.timestamp || new Date().toISOString()
+                        });
+                    }
+                });
+
+                allStudentsData = Array.from(studentMap.values());
+
+                // Sort by submission date (most recent first)
+                allStudentsData.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate));
+
+                console.log('✅ Loaded submitted students:', allStudentsData.length);
+                console.log('📋 Students data:', allStudentsData);
+
+                populateDepartmentFilter();
+                updateStatistics();
+                displayStudents(allStudentsData);
+
+            } catch (error) {
+                console.error('❌ Error loading submitted students:', error);
+                showAlert('Error loading student data', 'error');
+            }
+        }
+
+        function populateDepartmentFilter() {
+            const deptFilter = document.getElementById('deptFilter');
+            const departments = new Set();
+
+            allStudentsData.forEach(student => {
+                departments.add(student.displayDept);
+            });
+
+            const sortedDepts = Array.from(departments).sort((a, b) => {
+                const yearA = parseInt(a.charAt(0));
+                const yearB = parseInt(b.charAt(0));
+                if (yearA !== yearB) return yearA - yearB;
+                return a.localeCompare(b);
+            });
+
+            sortedDepts.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                deptFilter.appendChild(option);
+            });
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalStudents').textContent = allStudentsData.length;
+
+            const uniqueDepts = new Set(allStudentsData.map(s => s.department));
+            document.getElementById('totalDepts').textContent = uniqueDepts.size;
+
+            if (allStudentsData.length > 0) {
+                const latestDate = new Date(allStudentsData[0].submissionDate);
+                document.getElementById('latestSubmission').textContent = latestDate.toLocaleDateString();
+            } else {
+                document.getElementById('latestSubmission').textContent = '-';
+            }
+        }
+
+        function displayStudents(students) {
+            console.log('📊 Displaying students:', students.length);
+            const tbody = document.getElementById('studentsTableBody');
+
+            if (students.length === 0) {
+                console.log('⚠️ No students to display');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <h3>No Students Found</h3>
+                            <p>No students match your filter criteria.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = students.map((student, index) => {
+                const submissionDate = new Date(student.submissionDate);
+                const formattedDate = submissionDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td style="font-weight: 600;">${student.name}</td>
+                        <td>${student.rollNumber}</td>
+                        <td>${student.email}</td>
+                        <td style="color: #7c3aed; font-weight: 600;">${student.department}</td>
+                        <td>${student.year}</td>
+                        <td>${formattedDate}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            filteredStudentsData = students;
+            console.log('✅ Students displayed successfully');
+        }
+
+        function applyFilters() {
+            const deptFilter = document.getElementById('deptFilter').value;
+
+            let filtered = [...allStudentsData];
+
+            if (deptFilter) {
+                filtered = filtered.filter(student => student.displayDept === deptFilter);
+            }
+
+            displayStudents(filtered);
+        }
+
+        function resetFilters() {
+            document.getElementById('deptFilter').value = '';
+            displayStudents(allStudentsData);
+        }
+
+        function exportToCSV() {
+            const students = filteredStudentsData.length > 0 ? filteredStudentsData : allStudentsData;
+
+            if (students.length === 0) {
+                showAlert('No data to export', 'warning');
+                return;
+            }
+
+            const deptFilter = document.getElementById('deptFilter').value;
+
+            let csv = [];
+            csv.push('Submitted Students Report');
+            csv.push(`Generated on: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+            csv.push('');
+            csv.push(`Department Filter: ${deptFilter || 'All Departments'}`);
+            csv.push('');
+            csv.push('#,Student Name,Roll Number,Email,Department,Year,Submission Date');
+
+            students.forEach((student, index) => {
+                // Format date as YYYY-MM-DD to avoid Excel issues
+                const date = new Date(student.submissionDate);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const submissionDate = `${year}-${month}-${day}`;
+
+                csv.push(`${index + 1},"${student.name}","${student.rollNumber}","${student.email}","${student.department}",${student.year},${submissionDate}`);
+            });
+
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Submitted_Students_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showAlert('✅ CSV exported successfully!', 'success');
+        }
+
+        function printTable() {
+            const students = filteredStudentsData.length > 0 ? filteredStudentsData : allStudentsData;
+
+            if (students.length === 0) {
+                showAlert('No data to print', 'warning');
+                return;
+            }
+
+            const deptFilter = document.getElementById('deptFilter').value;
+
+            const printWindow = window.open('', '', 'height=600,width=900');
+
+            const tableRows = students.map((student, index) => {
+                const submissionDate = new Date(student.submissionDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${student.name}</td>
+                        <td>${student.rollNumber}</td>
+                        <td>${student.email}</td>
+                        <td>${student.department}</td>
+                        <td>${student.year}</td>
+                        <td>${submissionDate}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Submitted Students Report<\/title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 20px;
+                            background: white;
+                        }
+                        .print-header {
+                            text-align: center;
+                            margin-bottom: 30px;
+                            border-bottom: 2px solid #7c3aed;
+                            padding-bottom: 20px;
+                        }
+                        .print-header h1 {
+                            margin: 0 0 10px 0;
+                            color: #1a202c;
+                            font-size: 24px;
+                        }
+                        .print-header p {
+                            margin: 5px 0;
+                            color: #718096;
+                            font-size: 13px;
+                        }
+                        .print-filters {
+                            margin-bottom: 20px;
+                            padding: 15px;
+                            background: #f8f9ff;
+                            border-radius: 8px;
+                            font-size: 13px;
+                        }
+                        .print-filters p {
+                            margin: 5px 0;
+                            color: #1a202c;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                            font-size: 12px;
+                        }
+                        th {
+                            background: #7c3aed;
+                            color: white;
+                            padding: 12px 8px;
+                            text-align: left;
+                            font-weight: 700;
+                            border: 1px solid #7c3aed;
+                        }
+                        td {
+                            padding: 10px 8px;
+                            border: 1px solid #e0e0e0;
+                        }
+                        tr:nth-child(even) {
+                            background: #f8f9ff;
+                        }
+                        .print-footer {
+                            margin-top: 30px;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #718096;
+                            border-top: 1px solid #e0e0e0;
+                            padding-top: 15px;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .print-header { page-break-after: avoid; }
+                            table { page-break-inside: avoid; }
+                        }
+                    <\/style>
+                <\/head>
+                <body>
+                    <div class="print-header">
+                        <h1>📝 Submitted Students Report<\/h1>
+                        <p>Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}<\/p>
+                    <\/div>
+                    <div class="print-filters">
+                        <p><strong>Filters Applied:<\/strong><\/p>
+                        <p>Department: ${deptFilter || 'All Departments'}<\/p>
+                        <p>Total Students: ${students.length}<\/p>
+                    <\/div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#<\/th>
+                                <th>Student Name<\/th>
+                                <th>Roll Number<\/th>
+                                <th>Email<\/th>
+                                <th>Department<\/th>
+                                <th>Year<\/th>
+                                <th>Submission Date<\/th>
+                            <\/tr>
+                        <\/thead>
+                        <tbody>
+                            ${tableRows}
+                        <\/tbody>
+                    <\/table>
+                    <div class="print-footer">
+                        <p>This is an automatically generated report from the Faculty Feedback System.<\/p>
+                    <\/div>
+                <\/body>
+                <\/html>
+            `;
+
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+
+            showAlert('Opening print preview...', 'success');
+        }
+
+        window.applyFilters = applyFilters;
+        window.resetFilters = resetFilters;
+        window.exportToCSV = exportToCSV;
+        window.printTable = printTable;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await waitForModules();
+            const currentUser = await checkAuth('admin');
+            if (!currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+            await loadSubmittedStudents();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Feedback Flow</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            border-radius: 5px;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .info {
+            padding: 10px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Feedback Flow Test</h1>
+
+        <div class="info">
+            <strong>Purpose:</strong> This page helps you verify that feedback is being saved and retrieved correctly from Firestore.
+        </div>
+
+        <div class="section">
+            <h2>Current User</h2>
+            <div id="userInfo">Loading...</div>
+        </div>
+
+        <div class="section">
+            <h2>Test Actions</h2>
+            <button onclick="testGetAllFeedbacks()">1. Get All Feedbacks</button>
+            <button onclick="testGetMyFeedbacks()">2. Get My Feedbacks</button>
+            <button onclick="testCheckSubmission()">3. Check If Survey Submitted</button>
+            <button onclick="testFeedbackStructure()">4. Verify Feedback Structure</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <div class="section">
+            <h2>Output</h2>
+            <div class="output" id="output">Click a button above to run tests...</div>
+        </div>
+
+        <div class="section">
+            <h2>Expected Behavior</h2>
+            <ul>
+                <li>✅ Feedbacks should be saved with proper structure</li>
+                <li>✅ Student can only submit a survey once</li>
+                <li>✅ Submitted surveys appear in "My Submissions"</li>
+                <li>✅ Dashboard shows correct completion status</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth } from './js/firebase-auth.js';
+        
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+    </script>
+
+    <script>
+        let currentUser = null;
+        let output = [];
+
+        async function init() {
+            await waitForModules();
+            currentUser = await checkAuth('student');
+            if (currentUser) {
+                displayUserInfo();
+            }
+        }
+
+        function waitForModules() {
+            return new Promise((resolve) => {
+                const check = () => {
+                    if (typeof window.Storage !== 'undefined' && typeof window.checkAuth !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(check, 100);
+                    }
+                };
+                check();
+            });
+        }
+
+        function displayUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            userInfo.innerHTML = `
+                <strong>Name:</strong> ${currentUser.name}<br>
+                <strong>ID:</strong> ${currentUser.id}<br>
+                <strong>Department:</strong> ${currentUser.department}<br>
+                <strong>Roll Number:</strong> ${currentUser.rollNumber || 'N/A'}
+            `;
+        }
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+            output.push(`[${timestamp}] ${prefix} ${message}`);
+            updateOutput();
+        }
+
+        function updateOutput() {
+            const outputDiv = document.getElementById('output');
+            outputDiv.textContent = output.join('\n');
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+
+        function clearOutput() {
+            output = [];
+            updateOutput();
+        }
+
+        async function testGetAllFeedbacks() {
+            log('Testing: Get All Feedbacks from Firestore...');
+            try {
+                const feedbacks = await Storage.getFeedbacks();
+                log(`Found ${feedbacks.length} total feedbacks in database`, 'success');
+
+                if (feedbacks.length > 0) {
+                    log('Sample feedback structure:');
+                    log(JSON.stringify(feedbacks[0], null, 2));
+                } else {
+                    log('No feedbacks found in database', 'error');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetMyFeedbacks() {
+            log(`Testing: Get Feedbacks for Student ID: ${currentUser.id}...`);
+            try {
+                const myFeedbacks = await Storage.getFeedbacksByStudentId(currentUser.id);
+                log(`Found ${myFeedbacks.length} feedbacks for this student`, 'success');
+
+                if (myFeedbacks.length > 0) {
+                    log('Your submissions:');
+                    myFeedbacks.forEach((feedback, index) => {
+                        log(`\n--- Submission ${index + 1} ---`);
+                        log(`Survey ID: ${feedback.surveyId}`);
+                        log(`Department: ${feedback.studentDepartment}`);
+                        log(`Teachers: ${feedback.selectedTeachers.map(t => t.name).join(', ')}`);
+                        log(`Responses: ${feedback.responses.length}`);
+                        log(`Submitted: ${new Date(feedback.submittedAt).toLocaleString()}`);
+                    });
+                } else {
+                    log('You have not submitted any feedbacks yet', 'error');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCheckSubmission() {
+            log('Testing: Check if survey already submitted...');
+            try {
+                const surveys = await Storage.getSurveys();
+                if (surveys.length === 0) {
+                    log('No surveys found in database', 'error');
+                    return;
+                }
+
+                const survey = surveys[0];
+                log(`Checking survey: ${survey.id}`);
+
+                const hasSubmitted = await Storage.hasSubmittedFeedback(currentUser.id, survey.id);
+
+                if (hasSubmitted) {
+                    log(`✅ You HAVE already submitted this survey`, 'success');
+                    log('This means one-time submission is working correctly!');
+                } else {
+                    log(`❌ You have NOT submitted this survey yet`, 'info');
+                    log('You can take this survey');
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFeedbackStructure() {
+            log('Testing: Verify Feedback Structure...');
+            try {
+                const myFeedbacks = await Storage.getFeedbacksByStudentId(currentUser.id);
+
+                if (myFeedbacks.length === 0) {
+                    log('No feedbacks to verify. Please submit a survey first.', 'error');
+                    return;
+                }
+
+                const feedback = myFeedbacks[0];
+                log('Checking feedback structure...');
+
+                // Check required fields
+                const requiredFields = [
+                    'id', 'surveyId', 'studentId', 'studentName',
+                    'studentDepartment', 'selectedTeachers', 'responses', 'submittedAt'
+                ];
+
+                let allFieldsPresent = true;
+                requiredFields.forEach(field => {
+                    if (feedback[field] !== undefined) {
+                        log(`✅ ${field}: Present`, 'success');
+                    } else {
+                        log(`❌ ${field}: MISSING`, 'error');
+                        allFieldsPresent = false;
+                    }
+                });
+
+                if (allFieldsPresent) {
+                    log('\n✅ All required fields are present!', 'success');
+                    log('Feedback structure is correct!', 'success');
+                } else {
+                    log('\n❌ Some fields are missing!', 'error');
+                    log('Feedback structure needs fixing', 'error');
+                }
+
+                // Check data types
+                log('\nData type verification:');
+                log(`selectedTeachers is array: ${Array.isArray(feedback.selectedTeachers)}`);
+                log(`responses is array: ${Array.isArray(feedback.responses)}`);
+                log(`submittedAt is valid date: ${!isNaN(new Date(feedback.submittedAt))}`);
+
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize on page load
+        init();
+    </script>
+</body>
+
+</html>

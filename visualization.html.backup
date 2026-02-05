@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizations - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .visualization-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 255, 0.95) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #7c3aed;
+        }
+
+        .search-section {
+            margin-bottom: 30px;
+        }
+
+        .search-section h3 {
+            color: #1a202c;
+            margin-bottom: 20px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #7c3aed;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: #1a202c;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .search-box button {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-box button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .search-box button:hover::before {
+            left: 100%;
+        }
+
+        .search-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+        }
+
+        .selected-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .selected-tag {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .selected-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .selected-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .selected-tag button:hover {
+            transform: scale(1.2);
+        }
+
+        .chart-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .chart-options button {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-options button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .chart-options button:hover::before {
+            left: 100%;
+        }
+
+        .chart-options button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(17, 153, 142, 0.3);
+        }
+
+        .chart-options button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .export-section {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .export-section button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-section button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .export-section button:hover::before {
+            left: 100%;
+        }
+
+        .export-section button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 87, 108, 0.3);
+        }
+
+        .export-section button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Statistics Summary */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(248, 249, 255, 0.5) 100%);
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            display: none;
+        }
+
+        .stats-summary.show {
+            display: grid;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 249, 255, 0.3) 100%);
+            border-radius: 12px;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 2px solid #e0e0e0;
+        }
+
+        .chart-container.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading-spinner.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #7c3aed;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 249, 255, 0.3) 100%);
+            border-radius: 12px;
+            border: 2px dashed #e0e0e0;
+        }
+
+        .empty-state span {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            color: #1a202c;
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .empty-state p {
+            color: #7c3aed;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .visualization-container {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .search-section h3 {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            .search-box {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .search-box input {
+                min-width: 100%;
+            }
+
+            .search-box button {
+                width: 100%;
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            .chart-options {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 10px;
+            }
+
+            .chart-options button {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+
+            .export-section {
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .export-section button {
+                padding: 10px 16px;
+                font-size: 12px;
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                padding: 15px;
+            }
+
+            .stat-item {
+                padding: 12px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+                margin-bottom: 6px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+
+            .chart-container {
+                height: 400px;
+                padding: 15px;
+                margin-top: 20px;
+            }
+
+            .empty-state {
+                padding: 40px 15px;
+            }
+
+            .empty-state span {
+                font-size: 48px;
+                margin-bottom: 15px;
+            }
+
+            .empty-state h3 {
+                font-size: 18px;
+            }
+
+            .empty-state p {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .visualization-container {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .search-section h3 {
+                font-size: 15px;
+                margin-bottom: 12px;
+            }
+
+            .search-box input {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .search-box button {
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+
+            .chart-options {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .chart-options button {
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+
+            .export-section {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .export-section button {
+                width: 100%;
+                padding: 10px 14px;
+                font-size: 12px;
+            }
+
+            .stats-summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .chart-container {
+                height: 300px;
+                padding: 12px;
+                margin-top: 15px;
+            }
+
+            .empty-state {
+                padding: 30px 12px;
+            }
+
+            .empty-state span {
+                font-size: 40px;
+                margin-bottom: 12px;
+            }
+
+            .empty-state h3 {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="visualization.html" class="nav-item active">
+                    <span class="icon">📈</span>
+                    <span>Visualizations</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>📈 Ratings Visualization</h1>
+                    <p>Visualize average ratings by department and year</p>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div id="alertMessage" class="alert"></div>
+
+                <!-- Search and Selection Section -->
+                <div class="visualization-container">
+                    <div class="search-section">
+                        <h3>🔍 Select Department</h3>
+                        <div class="search-box">
+                            <select id="departmentDropdown" onchange="onDepartmentChange()" style="flex: 1; min-width: 200px; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: all 0.3s ease; color: #1a202c; cursor: pointer;">
+                                <option value="">-- Select a Department --</option>
+                            </select>
+                        </div>
+
+                        <div class="selected-items" id="selectedDepartments">
+                            <!-- Selected department will appear here -->
+                        </div>
+
+                        <div class="chart-options">
+                            <button id="piechartBtn" onclick="createPieChart()">📊 Pie Chart</button>
+                            <button id="histogramBtn" onclick="createHistogram()">📈 Histogram</button>
+                            <button id="linechartBtn" onclick="createLineChart()">📉 Line Chart</button>
+                        </div>
+
+                        <div class="export-section">
+                            <button id="exportBtn" onclick="exportChart()" disabled>💾 Export Chart</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Display Section -->
+                <div class="visualization-container">
+                    <div id="loadingSpinner" class="loading-spinner">
+                        <div class="spinner"></div>
+                        <p>Loading chart data...</p>
+                    </div>
+
+                    <div id="statsSummary" class="stats-summary">
+                        <div class="stat-item">
+                            <div class="stat-label">Highest Rating</div>
+                            <div class="stat-value" id="maxRating">-</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Lowest Rating</div>
+                            <div class="stat-value" id="minRating">-</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Average Rating</div>
+                            <div class="stat-value" id="avgRating">-</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Median Rating</div>
+                            <div class="stat-value" id="medianRating">-</div>
+                        </div>
+                    </div>
+
+                    <div id="chartContainer" class="chart-container">
+                        <canvas id="myChart"></canvas>
+                    </div>
+
+                    <div id="emptyState" class="empty-state">
+                        <span>📭</span>
+                        <h3>No Chart Created Yet</h3>
+                        <p>Select departments and click "Create Pie Chart", "Create Histogram", or "Create Line Chart" to generate visualizations</p>
+                    </div>
+                </div>
+
+                <!-- Faculty Ratings by Year Section -->
+                <div class="visualization-container">
+                    <div class="search-section">
+                        <h3>👨‍🏫 Faculty Ratings Report</h3>
+                        <p style="color: #718096; font-size: 14px; margin: 10px 0 15px 0;">View and filter faculty performance ratings by department and year</p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; font-weight: 600; color: #1a202c; margin-bottom: 8px; font-size: 13px;">Filter by Department</label>
+                                <select id="reportDepartmentFilter" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #1a202c; cursor: pointer; transition: all 0.3s ease;">
+                                    <option value="">All Departments</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; color: #1a202c; margin-bottom: 8px; font-size: 13px;">Filter by Year</label>
+                                <select id="reportYearFilter" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #1a202c; cursor: pointer; transition: all 0.3s ease;">
+                                    <option value="">All Years</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; color: #1a202c; margin-bottom: 8px; font-size: 13px;">Sort By</label>
+                                <select id="reportSortOrder" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #1a202c; cursor: pointer; transition: all 0.3s ease;">
+                                    <option value="highest">Highest Rating First</option>
+                                    <option value="lowest">Lowest Rating First</option>
+                                    <option value="name">Faculty Name (A-Z)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="displayFacultyRatingsByYear()" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(124, 58, 237, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(124, 58, 237, 0.2)';">📊 Generate Report</button>
+                    </div>
+                    <div id="facultyRatingsContainer" style="margin-top: 20px;">
+                        <!-- Faculty ratings will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make Storage and auth functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+    <script src="js/mobile-nav.js"></script>
+    <script src="js/visualization.js"></script>
+</body>
+
+</html>

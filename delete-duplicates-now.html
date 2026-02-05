@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Duplicate Departments NOW</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            color: #1a202c;
+        }
+
+        h1 {
+            color: #dc2626;
+            margin-bottom: 20px;
+            font-size: 36px;
+            text-align: center;
+        }
+
+        .warning-box {
+            background: #fef2f2;
+            border: 3px solid #dc2626;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .warning-box h2 {
+            color: #dc2626;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #16a34a;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #dc2626;
+        }
+
+        .dept-list {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dept-item {
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #dc2626;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dept-item.keep {
+            border-left-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge.delete {
+            background: #dc2626;
+            color: white;
+        }
+
+        .badge.keep {
+            background: #16a34a;
+            color: white;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .progress {
+            background: #e5e7eb;
+            border-radius: 8px;
+            height: 30px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🗑️ Delete Duplicate Departments</h1>
+
+        <div class="warning-box">
+            <h2>⚠️ CRITICAL WARNING</h2>
+            <p><strong>This will PERMANENTLY delete duplicate departments from your database!</strong></p>
+            <p style="margin-top: 10px;">The system will keep only ONE copy of each department (the one with the most faculty members).</p>
+            <p style="margin-top: 10px; color: #dc2626;"><strong>THIS CANNOT BE UNDONE!</strong></p>
+        </div>
+
+        <div id="results"></div>
+
+        <button class="btn" id="scanBtn" onclick="scanAndDelete()">
+            🔍 SCAN & DELETE DUPLICATES NOW
+        </button>
+
+        <div id="progress" style="display: none;">
+            <div class="progress">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        window.Storage = Storage;
+        
+        // Auto-scan on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('scanBtn').click();
+            }, 1000);
+        });
+    </script>
+
+    <script>
+        async function scanAndDelete() {
+            const resultsDiv = document.getElementById('results');
+            const scanBtn = document.getElementById('scanBtn');
+            const progressDiv = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+
+            scanBtn.disabled = true;
+            resultsDiv.innerHTML = '<div class="status info"><span class="loading"></span> Scanning database for duplicates...</div>';
+
+            try {
+                // Get all departments
+                const departments = await Storage.getDepartments();
+                console.log('📊 Total departments in database:', departments.length);
+                console.log('Departments:', departments.map(d => `${d.name} (${d.id})`));
+
+                // Group by name (case-insensitive)
+                const grouped = {};
+                departments.forEach(dept => {
+                    const key = dept.name.toLowerCase().trim();
+                    if (!grouped[key]) {
+                        grouped[key] = [];
+                    }
+                    grouped[key].push(dept);
+                });
+
+                // Find duplicates
+                const duplicateGroups = [];
+                Object.keys(grouped).forEach(key => {
+                    if (grouped[key].length > 1) {
+                        duplicateGroups.push({
+                            name: grouped[key][0].name,
+                            departments: grouped[key]
+                        });
+                    }
+                });
+
+                if (duplicateGroups.length === 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ <strong>No duplicates found!</strong><br>
+                            Your database is clean. You have ${departments.length} unique departments.
+                        </div>
+                    `;
+                    scanBtn.disabled = false;
+                    scanBtn.textContent = '✅ DATABASE IS CLEAN';
+                    scanBtn.className = 'btn btn-success';
+                    return;
+                }
+
+                // Show what will be deleted
+                let html = `
+                    <div class="status error">
+                        ❌ <strong>Found ${duplicateGroups.length} department(s) with duplicates!</strong><br>
+                        Total duplicates to delete: ${duplicateGroups.reduce((sum, g) => sum + g.departments.length - 1, 0)}
+                    </div>
+                    <div class="dept-list">
+                `;
+
+                duplicateGroups.forEach(group => {
+                    // Sort by faculty count (descending)
+                    const sorted = group.departments.sort((a, b) => {
+                        const aCount = (a.faculties || []).length;
+                        const bCount = (b.faculties || []).length;
+                        return bCount - aCount;
+                    });
+
+                    html += `<h3 style="margin: 20px 0 10px 0; color: #1a202c;">📁 ${group.name}</h3>`;
+
+                    sorted.forEach((dept, index) => {
+                        const facultyCount = (dept.faculties || []).length;
+                        const isKeep = index === 0;
+
+                        html += `
+                            <div class="dept-item ${isKeep ? 'keep' : ''}">
+                                <div>
+                                    <strong>${dept.name}</strong><br>
+                                    <small>ID: ${dept.id} | Faculty: ${facultyCount}</small>
+                                </div>
+                                <span class="badge ${isKeep ? 'keep' : 'delete'}">${isKeep ? 'KEEP' : 'DELETE'}</span>
+                            </div>
+                        `;
+                    });
+                });
+
+                html += `</div>`;
+                resultsDiv.innerHTML = html;
+
+                // Show confirmation
+                const confirmed = confirm(
+                    `⚠️ FINAL WARNING!\n\n` +
+                    `This will DELETE ${duplicateGroups.reduce((sum, g) => sum + g.departments.length - 1, 0)} duplicate department(s).\n\n` +
+                    `The system will keep the department with the most faculty members.\n\n` +
+                    `THIS CANNOT BE UNDONE!\n\n` +
+                    `Click OK to proceed with deletion.`
+                );
+
+                if (!confirmed) {
+                    resultsDiv.innerHTML += '<div class="status info">ℹ️ Deletion cancelled by user.</div>';
+                    scanBtn.disabled = false;
+                    return;
+                }
+
+                // Start deletion
+                progressDiv.style.display = 'block';
+                resultsDiv.innerHTML = '<div class="status info"><span class="loading"></span> Deleting duplicates...</div>';
+
+                let deletedCount = 0;
+                let totalToDelete = duplicateGroups.reduce((sum, g) => sum + g.departments.length - 1, 0);
+
+                for (const group of duplicateGroups) {
+                    // Sort by faculty count
+                    const sorted = group.departments.sort((a, b) => {
+                        const aCount = (a.faculties || []).length;
+                        const bCount = (b.faculties || []).length;
+                        return bCount - aCount;
+                    });
+
+                    console.log(`\n🔍 Processing: ${group.name}`);
+                    console.log(`   Keeping: ${sorted[0].id} (${(sorted[0].faculties || []).length} faculty)`);
+
+                    // Delete all except the first one
+                    for (let i = 1; i < sorted.length; i++) {
+                        console.log(`   🗑️ Deleting: ${sorted[i].id} (${(sorted[i].faculties || []).length} faculty)`);
+
+                        try {
+                            await Storage.deleteDepartment(sorted[i].id);
+                            deletedCount++;
+
+                            // Update progress
+                            const progress = Math.round((deletedCount / totalToDelete) * 100);
+                            progressBar.style.width = progress + '%';
+                            progressBar.textContent = progress + '%';
+
+                            console.log(`   ✅ Deleted successfully`);
+                        } catch (error) {
+                            console.error(`   ❌ Error deleting ${sorted[i].id}:`, error);
+                        }
+                    }
+                }
+
+                // Success!
+                progressBar.style.width = '100%';
+                progressBar.textContent = '100%';
+
+                resultsDiv.innerHTML = `
+                    <div class="status success">
+                        ✅ <strong>SUCCESS!</strong><br>
+                        Deleted ${deletedCount} duplicate department(s).<br>
+                        Your database is now clean!
+                    </div>
+                    <div class="status info">
+                        ℹ️ <strong>Next Steps:</strong><br>
+                        1. Go to "Manage Faculties" to verify<br>
+                        2. Refresh the page to see the changes<br>
+                        3. Check that all faculty members are still there
+                    </div>
+                `;
+
+                scanBtn.textContent = '✅ DUPLICATES DELETED - REFRESH PAGE';
+                scanBtn.className = 'btn btn-success';
+                scanBtn.onclick = () => window.location.reload();
+                scanBtn.disabled = false;
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                resultsDiv.innerHTML = `
+                    <div class="status error">
+                        ❌ <strong>Error:</strong> ${error.message}<br>
+                        Check browser console for details.
+                    </div>
+                `;
+                scanBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

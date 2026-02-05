@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration - Faculty Feedback System</title>
+    <meta name="description" content="Create your student account to access feedback tools and academic insights.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Modern Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -3;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Floating Geometric Shapes */
+        .bg-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .shape-1 {
+            top: 10%;
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.5));
+            border-radius: 50%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            top: 20%;
+            right: 15%;
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.3));
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            animation-delay: 2s;
+        }
+
+        .shape-3 {
+            bottom: 20%;
+            left: 20%;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.4));
+            border-radius: 20px;
+            animation-delay: 4s;
+        }
+
+        .shape-4 {
+            bottom: 30%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.6));
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            animation-delay: 6s;
+        }
+
+        .shape-5 {
+            top: 50%;
+            left: 5%;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.5));
+            border-radius: 50%;
+            animation-delay: 8s;
+        }
+
+        .shape-6 {
+            top: 70%;
+            right: 25%;
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.3));
+            clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg) scale(1);
+                opacity: 0.1;
+            }
+
+            25% {
+                transform: translateY(-20px) rotate(90deg) scale(1.1);
+                opacity: 0.2;
+            }
+
+            50% {
+                transform: translateY(-10px) rotate(180deg) scale(0.9);
+                opacity: 0.15;
+            }
+
+            75% {
+                transform: translateY(-30px) rotate(270deg) scale(1.05);
+                opacity: 0.25;
+            }
+        }
+
+        /* Animated Grid Pattern */
+        .grid-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 30s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(50px, 50px);
+            }
+        }
+
+        /* Glowing Orbs */
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.4;
+            animation: orbFloat 25s ease-in-out infinite;
+            z-index: -2;
+        }
+
+        .orb-1 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.6) 0%, transparent 70%);
+            top: -150px;
+            right: -150px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(240, 147, 251, 0.5) 0%, transparent 70%);
+            bottom: -125px;
+            left: -125px;
+            animation-delay: 8s;
+        }
+
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(79, 172, 254, 0.4) 0%, transparent 70%);
+            top: 20%;
+            left: 10%;
+            animation-delay: 16s;
+        }
+
+        @keyframes orbFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.4;
+            }
+
+            33% {
+                transform: translate(30px, -30px) scale(1.1);
+                opacity: 0.6;
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
+                opacity: 0.3;
+            }
+        }
+
+        /* Particle System */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: particleFloat 15s linear infinite;
+        }
+
+        .particle:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .particle:nth-child(2) {
+            top: 40%;
+            left: 80%;
+            animation-delay: 3s;
+        }
+
+        .particle:nth-child(3) {
+            top: 70%;
+            left: 30%;
+            animation-delay: 6s;
+        }
+
+        .particle:nth-child(4) {
+            top: 90%;
+            left: 60%;
+            animation-delay: 9s;
+        }
+
+        .particle:nth-child(5) {
+            top: 10%;
+            left: 70%;
+            animation-delay: 12s;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+                transform: translateY(90vh) scale(1);
+            }
+
+            90% {
+                opacity: 1;
+                transform: translateY(-10vh) scale(1);
+            }
+
+            100% {
+                transform: translateY(-20vh) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .register-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow:
+                0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            padding: 48px;
+            width: 100%;
+            max-width: 520px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            animation: containerSlideUp 0.8s ease-out;
+            margin: auto;
+            box-sizing: border-box;
+        }
+
+        .register-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg,
+                    transparent 0%,
+                    rgba(255, 255, 255, 0.8) 50%,
+                    transparent 100%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .register-container::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg,
+                    rgba(102, 126, 234, 0.1) 0%,
+                    rgba(240, 147, 251, 0.1) 25%,
+                    rgba(79, 172, 254, 0.1) 50%,
+                    rgba(245, 87, 108, 0.1) 75%,
+                    rgba(102, 126, 234, 0.1) 100%);
+            border-radius: 26px;
+            z-index: -1;
+            animation: borderGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes containerSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes borderGlow {
+
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #374151;
+            padding: 10px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            color: #6366f1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 20px;
+        }
+
+        .form-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .form-subtitle {
+            color: #6b7280;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            letter-spacing: 0.025em;
+            text-align: left;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: white;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        .form-select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+            appearance: none;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrapper .form-input {
+            padding-right: 50px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+
+        .password-toggle:focus {
+            outline: 2px solid #6366f1;
+            outline-offset: 2px;
+        }
+
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.025em;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .register-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.1) 0%,
+                    transparent 50%,
+                    rgba(255, 255, 255, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 8px 25px rgba(99, 102, 241, 0.4),
+                0 0 20px rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, #5b5bf6 0%, #8b5cf6 50%, #a855f7 100%);
+        }
+
+        .register-btn:hover::before {
+            left: 100%;
+        }
+
+        .register-btn:hover::after {
+            opacity: 1;
+        }
+
+        .register-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .register-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .register-btn.loading {
+            pointer-events: none;
+            cursor: wait;
+            position: relative;
+        }
+
+        .register-btn.loading::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 24px;
+            height: 24px;
+            margin: -12px 0 0 -12px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spinLoader 0.8s linear infinite;
+            z-index: 10;
+        }
+
+        @keyframes spinLoader {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .register-btn.loading {
+            color: transparent !important;
+        }
+
+        .register-btn.loading::after {
+            opacity: 0;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .login-link {
+            color: #6b7280;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .login-link a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #4f46e5;
+            text-decoration: underline;
+        }
+
+        /* Alert Styling */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            border: 1px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: currentColor;
+        }
+
+        .alert.show {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .alert-error,
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fcd34d;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: #93c5fd;
+        }
+
+        /* Error Styling */
+        .field-error-container {
+            min-height: 22px;
+            margin-top: 6px;
+        }
+
+        .field-error {
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fee2e2;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 3px solid #dc2626;
+            animation: errorSlide 0.3s ease;
+        }
+
+        .field-error::before {
+            content: '⚠';
+            font-size: 12px;
+            color: #dc2626;
+        }
+
+        @keyframes errorSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-input.error,
+        .form-select.error {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+            background: rgba(254, 242, 242, 0.5);
+        }
+
+        .form-input.error:focus,
+        .form-select.error:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+        }
+
+        /* Success State */
+        .form-input.success,
+        .form-select.success {
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Responsive Design - Mobile First Approach */
+
+        /* Extra Small Devices (320px and up) */
+        @media (max-width: 374px) {
+            body {
+                padding: 8px;
+                align-items: flex-start;
+                padding-top: 20px;
+            }
+
+            .register-container {
+                padding: 16px;
+                border-radius: 12px;
+                margin: 0;
+                min-height: auto;
+                max-width: 100%;
+            }
+
+            .register-container::after {
+                border-radius: 14px;
+            }
+
+            .back-btn {
+                top: 12px;
+                right: 12px;
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .form-header {
+                margin-bottom: 20px;
+                margin-top: 8px;
+            }
+
+            .form-title {
+                font-size: 20px;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .form-subtitle {
+                font-size: 13px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-label {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 8px 10px;
+                font-size: 16px;
+                border-radius: 8px;
+            }
+
+            .password-wrapper .form-input {
+                padding-right: 40px;
+            }
+
+            .password-toggle {
+                right: 6px;
+                width: 28px;
+                height: 28px;
+                padding: 4px;
+            }
+
+            .password-toggle svg {
+                width: 14px;
+                height: 14px;
+            }
+
+            .register-btn {
+                padding: 10px 14px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+
+            .form-footer {
+                margin-top: 16px;
+                padding-top: 16px;
+            }
+
+            .login-link {
+                font-size: 12px;
+            }
+
+            /* Reduce background effects for performance */
+            .bg-shapes {
+                display: none;
+            }
+
+            .particles {
+                display: none;
+            }
+
+            .glow-orb {
+                opacity: 0.1;
+                filter: blur(20px);
+            }
+
+            .grid-pattern {
+                opacity: 0.3;
+            }
+        }
+
+        /* Small Devices (375px - 480px) */
+        @media (min-width: 375px) and (max-width: 480px) {
+            body {
+                padding: 12px;
+                align-items: center;
+            }
+
+            .register-container {
+                padding: 20px 16px;
+                border-radius: 16px;
+                max-width: 100%;
+            }
+
+            .register-container::after {
+                border-radius: 18px;
+            }
+
+            .back-btn {
+                top: 16px;
+                right: 16px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .form-header {
+                margin-bottom: 24px;
+                margin-top: 12px;
+            }
+
+            .form-title {
+                font-size: 22px;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .form-subtitle {
+                font-size: 14px;
+            }
+
+            .form-group {
+                margin-bottom: 18px;
+            }
+
+            .form-label {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 10px 12px;
+                font-size: 16px;
+                border-radius: 10px;
+            }
+
+            .password-wrapper .form-input {
+                padding-right: 44px;
+            }
+
+            .password-toggle {
+                right: 8px;
+                width: 30px;
+                height: 30px;
+                padding: 5px;
+            }
+
+            .password-toggle svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .register-btn {
+                padding: 12px 16px;
+                font-size: 15px;
+                border-radius: 12px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            /* Optimize background for small screens */
+            .bg-shapes .shape {
+                opacity: 0.05;
+            }
+
+            .particles {
+                display: none;
+            }
+
+            .glow-orb {
+                opacity: 0.15;
+                filter: blur(25px);
+            }
+        }
+
+        /* Medium Small Devices (481px - 640px) */
+        @media (min-width: 481px) and (max-width: 640px) {
+            body {
+                padding: 16px;
+            }
+
+            .register-container {
+                padding: 28px 24px;
+                border-radius: 18px;
+                max-width: 480px;
+            }
+
+            .register-container::after {
+                border-radius: 20px;
+            }
+
+            .back-btn {
+                top: 18px;
+                right: 18px;
+                padding: 7px 14px;
+                font-size: 13px;
+            }
+
+            .form-header {
+                margin-bottom: 28px;
+                margin-top: 14px;
+            }
+
+            .form-title {
+                font-size: 26px;
+            }
+
+            .form-subtitle {
+                font-size: 15px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 12px 14px;
+                font-size: 16px;
+            }
+
+            .password-wrapper .form-input {
+                padding-right: 46px;
+            }
+
+            .password-toggle {
+                right: 10px;
+                width: 32px;
+                height: 32px;
+                padding: 6px;
+            }
+
+            .password-toggle svg {
+                width: 17px;
+                height: 17px;
+            }
+
+            .register-btn {
+                padding: 14px 18px;
+                font-size: 16px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+        }
+
+        /* Tablets (641px - 768px) */
+        @media (min-width: 641px) and (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+
+            .register-container {
+                padding: 36px 32px;
+                border-radius: 20px;
+                max-width: 520px;
+            }
+
+            .register-container::after {
+                border-radius: 22px;
+            }
+
+            .back-btn {
+                top: 20px;
+                right: 20px;
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+
+            .form-header {
+                margin-bottom: 32px;
+                margin-top: 16px;
+            }
+
+            .form-title {
+                font-size: 28px;
+            }
+
+            .form-subtitle {
+                font-size: 16px;
+            }
+
+            .form-group {
+                margin-bottom: 22px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 13px 15px;
+                font-size: 16px;
+            }
+
+            .password-wrapper .form-input {
+                padding-right: 48px;
+            }
+
+            .password-toggle {
+                right: 11px;
+                width: 34px;
+                height: 34px;
+                padding: 7px;
+            }
+
+            .password-toggle svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .register-btn {
+                padding: 15px 20px;
+                font-size: 17px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Large Tablets and Small Laptops (769px - 1024px) */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            body {
+                padding: 24px;
+            }
+
+            .register-container {
+                padding: 42px 36px;
+                border-radius: 22px;
+                max-width: 520px;
+            }
+
+            .register-container::after {
+                border-radius: 24px;
+            }
+
+            .back-btn {
+                top: 22px;
+                right: 22px;
+                padding: 9px 18px;
+                font-size: 14px;
+            }
+
+            .form-header {
+                margin-bottom: 36px;
+                margin-top: 18px;
+            }
+
+            .form-title {
+                font-size: 30px;
+            }
+
+            .form-subtitle {
+                font-size: 16px;
+            }
+
+            .form-group {
+                margin-bottom: 24px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+
+            .password-wrapper .form-input {
+                padding-right: 50px;
+            }
+
+            .password-toggle {
+                right: 12px;
+                width: 36px;
+                height: 36px;
+                padding: 8px;
+            }
+
+            .password-toggle svg {
+                width: 19px;
+                height: 19px;
+            }
+
+            .register-btn {
+                padding: 16px 22px;
+                font-size: 17px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Desktop (1025px and up) */
+        @media (min-width: 1025px) {
+            body {
+                padding: 20px;
+            }
+
+            .register-container {
+                padding: 48px;
+                border-radius: 24px;
+                max-width: 520px;
+            }
+
+            .register-container::after {
+                border-radius: 26px;
+            }
+
+            .back-btn {
+                top: 24px;
+                right: 24px;
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .form-header {
+                margin-bottom: 40px;
+                margin-top: 20px;
+            }
+
+            .form-title {
+                font-size: 32px;
+            }
+
+            .form-subtitle {
+                font-size: 16px;
+            }
+
+            .form-group {
+                margin-bottom: 24px;
+            }
+
+            .form-input,
+            .form-select {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+
+            .password-wrapper .form-input {
+                padding-right: 50px;
+            }
+
+            .password-toggle {
+                right: 12px;
+                width: 36px;
+                height: 36px;
+                padding: 8px;
+            }
+
+            .password-toggle svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .register-btn {
+                padding: 18px 24px;
+                font-size: 18px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+        }
+
+        /* Landscape orientation fixes */
+        @media (max-height: 600px) and (orientation: landscape) {
+            body {
+                align-items: flex-start;
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+
+            .register-container {
+                margin: 10px auto;
+                padding: 20px 24px;
+            }
+
+            .form-header {
+                margin-bottom: 16px;
+                margin-top: 8px;
+            }
+
+            .form-title {
+                font-size: 24px;
+            }
+
+            .form-group {
+                margin-bottom: 14px;
+            }
+
+            .form-footer {
+                margin-top: 16px;
+                padding-top: 16px;
+            }
+
+            /* Hide some background elements in landscape */
+            .glow-orb {
+                display: none;
+            }
+
+            .bg-shapes {
+                opacity: 0.3;
+            }
+        }
+
+        /* Very short screens */
+        @media (max-height: 500px) {
+            body {
+                align-items: flex-start;
+                padding: 8px;
+            }
+
+            .register-container {
+                margin: 8px auto;
+                padding: 16px 20px;
+            }
+
+            .form-header {
+                margin-bottom: 12px;
+                margin-top: 4px;
+            }
+
+            .form-title {
+                font-size: 22px;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .register-btn {
+                padding: 12px 18px;
+                font-size: 16px;
+            }
+        }
+
+        /* Performance optimizations */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .bg-shapes,
+            .particles,
+            .glow-orb {
+                display: none;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .register-container {
+                border: 2px solid #000;
+                background: #fff;
+            }
+
+            .form-input,
+            .form-select {
+                border: 2px solid #000;
+            }
+
+            .register-btn {
+                background: #000;
+                border: 2px solid #000;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus visible for keyboard navigation */
+        .form-input:focus-visible,
+        .form-select:focus-visible,
+        .register-btn:focus-visible,
+        .back-btn:focus-visible {
+            outline: 2px solid #6366f1;
+            outline-offset: 2px;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .register-container {
+                box-shadow: none;
+                border: 1px solid #000;
+            }
+
+            .register-btn {
+                background: #000 !important;
+                color: white !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Modern Background Elements -->
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+        <div class="shape shape-4"></div>
+        <div class="shape shape-5"></div>
+        <div class="shape shape-6"></div>
+    </div>
+
+    <div class="grid-pattern"></div>
+
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="register-container">
+        <!-- Back Button -->
+        <a href="student-login.html" class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M19 12H5M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Back to Login
+        </a>
+
+        <!-- Form Header -->
+        <div class="form-header">
+            <h1 class="form-title">
+                🚀 Student Registration
+            </h1>
+            <p class="form-subtitle">Create your account to access the feedback system</p>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="studentRegisterForm">
+            <div id="alertMessage" class="alert"></div>
+
+            <div class="form-group">
+                <label for="fullName" class="form-label">Full Name</label>
+                <input type="text" id="fullName" name="fullName" class="form-input" placeholder="Enter your full name" required autocomplete="name">
+                <div class="field-error-container"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email address" required autocomplete="email">
+                <div class="field-error-container"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="rollNumber" class="form-label">Roll Number</label>
+                    <input type="text" id="rollNumber" name="rollNumber" class="form-input" placeholder="Enter your roll number" required autocomplete="off">
+                    <div class="field-error-container"></div>
+                </div>
+                <div class="form-group">
+                    <label for="department" class="form-label">Department</label>
+                    <select id="department" name="department" class="form-select" required autocomplete="organization">
+                        <option value="">Select Department</option>
+                    </select>
+                    <div class="field-error-container"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Create a strong password" required autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2" />
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="field-error-container"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" placeholder="Confirm your password" required autocomplete="new-password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                            <svg class="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2" />
+                                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="field-error-container"></div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="register-btn">
+                🚀 Create Account
+            </button>
+
+            <div class="form-footer">
+                <p class="login-link">
+                    Already have an account? <a href="student-login.html">Sign in here</a>
+                </p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/validation.js"></script>
+    <script src="js/error-handler.js"></script>
+    <script src="js/utils.js"></script>
+
+    <!-- Firebase Integration - Load and Initialize -->
+    <script type="module">
+        // Import Firebase modules
+        import Storage from './js/firebase-storage.js';
+        import { db } from './js/firebase-config.js';
+        
+        // Make globally available
+        window.Storage = Storage;
+        window.db = db;
+
+        console.log('✅ Firebase Storage loaded:', !!Storage);
+        console.log('✅ Firestore Database loaded:', !!db);
+
+        // showAlert function for displaying messages
+        function showAlert(message, type = 'danger', duration = 5000) {
+            const alertDiv = document.getElementById('alertMessage');
+            if (alertDiv) {
+                alertDiv.textContent = message;
+                alertDiv.className = `alert alert-${type} show`;
+                
+                setTimeout(() => {
+                    if (alertDiv.classList.contains('show')) {
+                        alertDiv.className = 'alert';
+                    }
+                }, duration);
+            } else {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
+        }
+
+        // Wait for DOM to be ready, then set up registration handler
+        document.addEventListener('DOMContentLoaded', async function() {
+            const form = document.getElementById('studentRegisterForm');
+            if (!form) {
+                console.error('❌ Registration form not found!');
+                return;
+            }
+
+            console.log('✅ Registration form found, attaching handler...');
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('📝 Registration form submitted');
+
+                // Add loading state IMMEDIATELY before any validation
+                const submitBtn = this.querySelector('.register-btn, button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.classList.add('loading');
+                    submitBtn.disabled = true;
+                    console.log('✅ Loading animation started');
+                }
+
+                // Small delay to ensure animation is visible
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                try {
+                    const fullName = document.getElementById('fullName').value.trim();
+                    const email = document.getElementById('email').value.trim().toLowerCase();
+                    const rollNumber = document.getElementById('rollNumber').value.trim().toUpperCase();
+                    const department = document.getElementById('department').value;
+                    const password = document.getElementById('password').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+
+                    console.log('📧 Registering:', email);
+
+                    // Basic validation
+                    if (!fullName || !email || !rollNumber || !department || !password || !confirmPassword) {
+                        showAlert('Please fill in all required fields', 'danger');
+                        if (submitBtn) {
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    if (password !== confirmPassword) {
+                        showAlert('Passwords do not match!', 'danger');
+                        if (submitBtn) {
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    if (password.length < 6) {
+                        showAlert('Password must be at least 6 characters long', 'danger');
+                        if (submitBtn) {
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    // Check if Storage is available
+                    if (!window.Storage) {
+                        console.error('❌ Storage not loaded!');
+                        showAlert('System error: Storage module not loaded. Please refresh the page.', 'danger');
+                        if (submitBtn) {
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    // Check if database is available
+                    if (!window.db) {
+                        console.error('❌ Database not loaded!');
+                        showAlert('System error: Database not connected. Please refresh the page.', 'danger');
+                        if (submitBtn) {
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    console.log('✅ Storage available:', !!window.Storage);
+                    console.log('✅ Firestore available:', !!window.db);
+
+                    // Check if email already exists with timeout
+                    console.log('Checking if email exists...');
+                    
+                    const timeoutPromise = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Database timeout - check your internet connection')), 10000)
+                    );
+                    
+                    const existingUser = await Promise.race([
+                        Storage.findUserByEmail(email),
+                        timeoutPromise
+                    ]);
+                    
+                    console.log('✅ Email check complete:', existingUser ? 'User exists' : 'Email available');
+                    
+                    if (existingUser) {
+                        showAlert('Email already registered! Please use a different email or login.', 'danger');
+                        if (submitBtn) {
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    // Check if roll number already exists
+                    console.log('Checking roll number...');
+                    const users = await Promise.race([
+                        Storage.getUsers(),
+                        timeoutPromise
+                    ]);
+                    
+                    console.log('✅ Got users list, count:', users.length);
+                    
+                    if (users.some(u => u.rollNumber === rollNumber)) {
+                        showAlert('Roll number already registered! Please check your roll number.', 'danger');
+                        if (submitBtn) {
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                        }
+                        return;
+                    }
+
+                    // Create new user
+                    console.log('Creating new student user...');
+                    const newUser = {
+                        id: Storage.generateId(),
+                        name: fullName,
+                        email: email,
+                        rollNumber: rollNumber,
+                        department: department,
+                        password: password,
+                        role: 'student',
+                        registeredAt: new Date().toISOString()
+                    };
+
+                    console.log('Saving user to database...');
+                    const savedUser = await Promise.race([
+                        Storage.saveUser(newUser),
+                        timeoutPromise
+                    ]);
+                    
+                    if (savedUser) {
+                        console.log('✅ Student registered successfully');
+                        showAlert('Registration successful! Redirecting to login...', 'success');
+
+                        this.reset();
+
+                        // Keep loading animation during redirect
+                        setTimeout(() => {
+                            window.location.href = 'student-login.html';
+                        }, 1500);
+                    } else {
+                        throw new Error('Failed to save user data');
+                    }
+
+                } catch (error) {
+                    console.error('❌ Registration error:', error);
+                    showAlert('Registration failed: ' + error.message, 'danger');
+                    // Remove loading on error
+                    if (submitBtn) {
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                    }
+                }
+            });
+
+            console.log('✅ Registration handler attached successfully');
+        });
+    </script>
+
+    <script>
+        // Load departments for registration (dynamically from database)
+        async function loadDepartmentsForRegistration() {
+            const departmentSelect = document.getElementById('department');
+
+            try {
+                // Load departments from database
+                const departments = await Storage.getDepartments() || [];
+
+                console.log('Loaded departments for registration:', departments);
+
+                // Clear existing options except the first one
+                while (departmentSelect.options.length > 1) {
+                    departmentSelect.remove(1);
+                }
+
+                // FIXED: Only use departments from database, no fallback
+                // This prevents students from creating non-existent departments
+                if (departments.length === 0) {
+                    // Show message that admin needs to create departments first
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No departments available - Contact admin';
+                    option.disabled = true;
+                    departmentSelect.appendChild(option);
+
+                    // Disable the select and show alert
+                    departmentSelect.disabled = true;
+
+                    // Show alert to user
+                    const alertDiv = document.getElementById('alertMessage');
+                    if (alertDiv) {
+                        alertDiv.textContent = '⚠️ No departments available. Please contact the administrator to create departments first.';
+                        alertDiv.className = 'alert alert-warning show';
+                    }
+
+                    console.warn('⚠️ No departments in database. Students cannot register until admin creates departments.');
+                } else {
+                    // Use departments from database ONLY
+                    departmentSelect.disabled = false;
+                    departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.name; // Use the same name as stored in database
+                        option.textContent = dept.fullName || dept.name;
+                        departmentSelect.appendChild(option);
+                    });
+
+                    console.log(`✅ Loaded ${departments.length} departments for registration`);
+                }
+            } catch (error) {
+                console.error('❌ Error loading departments for registration:', error);
+
+                // Show error to user
+                const alertDiv = document.getElementById('alertMessage');
+                if (alertDiv) {
+                    alertDiv.textContent = '❌ Error loading departments. Please refresh the page or contact support.';
+                    alertDiv.className = 'alert alert-danger show';
+                }
+            }
+        }
+
+        // Password toggle function
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const toggleBtn = passwordInput.parentElement.querySelector('.password-toggle');
+            const eyeIcon = toggleBtn.querySelector('.eye-open');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path d="M17.94 17.94C16.2306 19.243 14.1491 19.9649 12 20C5 20 1 12 1 12C2.24389 9.68192 3.96914 7.65663 6.06 6.06M9.9 4.24C10.5883 4.0789 11.2931 3.99836 12 4C19 4 23 12 23 12C22.393 13.1356 21.6691 14.2048 20.84 15.19M14.12 14.12C13.8454 14.4148 13.5141 14.6512 13.1462 14.8151C12.7782 14.9791 12.3809 15.0673 11.9781 15.0744C11.5753 15.0815 11.1749 15.0074 10.8016 14.8565C10.4283 14.7056 10.0887 14.4811 9.80385 14.1962C9.51897 13.9113 9.29439 13.5717 9.14351 13.1984C8.99262 12.8251 8.91853 12.4247 8.92563 12.0219C8.93274 11.6191 9.02091 11.2218 9.18488 10.8538C9.34884 10.4858 9.58525 10.1546 9.88 9.88" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                `;
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                `;
+            }
+        }
+
+        // Enhanced form interactions
+        document.querySelectorAll('.form-input, .form-select').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.transform = 'translateY(-1px)';
+            });
+
+            input.addEventListener('blur', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Page load confirmation
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('✅ Student registration page loaded successfully');
+            console.log('🔍 Submit button found:', document.querySelector('.register-btn'));
+
+            // Wait for Storage module to load
+            while (typeof Storage === 'undefined') {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Load departments when page loads
+            await loadDepartmentsForRegistration();
+        });
+    </script>
+</body>
+
+</html>

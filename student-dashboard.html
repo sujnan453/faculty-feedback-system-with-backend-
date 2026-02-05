@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Student Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="student-dashboard.html" class="nav-item active">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="student-submissions.html" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>My Submissions</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>Welcome, <span id="studentName">Student</span>!</h1>
+                    <p>Complete your faculty feedback surveys</p>
+                </div>
+                <div class="user-info">
+                    <div class="info-badge">
+                        <span class="label">Department:</span>
+                        <span class="value" id="studentSemester">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <span id="userInitials">S</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="stats-grid">
+                    <div class="stat-card stat-available">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-info">
+                            <h3 id="availableSurveys">0</h3>
+                            <p>Available Surveys</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-completed">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3 id="completedSurveys">0</h3>
+                            <p>Completed Surveys</p>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-pending">
+                        <div class="stat-icon">⏳</div>
+                        <div class="stat-info">
+                            <h3 id="pendingSurveys">0</h3>
+                            <p>Pending Surveys</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="surveys-section">
+                    <h2>Available Surveys</h2>
+                    <div id="surveysContainer" class="surveys-grid">
+                        <!-- Surveys will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+
+    <script src="js/sample-data.js"></script>
+    <script src="js/mobile-nav.js"></script>
+    <script type="module" src="js/student-dashboard.js"></script>
+</body>
+
+</html>

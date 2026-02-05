@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            background: #f9f9f9;
+        }
+
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        #output {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>🔥 Firebase Connection & Authentication Test</h1>
+
+        <div class="test-section">
+            <h3>Test Controls</h3>
+            <button onclick="testFirebaseConnection()">1. Test Firebase Connection</button>
+            <button onclick="testUserRegistration()">2. Test User Registration</button>
+            <button onclick="testUserLogin()">3. Test User Login</button>
+            <button onclick="testDataRetrieval()">4. Test Data Retrieval</button>
+            <button onclick="clearTests()">Clear Output</button>
+        </div>
+
+        <div id="output"></div>
+    </div>
+
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { showAlert } from './js/firebase-auth.js';
+        import { database } from './js/firebase-config.js';
+
+        window.Storage = Storage;
+        window.database = database;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            output.appendChild(div);
+            console.log(message);
+        }
+
+        window.testFirebaseConnection = async function() {
+            log('🔍 Testing Firebase Connection...', 'info');
+            try {
+                if (database) {
+                    log('✅ Firebase database object exists', 'success');
+                    log(`✅ Database URL: ${database.app.options.databaseURL}`, 'success');
+                    
+                    // Try to read from database
+                    const testRef = await Storage.getDepartments();
+                    log(`✅ Successfully connected to Firebase Realtime Database`, 'success');
+                    log(`✅ Found ${testRef.length} departments`, 'success');
+                } else {
+                    log('❌ Firebase database object is null', 'error');
+                }
+            } catch (error) {
+                log(`❌ Firebase connection error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+
+        window.testUserRegistration = async function() {
+            log('📝 Testing User Registration...', 'info');
+            try {
+                const testUser = {
+                    name: 'Test Student',
+                    email: 'test' + Date.now() + '@student.edu',
+                    rollNumber: 'TEST' + Date.now(),
+                    department: 'BCA',
+                    password: 'Test@123',
+                    role: 'student'
+                };
+
+                log(`Creating user: ${testUser.email}`, 'info');
+                const savedUser = await Storage.saveUser(testUser);
+                
+                if (savedUser) {
+                    log(`✅ User registered successfully!`, 'success');
+                    log(`✅ User ID: ${savedUser.id}`, 'success');
+                    log(`✅ User Email: ${savedUser.email}`, 'success');
+                    window.testUserId = savedUser.id;
+                    window.testUserEmail = savedUser.email;
+                    window.testUserPassword = testUser.password;
+                } else {
+                    log('❌ User registration failed', 'error');
+                }
+            } catch (error) {
+                log(`❌ Registration error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+
+        window.testUserLogin = async function() {
+            log('🔐 Testing User Login...', 'info');
+            try {
+                if (!window.testUserEmail) {
+                    log('⚠️ Please run Test 2 (User Registration) first', 'error');
+                    return;
+                }
+
+                log(`Looking up user: ${window.testUserEmail}`, 'info');
+                const user = await Storage.findUserByEmail(window.testUserEmail);
+                
+                if (!user) {
+                    log('❌ User not found in database', 'error');
+                    return;
+                }
+
+                log(`✅ User found: ${user.email}`, 'success');
+                log(`✅ User role: ${user.role}`, 'success');
+
+                // Test password verification
+                if (user.password === window.testUserPassword) {
+                    log('✅ Password verification successful', 'success');
+                    
+                    // Test session creation
+                    const sessionCreated = await Storage.setCurrentUser(user, true);
+                    if (sessionCreated) {
+                        log('✅ Session created successfully', 'success');
+                        
+                        // Test session retrieval
+                        const currentUser = Storage.getCurrentUser();
+                        if (currentUser) {
+                            log('✅ Session retrieved successfully', 'success');
+                            log(`✅ Current user: ${currentUser.email}`, 'success');
+                        } else {
+                            log('❌ Failed to retrieve session', 'error');
+                        }
+                    } else {
+                        log('❌ Failed to create session', 'error');
+                    }
+                } else {
+                    log('❌ Password verification failed', 'error');
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+
+        window.testDataRetrieval = async function() {
+            log('📊 Testing Data Retrieval...', 'info');
+            try {
+                // Test getting all users
+                const users = await Storage.getUsers();
+                log(`✅ Retrieved ${users.length} users from database`, 'success');
+                
+                // Test getting departments
+                const departments = await Storage.getDepartments();
+                log(`✅ Retrieved ${departments.length} departments`, 'success');
+                
+                // Test getting surveys
+                const surveys = await Storage.getSurveys();
+                log(`✅ Retrieved ${surveys.length} surveys`, 'success');
+                
+                // Test getting feedbacks
+                const feedbacks = await Storage.getFeedbacks();
+                log(`✅ Retrieved ${feedbacks.length} feedbacks`, 'success');
+
+                log('✅ All data retrieval tests passed!', 'success');
+            } catch (error) {
+                log(`❌ Data retrieval error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+
+        window.clearTests = function() {
+            document.getElementById('output').innerHTML = '';
+        };
+
+        // Auto-run connection test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testFirebaseConnection();
+            }, 500);
+        });
+    </script>
+</body>
+
+</html>

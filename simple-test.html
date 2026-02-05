@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Firebase Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Simple Firebase Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testWrite()">Test Write</button>
+    <button onclick="testRead()">Test Read</button>
+    <button onclick="clearLog()">Clear Log</button>
+    <div id="log"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA6Nr81548vWJiEPdltuIFtNyEpwc0RjcE",
+            authDomain: "faculty-feedback-system-f4a83.firebaseapp.com",
+            databaseURL: "https://faculty-feedback-system-f4a83-default-rtdb.firebaseio.com",
+            projectId: "faculty-feedback-system-f4a83",
+            storageBucket: "faculty-feedback-system-f4a83.firebasestorage.app",
+            messagingSenderId: "784604808754",
+            appId: "1:784604808754:web:6035f842b92ae5bdda5e2b"
+        };
+
+        let app, database;
+
+        function log(message, type = 'log') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            console.log(message);
+        }
+
+        window.testConnection = async function() {
+            try {
+                log('Testing Firebase connection...', 'log');
+                
+                if (!app) {
+                    app = initializeApp(firebaseConfig);
+                    log('✅ Firebase app initialized', 'success');
+                }
+                
+                if (!database) {
+                    database = getDatabase(app);
+                    log('✅ Database instance created', 'success');
+                }
+                
+                log(`✅ Database URL: ${firebaseConfig.databaseURL}`, 'success');
+                log('✅ Connection test passed!', 'success');
+            } catch (error) {
+                log(`❌ Connection error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+
+        window.testWrite = async function() {
+            try {
+                if (!database) {
+                    log('❌ Database not initialized. Run Test Connection first.', 'error');
+                    return;
+                }
+
+                log('Writing test data to Firebase...', 'log');
+                
+                const testData = {
+                    id: 'test_' + Date.now(),
+                    name: 'Test User',
+                    email: 'test@example.com',
+                    timestamp: new Date().toISOString()
+                };
+
+                const testRef = ref(database, 'test/' + testData.id);
+                await set(testRef, testData);
+                
+                log(`✅ Data written successfully! ID: ${testData.id}`, 'success');
+                log(`✅ Check Firebase Console: https://console.firebase.google.com/`, 'success');
+            } catch (error) {
+                log(`❌ Write error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+
+        window.testRead = async function() {
+            try {
+                if (!database) {
+                    log('❌ Database not initialized. Run Test Connection first.', 'error');
+                    return;
+                }
+
+                log('Reading data from Firebase...', 'log');
+                
+                const testRef = ref(database, 'test');
+                const snapshot = await get(testRef);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const count = Object.keys(data).length;
+                    log(`✅ Read successful! Found ${count} test records`, 'success');
+                    log(`Data: ${JSON.stringify(data, null, 2)}`, 'log');
+                } else {
+                    log('⚠️ No data found. Try Test Write first.', 'log');
+                }
+            } catch (error) {
+                log(`❌ Read error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        };
+
+        window.clearLog = function() {
+            document.getElementById('log').innerHTML = '';
+        };
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            setTimeout(testConnection, 500);
+        });
+    </script>
+</body>
+
+</html>

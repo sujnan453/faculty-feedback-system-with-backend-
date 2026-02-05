@@ -1,0 +1,492 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #1cc88a;
+    --danger-color: #e74a3b;
+    --warning-color: #f39c12;
+    
+    /* Enhanced text colors for better readability */
+    --text-primary: #1a202c;
+    --text-secondary: #2d3748;
+    --text-muted: #4a5568;
+    --text-light: #718096;
+    --text-white: #ffffff;
+    
+    /* Legacy support - updated with better colors */
+    --text-dark: #1a202c;
+    --text-light: #4a5568;
+    
+    --bg-light: #f8f9fc;
+    --border-color: #e3e6f0;
+    --white: #ffffff;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-light);
+    padding: 20px;
+}
+
+.survey-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.survey-header {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+    text-align: center;
+    position: relative;
+}
+
+.back-btn {
+    position: absolute;
+    left: 30px;
+    top: 30px;
+    background: var(--bg-light);
+    border: 2px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    background: var(--border-color);
+    border-color: var(--primary-color);
+}
+
+.survey-header h1 {
+    font-size: 2rem;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.survey-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.survey-content {
+    background: var(--white);
+    padding: 35px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Teacher Tabs */
+.teacher-tabs {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.teacher-tab {
+    padding: 12px 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.teacher-tab:hover {
+    border-color: var(--primary-color);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.teacher-tab.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+.teacher-tab.completed {
+    border-color: var(--success-color);
+    background: rgba(28, 200, 138, 0.1);
+}
+
+.teacher-tab.completed .status-icon {
+    color: var(--success-color);
+}
+
+.status-icon {
+    font-size: 1.2rem;
+}
+
+/* Progress Bar */
+.progress-container {
+    margin-bottom: 30px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-color), #17a673);
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Current Teacher Info */
+.current-teacher-info {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.current-teacher-info h2 {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+}
+
+.current-teacher-info p {
+    font-size: 1rem;
+    opacity: 0.95;
+}
+
+/* Feedback Form */
+.feedback-form {
+    margin-bottom: 30px;
+}
+
+.question-group {
+    margin-bottom: 30px;
+    padding: 25px;
+    background: var(--bg-light);
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.question-text {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.rating-options {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.rating-option {
+    flex: 1;
+    min-width: 120px;
+}
+
+.rating-option input[type="radio"] {
+    display: none;
+}
+
+.rating-label {
+    display: block;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--white);
+}
+
+.rating-option input[type="radio"]:checked+.rating-label {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+.rating-label:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.rating-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.rating-text {
+    display: block;
+    font-size: 0.85rem;
+}
+
+.textarea-group {
+    margin-top: 20px;
+}
+
+.textarea-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.textarea-group textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.textarea-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Survey Actions */
+.survey-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+}
+
+.btn {
+    padding: 14px 30px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-secondary {
+    background: var(--bg-light);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: var(--white);
+}
+
+.btn-success:hover {
+    background: #17a673;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(28, 200, 138, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.alert.show {
+    display: block;
+}
+
+.alert-warning {
+    background: rgba(243, 156, 18, 0.1);
+    color: var(--warning-color);
+    border: 1px solid var(--warning-color);
+}
+
+.alert-success {
+    background: rgba(28, 200, 138, 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .survey-container {
+        margin: 0;
+    }
+
+    .survey-header {
+        padding: 20px 15px;
+        padding-top: 60px;
+    }
+
+    .back-btn {
+        position: static;
+        margin-bottom: 15px;
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+    }
+
+    .survey-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .survey-content {
+        padding: 20px 15px;
+    }
+
+    .teacher-tabs {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .teacher-tab {
+        padding: 15px;
+        text-align: center;
+    }
+
+    .current-teacher-info {
+        padding: 20px 15px;
+    }
+
+    .current-teacher-info h2 {
+        font-size: 1.4rem;
+    }
+
+    .question-group {
+        padding: 20px 15px;
+        margin-bottom: 25px;
+    }
+
+    .question-text {
+        font-size: 1rem;
+    }
+
+    .rating-options {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .rating-option {
+        min-width: auto;
+    }
+
+    .rating-label {
+        padding: 12px;
+    }
+
+    .rating-value {
+        font-size: 1.3rem;
+    }
+
+    .survey-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 15px;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .survey-header {
+        padding: 60px 20px 30px;
+    }
+
+    .back-btn {
+        position: static;
+        margin-bottom: 20px;
+        display: block;
+        width: 100%;
+    }
+
+    .survey-content {
+        padding: 20px;
+    }
+
+    .teacher-tabs {
+        flex-direction: column;
+    }
+
+    .rating-options {
+        flex-direction: column;
+    }
+
+    .survey-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .survey-container {
+        max-width: 800px;
+    }
+    
+    .rating-options {
+        gap: 12px;
+    }
+    
+    .rating-option {
+        min-width: 100px;
+    }
+}

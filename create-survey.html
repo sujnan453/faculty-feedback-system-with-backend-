@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Survey - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        /* User-Friendly Create Survey Design */
+
+        /* Enhanced Header */
+        .top-bar {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+            border-bottom: 2px solid rgba(124, 58, 237, 0.2);
+            padding: 24px 0;
+        }
+
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .welcome-section>div:first-child {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .welcome-section h1 {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            animation: slideInDown 0.6s ease-out;
+        }
+
+        .welcome-section p {
+            color: #6b7280;
+            font-size: 15px;
+            margin: 8px 0 0 0;
+            animation: slideInUp 0.6s ease-out 0.1s both;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c3aed 0%, #6d28d9 100%);
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+        }
+
+        /* Main Content Layout */
+        .dashboard-content {
+            padding: 24px;
+        }
+
+        .form-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Form Sections - Simplified */
+        .form-section {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .form-section:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .form-section:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .form-section:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .form-section:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section:hover {
+            border-color: #7c3aed;
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1);
+        }
+
+        .form-section h3 {
+            color: #1f2937;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 24px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .form-section h3::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            border-radius: 2px;
+        }
+
+        /* Form Group */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:hover,
+        .form-group select:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            background: white;
+        }
+
+        /* Faculties Header */
+        .faculties-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .faculties-title h3 {
+            margin: 0 0 8px 0;
+            border: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .faculties-title h3::before {
+            display: none;
+        }
+
+        .faculties-subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .faculties-counter {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+            white-space: nowrap;
+        }
+
+        /* Faculty Grid - User Friendly */
+        .faculty-checkbox-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .faculty-list-item {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .faculty-list-item:hover {
+            border-color: #7c3aed;
+            background: #f9fafb;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .faculty-list-item.selected {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+        }
+
+        /* All Departments Card - Full Width */
+        .all-departments-card {
+            grid-column: 1 / -1 !important;
+        }
+
+        .faculty-list-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #7c3aed;
+            flex-shrink: 0;
+        }
+
+        .faculty-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .faculty-item-name {
+            margin: 0;
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .faculty-item-icon {
+            font-size: 16px;
+        }
+
+        /* Questions Header */
+        .questions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .questions-title h3 {
+            margin: 0 0 8px 0;
+            border: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .questions-title h3::before {
+            display: none;
+        }
+
+        .questions-subtitle {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .questions-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .questions-counter {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+            white-space: nowrap;
+        }
+
+        /* Questions Filter */
+        .questions-filter {
+            margin-bottom: 20px;
+        }
+
+        .question-search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .question-search-input:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .question-search-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            background: white;
+        }
+
+        /* Questions Grid - User Friendly */
+        .questions-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            min-width: min-content;
+        }
+
+        /* Scrollbar styling */
+        .questions-container::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .questions-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .questions-container::-webkit-scrollbar-thumb {
+            background: #7c3aed;
+            border-radius: 3px;
+        }
+
+        .questions-container::-webkit-scrollbar-thumb:hover {
+            background: #6d28d9;
+        }
+
+        .question-item {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+            animation: fadeIn 0.4s ease-out;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .question-item:hover {
+            border-color: #7c3aed;
+            background: #f9fafb;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .question-item.selected {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+        }
+
+        .question-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #7c3aed;
+            flex-shrink: 0;
+            margin-top: 0;
+            align-self: flex-start;
+        }
+
+        .question-content {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .question-text {
+            margin: 0 0 6px 0;
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .question-meta {
+            margin: 0;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        /* Questions Footer */
+        .questions-footer {
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 10px;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .questions-help {
+            margin: 0;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .help-link {
+            color: #7c3aed;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .help-link:hover {
+            text-decoration: underline;
+            color: #6d28d9;
+        }
+
+        /* Button Styling */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-select-all {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            padding: 10px 16px;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-select-all:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            padding: 40px 20px;
+            background: #f9fafb;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px dashed #e5e7eb;
+        }
+
+        .empty-state p {
+            color: #6b7280;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .questions-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .welcome-section {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .progress-indicator {
+                justify-content: center;
+            }
+
+            .form-section {
+                padding: 20px;
+                margin-bottom: 16px;
+            }
+
+            .faculties-header,
+            .questions-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .faculty-checkbox-container {
+                grid-template-columns: 1fr;
+            }
+
+            .questions-container {
+                grid-template-columns: repeat(2, 1fr);
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .questions-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-section h1 {
+                font-size: 20px;
+            }
+
+            .welcome-section p {
+                font-size: 13px;
+            }
+
+            .progress-indicator {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+
+            .progress-step {
+                font-size: 12px;
+                padding: 6px 12px;
+                flex-shrink: 0;
+            }
+
+            .form-section {
+                padding: 16px;
+                border-radius: 12px;
+            }
+
+            .form-section h3 {
+                font-size: 16px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn-select-all {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .questions-container {
+                grid-template-columns: 1fr;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .question-item {
+                padding: 12px;
+            }
+
+            .question-text {
+                font-size: 13px;
+            }
+
+            .question-meta {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item active">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="visualization.html" class="nav-item">
+                    <span class="icon">📈</span>
+                    <span>Visualizations</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <div>
+                        <h1>Create New Survey</h1>
+                        <p>Design a faculty feedback survey for students</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progressBarFill"></div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Form Content -->
+            <div class="dashboard-content">
+                <div class="form-container">
+                    <div id="alertMessage" class="alert"></div>
+
+                    <form id="createSurveyForm">
+                        <!-- Basic Information -->
+                        <div class="form-section">
+                            <h3>📋 Select Department</h3>
+                            <div class="form-group">
+                                <label for="department">Department / Class</label>
+                                <select id="department" name="department" onchange="loadFaculties()" required>
+                                    <option value="">Select Department</option>
+                                    <option value="ALL">ALL Departments</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Department and Faculties Section -->
+                        <div class="form-section">
+                            <div class="faculties-header">
+                                <div class="faculties-title">
+                                    <h3>👨‍🏫 Select Faculties</h3>
+                                    <p class="faculties-subtitle">Choose faculty members for this survey</p>
+                                </div>
+                                <span class="faculties-counter">
+                                    <span id="selectedFacultiesCount">0</span> faculty member(s)
+                                </span>
+                            </div>
+                            <div id="facultyCheckboxContainer" class="faculty-checkbox-container">
+                                <!-- Faculties will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Questions Section -->
+                        <div class="form-section">
+                            <div class="questions-header">
+                                <div class="questions-title">
+                                    <h3>❓ Select Questions</h3>
+                                    <p class="questions-subtitle">Choose questions for this survey</p>
+                                </div>
+                                <div class="questions-controls">
+                                    <button type="button" class="btn btn-select-all" onclick="toggleSelectAllQuestions()" title="Select or deselect all questions">
+                                        <span class="select-all-icon">☑️</span>
+                                        <span class="select-all-text">Select All</span>
+                                    </button>
+                                    <span class="questions-counter">
+                                        <span id="selectedCount">0</span> / <span id="totalCount">0</span> selected
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="questions-filter">
+                                <input type="text" id="questionSearch" placeholder="🔍 Search questions..." class="question-search-input">
+                            </div>
+
+                            <div id="questionsContainer" class="questions-container">
+                                <!-- Questions will be loaded here -->
+                            </div>
+
+                            <div class="questions-footer">
+                                <p class="questions-help">
+                                    💡 <a href="manage-questions.html" class="help-link">Create new questions</a> from the Manage Questions section.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Submit Section -->
+                        <div class="form-section">
+                            <button type="submit" id="createSurveyBtn" class="btn btn-primary" style="width: 100%; position: relative; transition: opacity 0.3s ease;">
+                                <span id="btnText">Create Survey</span>
+                                <span id="btnLoader">
+                                    <svg style="width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round" style="opacity: 0.25;"></circle>
+                                        <circle cx="12" cy="12" r="10" stroke-width="3" stroke-dasharray="15.7 31.4" stroke-linecap="round" style="transform-origin: center; animation: spin 1s linear infinite;"></circle>
+                                    </svg>
+                                    <span>Creating Survey...</span>
+                                </span>
+                            </button>
+                        </div>
+                        <style>
+                            @keyframes spin {
+                                from {
+                                    transform: rotate(0deg);
+                                }
+
+                                to {
+                                    transform: rotate(360deg);
+                                }
+                            }
+
+                            #createSurveyBtn:disabled {
+                                pointer-events: none;
+                            }
+
+                            #btnLoader {
+                                display: none;
+                                align-items: center;
+                                gap: 8px;
+                            }
+
+                            #btnLoader.show {
+                                display: inline-flex;
+                            }
+                        </style>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+
+    <script src="js/mobile-nav.js"></script>
+    <script type="module" src="js/create-survey.js"></script>
+</body>
+
+</html>

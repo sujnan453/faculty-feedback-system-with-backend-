@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleanup Duplicate Departments - Admin Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #38a169;
+        }
+
+        .status.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #e53e3e;
+        }
+
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .dept-group {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .dept-group h3 {
+            color: #1a202c;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .dept-item {
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dept-item.keep {
+            border-left: 4px solid #38a169;
+            background: #f0fdf4;
+        }
+
+        .dept-item.duplicate {
+            border-left: 4px solid #dc2626;
+            background: #fef2f2;
+        }
+
+        .dept-info {
+            flex: 1;
+        }
+
+        .dept-name {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 5px;
+        }
+
+        .dept-meta {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge.keep {
+            background: #38a169;
+        }
+
+        .badge.duplicate {
+            background: #dc2626;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+            transform: translateX(-5px);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="admin-dashboard.html" class="back-link">← Back to Dashboard</a>
+
+        <h1>🧹 Cleanup Duplicate Departments</h1>
+        <p class="subtitle">Remove duplicate departments and keep only one copy of each</p>
+
+        <div class="section">
+            <h2>⚠️ Important Warning</h2>
+            <div class="status warning">
+                <span>⚠️</span>
+                <div>
+                    <strong>This action cannot be undone!</strong>
+                    <p style="margin-top: 5px;">This tool will delete duplicate departments. Make sure you understand which departments will be kept and which will be deleted before proceeding.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Step 1: Find Duplicates</h2>
+            <button class="btn" onclick="findDuplicates()">Scan for Duplicate Departments</button>
+            <div id="scanResults"></div>
+        </div>
+
+        <div class="section">
+            <h2>🗑️ Step 2: Remove Duplicates</h2>
+            <p style="margin-bottom: 15px; color: #4a5568;">After scanning, you can remove the duplicate departments. The system will keep the department with the most faculty members.</p>
+            <button class="btn btn-danger" id="cleanupBtn" onclick="cleanupDuplicates()" disabled>Remove Duplicate Departments</button>
+            <div id="cleanupResults"></div>
+        </div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        window.Storage = Storage;
+    </script>
+
+    <script>
+        let duplicateGroups = [];
+
+        async function findDuplicates() {
+            const resultsDiv = document.getElementById('scanResults');
+            resultsDiv.innerHTML = '<div class="status info"><span class="loading"></span> Scanning for duplicates...</div>';
+
+            try {
+                const departments = await Storage.getDepartments();
+
+                // Group departments by name (case-insensitive)
+                const grouped = {};
+                departments.forEach(dept => {
+                    const key = dept.name.toLowerCase().trim();
+                    if (!grouped[key]) {
+                        grouped[key] = [];
+                    }
+                    grouped[key].push(dept);
+                });
+
+                // Find groups with duplicates
+                duplicateGroups = [];
+                Object.keys(grouped).forEach(key => {
+                    if (grouped[key].length > 1) {
+                        duplicateGroups.push({
+                            name: grouped[key][0].name,
+                            departments: grouped[key]
+                        });
+                    }
+                });
+
+                if (duplicateGroups.length === 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="status success">
+                            <span>✅</span>
+                            <span>No duplicate departments found! Your database is clean.</span>
+                        </div>
+                    `;
+                    document.getElementById('cleanupBtn').disabled = true;
+                    return;
+                }
+
+                // Display duplicates
+                let html = `
+                    <div class="status error">
+                        <span>❌</span>
+                        <span>Found ${duplicateGroups.length} department(s) with duplicates</span>
+                    </div>
+                    <div class="results">
+                `;
+
+                duplicateGroups.forEach(group => {
+                    // Sort by faculty count (descending) to keep the one with most faculty
+                    const sorted = group.departments.sort((a, b) => {
+                        const aCount = (a.faculties || []).length;
+                        const bCount = (b.faculties || []).length;
+                        return bCount - aCount;
+                    });
+
+                    html += `
+                        <div class="dept-group">
+                            <h3>📁 ${group.name}</h3>
+                            <p style="color: #718096; margin-bottom: 15px;">Found ${sorted.length} copies of this department</p>
+                    `;
+
+                    sorted.forEach((dept, index) => {
+                        const facultyCount = (dept.faculties || []).length;
+                        const isKeep = index === 0;
+
+                        html += `
+                            <div class="dept-item ${isKeep ? 'keep' : 'duplicate'}">
+                                <div class="dept-info">
+                                    <div class="dept-name">
+                                        ${dept.name}
+                                        <span class="badge ${isKeep ? 'keep' : 'duplicate'}">${isKeep ? 'KEEP' : 'DELETE'}</span>
+                                    </div>
+                                    <div class="dept-meta">
+                                        ID: ${dept.id} | Faculty: ${facultyCount} | Full Name: ${dept.fullName || 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+                resultsDiv.innerHTML = html;
+
+                // Enable cleanup button
+                document.getElementById('cleanupBtn').disabled = false;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error"><span>❌</span><span>Error: ${error.message}</span></div>`;
+            }
+        }
+
+        async function cleanupDuplicates() {
+            if (duplicateGroups.length === 0) {
+                alert('No duplicates to clean up. Please scan first.');
+                return;
+            }
+
+            const confirmed = confirm(
+                `⚠️ WARNING: This will permanently delete ${duplicateGroups.reduce((sum, g) => sum + g.departments.length - 1, 0)} duplicate department(s).\n\n` +
+                `The system will keep the department with the most faculty members for each duplicate group.\n\n` +
+                `This action CANNOT be undone!\n\n` +
+                `Are you sure you want to continue?`
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            const resultsDiv = document.getElementById('cleanupResults');
+            const cleanupBtn = document.getElementById('cleanupBtn');
+
+            cleanupBtn.disabled = true;
+            resultsDiv.innerHTML = '<div class="status info"><span class="loading"></span> Cleaning up duplicates...</div>';
+
+            try {
+                let deletedCount = 0;
+                let keptCount = 0;
+
+                for (const group of duplicateGroups) {
+                    // Sort by faculty count (descending)
+                    const sorted = group.departments.sort((a, b) => {
+                        const aCount = (a.faculties || []).length;
+                        const bCount = (b.faculties || []).length;
+                        return bCount - aCount;
+                    });
+
+                    // Keep the first one (most faculty), delete the rest
+                    for (let i = 1; i < sorted.length; i++) {
+                        await Storage.deleteDepartment(sorted[i].id);
+                        deletedCount++;
+                        console.log(`🗑️ Deleted duplicate: ${sorted[i].name} (ID: ${sorted[i].id})`);
+                    }
+
+                    keptCount++;
+                    console.log(`✅ Kept: ${sorted[0].name} (ID: ${sorted[0].id}) with ${(sorted[0].faculties || []).length} faculty`);
+                }
+
+                resultsDiv.innerHTML = `
+                    <div class="status success">
+                        <span>✅</span>
+                        <div>
+                            <strong>Cleanup Complete!</strong>
+                            <p style="margin-top: 5px;">Deleted ${deletedCount} duplicate(s), kept ${keptCount} department(s)</p>
+                        </div>
+                    </div>
+                `;
+
+                // Clear duplicate groups
+                duplicateGroups = [];
+
+                // Suggest re-scanning
+                setTimeout(() => {
+                    resultsDiv.innerHTML += `
+                        <div class="status info">
+                            <span>ℹ️</span>
+                            <span>Scan again to verify all duplicates have been removed</span>
+                        </div>
+                    `;
+                }, 2000);
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="status error"><span>❌</span><span>Error during cleanup: ${error.message}</span></div>`;
+                cleanupBtn.disabled = false;
+            }
+        }
+
+        // Auto-scan on page load
+        window.addEventListener('load', () => {
+            setTimeout(findDuplicates, 1000);
+        });
+    </script>
+</body>
+
+</html>

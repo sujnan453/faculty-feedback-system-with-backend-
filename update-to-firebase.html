@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Migration - Faculty Feedback System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .status {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            min-width: 30px;
+        }
+
+        .status-text {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success {
+            color: #10b981;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+
+        .warning {
+            color: #f59e0b;
+        }
+
+        .info {
+            color: #3b82f6;
+        }
+
+        .progress {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .log {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Migration</h1>
+        <p class="subtitle">Migrate from localStorage to Firebase Realtime Database</p>
+
+        <div id="alertContainer"></div>
+
+        <div class="status">
+            <div class="status-item">
+                <span class="status-icon">📦</span>
+                <span class="status-text">Firebase Configuration: <strong id="firebaseStatus" class="info">Ready</strong></span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">💾</span>
+                <span class="status-text">LocalStorage Data: <strong id="localStorageStatus" class="info">Checking...</strong></span>
+            </div>
+            <div class="status-item">
+                <span class="status-icon">☁️</span>
+                <span class="status-text">Firebase Connection: <strong id="connectionStatus" class="info">Not Connected</strong></span>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <button class="btn" id="migrateBtn" onclick="startMigration()">
+            🚀 Start Migration
+        </button>
+
+        <div class="log" id="logContainer">
+            <div class="log-entry">📋 Migration log will appear here...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        
+        let migrationLog = [];
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            const logEntry = `[${timestamp}] ${icon} ${message}`;
+            migrationLog.push(logEntry);
+            
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = logEntry;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+        
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+        
+        // Check localStorage data on load
+        window.addEventListener('load', () => {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const surveys = JSON.parse(localStorage.getItem('surveys') || '[]');
+            const feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+            const departments = JSON.parse(localStorage.getItem('departments') || '[]');
+            const questions = JSON.parse(localStorage.getItem('questions') || '[]');
+            
+            const totalItems = users.length + surveys.length + feedbacks.length + departments.length + questions.length;
+            
+            document.getElementById('localStorageStatus').textContent = `${totalItems} items found`;
+            document.getElementById('localStorageStatus').className = totalItems > 0 ? 'success' : 'warning';
+            
+            addLog(`Found ${users.length} users, ${surveys.length} surveys, ${feedbacks.length} feedbacks, ${departments.length} departments, ${questions.length} questions`);
+        });
+        
+        window.startMigration = async function() {
+            const btn = document.getElementById('migrateBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Migrating...';
+            
+            migrationLog = [];
+            document.getElementById('logContainer').innerHTML = '';
+            
+            try {
+                addLog('Starting migration process...');
+                updateProgress(10);
+                
+                // Test Firebase connection
+                addLog('Testing Firebase connection...');
+                document.getElementById('connectionStatus').textContent = 'Connecting...';
+                document.getElementById('connectionStatus').className = 'warning';
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').className = 'success';
+                addLog('Firebase connection successful', 'success');
+                updateProgress(20);
+                
+                // Migrate Users
+                addLog('Migrating users...');
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                for (const user of users) {
+                    await Storage.saveUser(user);
+                    addLog(`Migrated user: ${user.email}`);
+                }
+                addLog(`✅ Migrated ${users.length} users`, 'success');
+                updateProgress(35);
+                
+                // Migrate Departments
+                addLog('Migrating departments...');
+                const departments = JSON.parse(localStorage.getItem('departments') || '[]');
+                for (const dept of departments) {
+                    await Storage.saveDepartment(dept);
+                    addLog(`Migrated department: ${dept.name}`);
+                }
+                addLog(`✅ Migrated ${departments.length} departments`, 'success');
+                updateProgress(50);
+                
+                // Migrate Questions
+                addLog('Migrating questions...');
+                const questions = JSON.parse(localStorage.getItem('questions') || '[]');
+                for (const question of questions) {
+                    await Storage.saveQuestion(question);
+                    addLog(`Migrated question: ${question.text.substring(0, 50)}...`);
+                }
+                addLog(`✅ Migrated ${questions.length} questions`, 'success');
+                updateProgress(65);
+                
+                // Migrate Surveys
+                addLog('Migrating surveys...');
+                const surveys = JSON.parse(localStorage.getItem('surveys') || '[]');
+                for (const survey of surveys) {
+                    await Storage.saveSurvey(survey);
+                    addLog(`Migrated survey: ${survey.department}`);
+                }
+                addLog(`✅ Migrated ${surveys.length} surveys`, 'success');
+                updateProgress(80);
+                
+                // Migrate Feedbacks
+                addLog('Migrating feedbacks...');
+                const feedbacks = JSON.parse(localStorage.getItem('feedbacks') || '[]');
+                for (const feedback of feedbacks) {
+                    await Storage.saveFeedback(feedback);
+                    addLog(`Migrated feedback from student: ${feedback.studentId}`);
+                }
+                addLog(`✅ Migrated ${feedbacks.length} feedbacks`, 'success');
+                updateProgress(95);
+                
+                // Verify migration
+                addLog('Verifying migration...');
+                const verifyUsers = await Storage.getUsers();
+                const verifySurveys = await Storage.getSurveys();
+                const verifyFeedbacks = await Storage.getFeedbacks();
+                const verifyDepartments = await Storage.getDepartments();
+                const verifyQuestions = await Storage.getQuestions();
+                
+                addLog(`Verified: ${verifyUsers.length} users, ${verifySurveys.length} surveys, ${verifyFeedbacks.length} feedbacks`);
+                updateProgress(100);
+                
+                addLog('🎉 Migration completed successfully!', 'success');
+                showAlert('✅ Migration completed successfully! All data has been transferred to Firebase.', 'success');
+                
+                btn.textContent = '✅ Migration Complete';
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                
+                // Show next steps
+                setTimeout(() => {
+                    if (confirm('Migration complete! Would you like to clear localStorage data? (Recommended after verifying Firebase data)')) {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        addLog('LocalStorage cleared', 'success');
+                        showAlert('LocalStorage has been cleared. Please refresh the page to use Firebase.', 'info');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                addLog(`❌ Migration failed: ${error.message}`, 'error');
+                showAlert(`Migration failed: ${error.message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = '🔄 Retry Migration';
+                console.error('Migration error:', error);
+            }
+        };
+    </script>
+</body>
+
+</html>

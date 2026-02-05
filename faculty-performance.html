@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Faculty Performance - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        /* Faculty Performance Page Styles */
+        .performance-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #7c3aed;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: #1a202c;
+            font-weight: 500;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .btn-search {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #1a202c;
+            padding: 14px 28px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+            border-color: #7c3aed;
+        }
+
+        .performance-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+            border-top: 4px solid #7c3aed;
+        }
+
+        .table-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+            border-bottom: 2px solid #7c3aed;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .table-header h3 {
+            margin: 0;
+            color: #1a202c;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .table-header-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .table-header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-print::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-print:hover::before {
+            left: 100%;
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-print:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-csv {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(17, 153, 142, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-csv::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-csv:hover::before {
+            left: 100%;
+        }
+
+        .btn-csv:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+        }
+
+        .btn-csv:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(17, 153, 142, 0.2);
+        }
+
+        @media print {
+
+            .filters-section,
+            .stats-summary,
+            .table-header-actions,
+            .btn-print,
+            .sidebar,
+            .top-bar,
+            .dashboard-wrapper>* {
+                display: none !important;
+            }
+
+            .performance-table-container {
+                box-shadow: none;
+                border: none;
+            }
+
+            .performance-table {
+                font-size: 11px;
+            }
+
+            .performance-table th,
+            .performance-table td {
+                padding: 8px 6px;
+                border: 1px solid #333;
+            }
+
+            .performance-table thead {
+                background: #f0f0f0 !important;
+                color: #000 !important;
+            }
+
+            .performance-table tbody tr:hover {
+                background: white !important;
+            }
+
+            .main-content {
+                margin: 0;
+                padding: 20px;
+            }
+
+            .dashboard-content {
+                margin: 0;
+                padding: 0;
+            }
+
+            .performance-container {
+                max-width: 100%;
+                margin: 0;
+            }
+
+            body {
+                background: white;
+            }
+
+            .performance-table-container {
+                page-break-inside: avoid;
+            }
+        }
+
+        .header-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #1a202c;
+            font-weight: 500;
+        }
+
+        .header-stat-value {
+            font-weight: 700;
+            color: #7c3aed;
+            font-size: 14px;
+        }
+
+        .performance-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .performance-table thead {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+        }
+
+        .performance-table th {
+            padding: 16px 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .performance-table th:first-child {
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .performance-table tbody tr {
+            border-bottom: 1px solid #e8e8e8;
+            transition: all 0.3s ease;
+        }
+
+        .performance-table tbody tr:hover {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+        }
+
+        .performance-table td {
+            padding: 16px 12px;
+            font-size: 14px;
+            color: #1a202c;
+            text-align: center;
+            font-weight: 500;
+            background: white;
+            border: 1px solid #e8e8e8;
+        }
+
+        .dept-cell {
+            text-align: left;
+            padding-left: 20px;
+            font-weight: 700;
+            color: #7c3aed;
+            font-size: 14px;
+            background: white;
+            border: 1px solid #e8e8e8;
+        }
+
+        .rating-cell {
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 12px 8px;
+            background: white;
+            border: 1px solid #e8e8e8;
+        }
+
+        .rating-cell.high {
+            color: #059669;
+            background: rgba(5, 150, 105, 0.12);
+            border: 1px solid rgba(5, 150, 105, 0.3);
+            border-radius: 6px;
+        }
+
+        .rating-cell.medium {
+            color: #d97706;
+            background: rgba(217, 119, 6, 0.12);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            border-radius: 6px;
+        }
+
+        .rating-cell.low {
+            color: #dc2626;
+            background: rgba(220, 38, 38, 0.12);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            border-radius: 6px;
+        }
+
+        .total-cell {
+            font-weight: 700;
+            color: #1a202c;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .avg-cell {
+            font-weight: 700;
+            color: #1a202c;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .avg-row {
+            background: white;
+            font-weight: 700;
+            border-top: 3px solid #7c3aed;
+        }
+
+        .avg-row td {
+            color: #1a202c;
+            padding: 18px 12px;
+            font-size: 14px;
+            background: white;
+            border: 1px solid #e8e8e8;
+        }
+
+        .avg-row .dept-cell {
+            color: #7c3aed;
+            font-size: 15px;
+            font-weight: 700;
+            background: white;
+            border: 1px solid #e8e8e8;
+        }
+
+        .avg-row .avg-cell {
+            color: #1a202c;
+            background: white;
+            border: 2px solid #e0e0e0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            color: #1a202c;
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 5px solid #7c3aed;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            border-left-color: #6d28d9;
+        }
+
+        .summary-card h4 {
+            color: #718096;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 0 0 12px 0;
+            letter-spacing: 0.6px;
+        }
+
+        .summary-card .value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #7c3aed;
+            margin: 0 0 8px 0;
+        }
+
+        .summary-card .subtext {
+            font-size: 13px;
+            color: #718096;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .performance-container {
+                max-width: 100%;
+                padding: 0 15px;
+            }
+
+            .filters-section {
+                padding: 20px;
+                margin-bottom: 25px;
+            }
+
+            .filters-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .table-header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .table-header-info {
+                width: 100%;
+                gap: 15px;
+            }
+
+            .performance-table th,
+            .performance-table td {
+                padding: 12px 8px;
+                font-size: 12px;
+            }
+
+            .performance-table th:first-child {
+                padding-left: 12px;
+            }
+
+            .dept-cell {
+                padding-left: 12px;
+                font-size: 12px;
+            }
+
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .summary-card {
+                padding: 18px;
+            }
+
+            .summary-card .value {
+                font-size: 28px;
+            }
+
+            .summary-card h4 {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .performance-container {
+                padding: 0 10px;
+            }
+
+            .filters-section {
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 8px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin-bottom: 15px;
+            }
+
+            .filter-group label {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                padding: 12px 14px;
+                font-size: 13px;
+            }
+
+            .filter-buttons {
+                justify-content: stretch;
+                gap: 10px;
+            }
+
+            .btn-search,
+            .btn-reset {
+                flex: 1;
+                padding: 12px 16px;
+                font-size: 13px;
+            }
+
+            .performance-table-container {
+                border-radius: 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .performance-table {
+                font-size: 11px;
+                min-width: 900px;
+            }
+
+            .performance-table th,
+            .performance-table td {
+                padding: 10px 6px;
+                font-size: 11px;
+            }
+
+            .performance-table th {
+                font-size: 10px;
+                letter-spacing: 0.3px;
+            }
+
+            .dept-cell {
+                padding-left: 10px;
+                font-size: 11px;
+            }
+
+            .table-header {
+                padding: 12px 15px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .table-header-left {
+                width: 100%;
+                gap: 8px;
+            }
+
+            .table-header h3 {
+                font-size: 16px;
+            }
+
+            .table-header-info {
+                width: 100%;
+                gap: 12px;
+                font-size: 12px;
+            }
+
+            .header-stat {
+                font-size: 12px;
+            }
+
+            .header-stat-value {
+                font-size: 13px;
+            }
+
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+            .summary-card {
+                padding: 15px;
+                border-radius: 8px;
+            }
+
+            .summary-card h4 {
+                font-size: 11px;
+                margin-bottom: 8px;
+            }
+
+            .summary-card .value {
+                font-size: 24px;
+                margin-bottom: 6px;
+            }
+
+            .summary-card .subtext {
+                font-size: 11px;
+            }
+
+            .empty-state {
+                padding: 40px 15px;
+            }
+
+            .empty-state-icon {
+                font-size: 48px;
+                margin-bottom: 15px;
+            }
+
+            .empty-state h3 {
+                font-size: 18px;
+                margin-bottom: 8px;
+            }
+
+            .empty-state p {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .performance-container {
+                padding: 0 8px;
+            }
+
+            .filters-section {
+                padding: 12px;
+                margin-bottom: 15px;
+                border-radius: 6px;
+            }
+
+            .filters-section h3 {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-bottom: 12px;
+            }
+
+            .filter-group label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+
+            .filter-group input,
+            .filter-group select {
+                padding: 10px 12px;
+                font-size: 12px;
+                border-radius: 6px;
+            }
+
+            .filter-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn-search,
+            .btn-reset {
+                width: 100%;
+                padding: 11px 14px;
+                font-size: 12px;
+                border-radius: 6px;
+            }
+
+            .performance-table-container {
+                border-radius: 6px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin-bottom: 15px;
+            }
+
+            .performance-table {
+                font-size: 10px;
+                min-width: 800px;
+            }
+
+            .performance-table th,
+            .performance-table td {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+
+            .performance-table th {
+                font-size: 9px;
+                letter-spacing: 0.2px;
+                padding: 8px 3px;
+            }
+
+            .dept-cell {
+                padding-left: 8px;
+                font-size: 10px;
+            }
+
+            .rating-cell {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+
+            .total-cell,
+            .avg-cell {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+
+            .table-header {
+                padding: 10px 12px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .table-header-left {
+                width: 100%;
+                gap: 6px;
+            }
+
+            .table-header-left span {
+                font-size: 18px;
+            }
+
+            .table-header h3 {
+                font-size: 14px;
+            }
+
+            .table-header-info {
+                width: 100%;
+                gap: 10px;
+                font-size: 11px;
+                flex-wrap: wrap;
+            }
+
+            .header-stat {
+                font-size: 11px;
+            }
+
+            .header-stat-value {
+                font-size: 12px;
+            }
+
+            .stats-summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+
+            .summary-card {
+                padding: 12px;
+                border-radius: 6px;
+                border-left: 4px solid #7c3aed;
+            }
+
+            .summary-card h4 {
+                font-size: 10px;
+                margin-bottom: 6px;
+            }
+
+            .summary-card .value {
+                font-size: 20px;
+                margin-bottom: 4px;
+            }
+
+            .summary-card .subtext {
+                font-size: 10px;
+            }
+
+            .empty-state {
+                padding: 30px 12px;
+            }
+
+            .empty-state-icon {
+                font-size: 40px;
+                margin-bottom: 12px;
+            }
+
+            .empty-state h3 {
+                font-size: 16px;
+                margin-bottom: 6px;
+            }
+
+            .empty-state p {
+                font-size: 12px;
+            }
+
+            .avg-row td {
+                padding: 10px 4px;
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .performance-table {
+                min-width: 700px;
+                font-size: 9px;
+            }
+
+            .performance-table th,
+            .performance-table td {
+                padding: 6px 3px;
+                font-size: 9px;
+            }
+
+            .performance-table th {
+                font-size: 8px;
+                padding: 6px 2px;
+            }
+
+            .btn-search,
+            .btn-reset {
+                padding: 10px 12px;
+                font-size: 11px;
+            }
+
+            .summary-card .value {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="visualization.html" class="nav-item">
+                    <span class="icon">📈</span>
+                    <span>Visualizations</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item active">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>Faculty Performance</h1>
+                    <p>View and analyze faculty ratings and feedback data</p>
+                </div>
+                <button class="btn-print" onclick="printPerformanceTable()" title="Print performance report" style="margin-right: 20px;">
+                    <span>🖨️</span>
+                    <span>Print</span>
+                </button>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="performance-container">
+                    <div id="alertMessage" class="alert"></div>
+
+                    <!-- Filters Section (FIRST) -->
+                    <div class="filters-section">
+                        <h3 style="margin-top: 0; color: #1a202c; border-bottom: 2px solid #7c3aed; padding-bottom: 15px;">Filters</h3>
+                        <div class="filters-grid">
+                            <div class="filter-group">
+                                <label for="deptFilter">Department</label>
+                                <select id="deptFilter" onchange="updateFacultyDropdown(this.value); applyFilters()">
+                                    <option value="">All Departments</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="facultyNameFilter">Faculty Name</label>
+                                <select id="facultyNameFilter" onchange="applyFilters()">
+                                    <option value="">All Faculty</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="btn-search" onclick="applyFilters()">Search</button>
+                            <button class="btn-reset" onclick="resetFilters()">Reset</button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Stats -->
+                    <div class="stats-summary">
+                        <div class="summary-card">
+                            <h4>Total Faculty</h4>
+                            <p class="value" id="totalFacultyCount">0</p>
+                            <p class="subtext">Registered faculty members</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Average Rating</h4>
+                            <p class="value" id="avgRating">0</p>
+                            <p class="subtext">Overall average rating</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Top Rated</h4>
+                            <p class="value" id="topRated">-</p>
+                            <p class="subtext">Highest rated faculty</p>
+                        </div>
+                        <div class="summary-card">
+                            <h4>Departments</h4>
+                            <p class="value" id="totalDepts">0</p>
+                            <p class="subtext">Active departments</p>
+                        </div>
+                    </div>
+
+                    <!-- Performance Table -->
+                    <div class="performance-table-container">
+                        <div class="table-header">
+                            <div class="table-header-left">
+                                <span style="font-size: 24px;">📊</span>
+                                <h3>Faculty Performance Data</h3>
+                            </div>
+                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; width: 100%; justify-content: space-between;">
+                                <div class="table-header-info">
+                                    <div class="header-stat">
+                                        <span>Total Records:</span>
+                                        <span class="header-stat-value" id="headerTotalRecords">0</span>
+                                    </div>
+                                    <div class="header-stat">
+                                        <span>Avg Rating:</span>
+                                        <span class="header-stat-value" id="headerAvgRating">0</span>
+                                    </div>
+                                </div>
+                                <div class="table-header-actions">
+                                    <button class="btn-csv" onclick="exportPerformanceToCSV()" title="Export to CSV">
+                                        <span>📊</span>
+                                        <span>CSV</span>
+                                    </button>
+                                    <button class="btn-print" onclick="printPerformanceTable()" title="Print performance report">
+                                        <span>🖨️</span>
+                                        <span>Print</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <table class="performance-table" id="performanceTable">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Faculty Name</th>
+                                    <th>Student</th>
+                                    <th>Q1</th>
+                                    <th>Q2</th>
+                                    <th>Q3</th>
+                                    <th>Q4</th>
+                                    <th>Q5</th>
+                                    <th>Q6</th>
+                                    <th>Q7</th>
+                                    <th>Q8</th>
+                                    <th>Q9</th>
+                                    <th>Q10</th>
+                                    <th>Total</th>
+                                    <th>Avg</th>
+                                </tr>
+                            </thead>
+                            <tbody id="performanceTableBody">
+                                <tr>
+                                    <td colspan="15" class="empty-state">
+                                        <div class="empty-state-icon">📭</div>
+                                        <h3>No Data Available</h3>
+                                        <p>No faculty or survey data found. Use filters to search or load sample data.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make Storage and auth functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+    <script src="js/mobile-nav.js"></script>
+    <script>
+        // Wait for modules to be loaded
+        function waitForModules() {
+            return new Promise((resolve) => {
+                const checkModules = () => {
+                    if (typeof window.Storage !== 'undefined' &&
+                        typeof window.checkAuth !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(checkModules, 100);
+                    }
+                };
+                checkModules();
+            });
+        }
+        // Fallback showAlert if not loaded from firebase-auth
+        if (typeof window.showAlert === 'undefined') {
+            window.showAlert = function(message, type = 'info') {
+                console.log(`[${type.toUpperCase()}] ${message}`);
+                // Use console only - no alert popup
+            };
+        }
+        // Load faculty performance data from storage
+        let facultyPerformanceData = [];
+        // Function declarations
+        async function loadFacultyPerformanceData() {
+            await waitForModules();
+            facultyPerformanceData = [];
+            // Get all departments and faculties
+            const departments = await Storage.getDepartments() || [];
+            let feedbacks = await Storage.getFeedbacks() || [];
+            // VALIDATION: Filter out orphaned feedbacks
+            const validFeedbacks = [];
+            for (const feedback of feedbacks) {
+                // Check if survey exists
+                const survey = await Storage.getSurveyById(feedback.surveyId);
+                if (!survey) continue;
+                // Check if department exists
+                const department = await Storage.getDepartmentByName(feedback.studentDepartment);
+                if (!department) continue;
+                // Check if all faculty members still exist
+                const departmentFacultyIds = (department.faculties || []).map(f => f.id);
+                const invalidFaculty = feedback.selectedTeachers.some(t => !departmentFacultyIds.includes(t.id));
+                if (invalidFaculty) continue;
+                validFeedbacks.push(feedback);
+            }
+            feedbacks = validFeedbacks;
+            console.log('📊 Loading Faculty Performance Data:', {
+                departments: departments.length,
+                feedbacks: feedbacks.length
+            });
+            // ONLY create entries for faculties that have actual feedback data
+            // Don't create placeholder entries for years without feedback
+            feedbacks.forEach((feedback, feedbackIndex) => {
+                // For each feedback, create one record per selected teacher
+                feedback.selectedTeachers.forEach((teacher, teacherIndex) => {
+                    const ratings = [];
+                    // Extract ratings from feedback responses for this specific teacher
+                    if (feedback.responses) {
+                        feedback.responses.forEach(response => {
+                            if (response.teacherId === teacher.id && response.rating) {
+                                ratings.push(response.rating);
+                            }
+                        });
+                    }
+                    // Ensure we have exactly 10 ratings (one per question)
+                    while (ratings.length < 10) {
+                        ratings.push(0);
+                    }
+                    ratings.length = 10;
+                    // Get year from feedback - handle both studentYear and year fields
+                    const year = feedback.studentYear || feedback.year || 1;
+                    const yearSuffix = getYearSuffix(year);
+                    const displayDept = `${year}${yearSuffix} Year - ${feedback.studentDepartment}`;
+                    // Use S1, S2, S3... for each student feedback
+                    const studentNumber = feedbackIndex + 1;
+                    facultyPerformanceData.push({
+                        name: teacher.name,
+                        department: feedback.studentDepartment,
+                        year: year,
+                        displayDept: displayDept,
+                        displayStudent: `S${studentNumber}`,
+                        ratings: ratings,
+                        feedbackId: feedback.id,
+                        studentId: feedback.studentId,
+                        studentName: feedback.studentName
+                    });
+                });
+            });
+            // Sort by year, department, faculty name
+            facultyPerformanceData.sort((a, b) => {
+                if (a.year !== b.year) return a.year - b.year;
+                if (a.department !== b.department) return a.department.localeCompare(b.department);
+                if (a.name !== b.name) return a.name.localeCompare(b.name);
+                return 0;
+            });
+            console.log('✅ Faculty Performance Data Loaded:', {
+                totalRecords: facultyPerformanceData.length,
+                data: facultyPerformanceData
+            });
+        }
+
+        function getYearSuffix(year) {
+            if (year === 1) return 'st';
+            if (year === 2) return 'nd';
+            if (year === 3) return 'rd';
+            return 'th';
+        }
+
+        function getTotal(ratings) {
+            return ratings.reduce((a, b) => a + b, 0);
+        }
+
+        function getAverage(ratings) {
+            return (getTotal(ratings) / ratings.length).toFixed(2);
+        }
+
+        function getRatingClass(rating) {
+            if (rating >= 4) return 'high';
+            if (rating >= 3) return 'medium';
+            return 'low';
+        }
+
+        function loadPerformanceData() {
+            const tableBody = document.getElementById('performanceTableBody');
+            if (facultyPerformanceData.length === 0) {
+                tableBody.innerHTML = `
+            <tr>
+                <td colspan="15" class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <h3>No Data Available</h3>
+            <p>No faculty or survey data found. Add faculties in Manage Faculties page and submit surveys to see performance data.</p>
+                </td>
+            </tr>
+        `;
+                document.getElementById('headerTotalRecords').textContent = '0';
+                document.getElementById('headerAvgRating').textContent = '0';
+                return;
+            }
+            let html = facultyPerformanceData.map((faculty) => {
+                const total = getTotal(faculty.ratings);
+                const avg = getAverage(faculty.ratings);
+                const ratingCells = faculty.ratings.map(rating => {
+                    if (faculty.isPlaceholder && rating === 0) {
+                        return `<td class="rating-cell" style="color: #ccc;">-</td>`;
+                    }
+                    return `<td class="rating-cell ${getRatingClass(rating)}">${rating}</td>`;
+                }).join('');
+                return `
+            <tr>
+                <td class="dept-cell">${faculty.displayDept}</td>
+                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.name}</td>
+                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.displayStudent}</td>
+                ${ratingCells}
+                <td class="total-cell">${total}</td>
+                <td class="avg-cell">${avg}</td>
+            </tr>
+        `;
+            }).join('');
+            // Add average of averages row
+            const allAvgs = facultyPerformanceData.filter(f => !f.isPlaceholder).map(f => parseFloat(getAverage(f.ratings)));
+            const avgOfAvgs = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length).toFixed(2) : '0';
+            html += `
+        <tr class="avg-row">
+            <td class="dept-cell">Average of Averages</td>
+            <td colspan="12" style="text-align: right; padding-right: 20px;"></td>
+            <td class="total-cell" style="text-align: center; font-weight: 700; color: #1a202c;">-</td>
+            <td class="avg-cell">${avgOfAvgs}</td>
+        </tr>
+            `;
+            tableBody.innerHTML = html;
+            // Update header statistics
+            const actualData = facultyPerformanceData.filter(f => !f.isPlaceholder);
+            document.getElementById('headerTotalRecords').textContent = actualData.length;
+            document.getElementById('headerAvgRating').textContent = avgOfAvgs;
+            updateSummaryStats();
+        }
+
+        function updateSummaryStats() {
+            document.getElementById('totalFacultyCount').textContent = facultyPerformanceData.length;
+            const avgRating = facultyPerformanceData.reduce((sum, f) => sum + parseFloat(getAverage(f.ratings)), 0) / facultyPerformanceData.length;
+            document.getElementById('avgRating').textContent = avgRating.toFixed(2);
+            const topFaculty = facultyPerformanceData.reduce((max, f) => parseFloat(getAverage(f.ratings)) > parseFloat(getAverage(max.ratings)) ? f : max);
+            document.getElementById('topRated').textContent = topFaculty.name;
+            const depts = new Set(facultyPerformanceData.map(f => f.department));
+            document.getElementById('totalDepts').textContent = depts.size;
+        }
+
+        function applyFilters() {
+            const deptFilter = document.getElementById('deptFilter').value;
+            const facultyName = document.getElementById('facultyNameFilter').value;
+
+            // Update faculty dropdown based on selected department
+            updateFacultyDropdown(deptFilter);
+
+            let filtered = facultyPerformanceData;
+            // Filter by department if selected
+            if (deptFilter) {
+                filtered = filtered.filter(record => record.displayDept === deptFilter);
+            }
+            // Filter by faculty if selected
+            if (facultyName) {
+                filtered = filtered.filter(record => record.name === facultyName);
+            }
+            const tableBody = document.getElementById('performanceTableBody');
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `
+            <tr>
+                <td colspan="15" class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <h3>No Results Found</h3>
+            <p>No faculty match your filter criteria.</p>
+                </td>
+            </tr>
+        `;
+                document.getElementById('headerTotalRecords').textContent = '0';
+                document.getElementById('headerAvgRating').textContent = '0';
+                return;
+            }
+            let html = filtered.map((faculty) => {
+                const total = getTotal(faculty.ratings);
+                const avg = getAverage(faculty.ratings);
+                const ratingCells = faculty.ratings.map(rating => {
+                    if (faculty.isPlaceholder && rating === 0) {
+                        return `<td class="rating-cell" style="color: #ccc;">-</td>`;
+                    }
+                    return `<td class="rating-cell ${getRatingClass(rating)}">${rating}</td>`;
+                }).join('');
+                return `
+            <tr>
+                <td class="dept-cell">${faculty.displayDept}</td>
+                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.name}</td>
+                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.displayStudent}</td>
+                ${ratingCells}
+                <td class="total-cell">${total}</td>
+                <td class="avg-cell">${avg}</td>
+            </tr>
+        `;
+            }).join('');
+            // Add average of averages row
+            const actualData = filtered.filter(f => !f.isPlaceholder);
+            const allAvgs = actualData.map(f => parseFloat(getAverage(f.ratings)));
+            const avgOfAvgs = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length).toFixed(2) : '0';
+            html += `
+        <tr class="avg-row">
+            <td class="dept-cell">Average of Averages</td>
+            <td colspan="12" style="text-align: right; padding-right: 20px;"></td>
+            <td class="total-cell" style="text-align: center; font-weight: 700; color: #1a202c;">-</td>
+            <td class="avg-cell">${avgOfAvgs}</td>
+        </tr>
+            `;
+            tableBody.innerHTML = html;
+            // Update header statistics
+            document.getElementById('headerTotalRecords').textContent = actualData.length;
+            document.getElementById('headerAvgRating').textContent = avgOfAvgs;
+        }
+
+        function updateFacultyDropdown(selectedDept) {
+            const facultyNameFilter = document.getElementById('facultyNameFilter');
+            const currentValue = facultyNameFilter.value;
+
+            // Clear existing options except "All Faculty"
+            facultyNameFilter.innerHTML = '<option value="">All Faculty</option>';
+
+            // Get faculty names for the selected department only
+            let facultyNames;
+            if (selectedDept) {
+                // Filter faculty by selected department
+                facultyNames = new Set(
+                    facultyPerformanceData
+                    .filter(f => f.displayDept === selectedDept)
+                    .map(f => f.name)
+                );
+            } else {
+                // Show all faculty if no department selected
+                facultyNames = new Set(facultyPerformanceData.map(f => f.name));
+            }
+
+            // Add faculty options
+            Array.from(facultyNames).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                facultyNameFilter.appendChild(option);
+            });
+
+            // Restore previous selection if it still exists in the new list
+            if (currentValue && facultyNameFilter.querySelector(`option[value="${currentValue}"]`)) {
+                facultyNameFilter.value = currentValue;
+            } else {
+                facultyNameFilter.value = '';
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('deptFilter').value = '';
+            document.getElementById('facultyNameFilter').value = '';
+            updateFacultyDropdown(''); // Reset faculty dropdown to show all
+            loadPerformanceData();
+        }
+
+        function printPerformanceTable() {
+            // Get current filters
+            const deptFilter = document.getElementById('deptFilter').value;
+            const facultyName = document.getElementById('facultyNameFilter').value;
+            // Create print window
+            const printWindow = window.open('', '', 'height=600,width=900');
+            // Get table HTML
+            const table = document.getElementById('performanceTable').outerHTML;
+            // Create print document
+            const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Faculty Performance Report<\/title>
+            <style>
+                body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: white;
+                }
+                .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #7c3aed;
+            padding-bottom: 20px;
+                }
+                .print-header h1 {
+            margin: 0 0 10px 0;
+            color: #1a202c;
+            font-size: 24px;
+                }
+                .print-header p {
+            margin: 5px 0;
+            color: #718096;
+            font-size: 13px;
+                }
+                .print-filters {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            font-size: 13px;
+                }
+                .print-filters p {
+            margin: 5px 0;
+            color: #1a202c;
+                }
+                table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 11px;
+                }
+                th {
+            background: #7c3aed;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+            border: 1px solid #7c3aed;
+                }
+                td {
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+                }
+                td:first-child {
+            text-align: left;
+                }
+                tr:nth-child(even) {
+            background: #f8f9ff;
+                }
+                .avg-row {
+            background: #f0f0f0;
+            font-weight: 700;
+            border-top: 2px solid #7c3aed;
+                }
+                .print-footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 15px;
+                }
+                @media print {
+            body {
+                margin: 0;
+            }
+            .print-header {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: avoid;
+            }
+                }
+            <\/style>
+        <\/head>
+        <body>
+            <div class="print-header">
+                <h1>📊 Faculty Performance Report<\/h1>
+                <p>Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}<\/p>
+            <\/div>
+                 <div class="print-filters">
+                <p><strong>Filters Applied:<\/strong><\/p>
+                <p>Department: ${deptFilter || 'All Departments'}<\/p>
+                <p>Faculty: ${facultyName || 'All Faculty'}<\/p>
+            <\/div>
+                 ${table}
+                 <div class="print-footer">
+                <p>This is an automatically generated report from the Faculty Feedback System<\/p>
+            <\/div>
+        <\/body>
+        <\/html>
+            `;
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            // Wait for content to load then print
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        }
+
+        function exportPerformanceToCSV() {
+            const deptFilter = document.getElementById('deptFilter').value;
+            const facultyName = document.getElementById('facultyNameFilter').value;
+            // Get the table
+            const table = document.getElementById('performanceTable');
+            let csv = [];
+            // Add header info
+            csv.push('Faculty Performance Report');
+            csv.push(`Generated on: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
+            csv.push('');
+            csv.push(`Department Filter: ${deptFilter || 'All Departments'}`);
+            csv.push(`Faculty Filter: ${facultyName || 'All Faculty'}`);
+            csv.push('');
+            // Add table headers
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+                headers.push('"' + th.textContent.trim() + '"');
+            });
+            csv.push(headers.join(','));
+            // Add table rows
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    row.push('"' + td.textContent.trim() + '"');
+                });
+                csv.push(row.join(','));
+            });
+            // Create blob and download
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Faculty_Performance_${new Date().getTime()}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showAlert('✅ CSV exported successfully!', 'success');
+        }
+        // Make functions globally accessible for onclick handlers
+        window.applyFilters = applyFilters;
+        window.resetFilters = resetFilters;
+        window.printPerformanceTable = printPerformanceTable;
+        window.exportPerformanceToCSV = exportPerformanceToCSV;
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await waitForModules();
+            await loadFacultyPerformanceData();
+            await loadPerformanceData();
+            // Populate department filter with ALL departments and ALL year levels
+            const allDepartments = await Storage.getDepartments() || [];
+            const deptFilter = document.getElementById('deptFilter');
+            // Create a Set to store unique department+year combinations
+            const deptYearSet = new Set();
+            // Add all possible combinations for all departments
+            allDepartments.forEach(dept => {
+                for (let year = 1; year <= 3; year++) {
+                    const yearSuffix = year === 1 ? 'st' : year === 2 ? 'nd' : 'rd';
+                    const displayText = `${year}${yearSuffix} Year - ${dept.name}`;
+                    deptYearSet.add(displayText);
+                }
+            });
+            // Convert to array and sort
+            const deptOptions = Array.from(deptYearSet).sort((a, b) => {
+                // Extract year from both strings
+                const yearA = parseInt(a.charAt(0));
+                const yearB = parseInt(b.charAt(0));
+                // Sort by year first
+                if (yearA !== yearB) return yearA - yearB;
+                // Then by department name
+                return a.localeCompare(b);
+            });
+            // Add options to dropdown
+            deptOptions.forEach(optionText => {
+                const optionElement = document.createElement('option');
+                optionElement.value = optionText;
+                optionElement.textContent = optionText;
+                deptFilter.appendChild(optionElement);
+            });
+            // Populate faculty name filter with faculty from feedback data
+            updateFacultyDropdown(''); // Initialize with all faculty
+        });
+    </script>
+</body>
+
+</html>

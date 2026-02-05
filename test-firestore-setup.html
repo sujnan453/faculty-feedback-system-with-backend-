@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Firestore Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 5px;
+        }
+
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .success {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .warning {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+
+        .info {
+            border-left-color: #2196F3;
+            background: #e3f2fd;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .instructions {
+            background: #fff9c4;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔥 Firestore Setup & Test</h1>
+
+        <div class="instructions">
+            <h3>⚠️ IMPORTANT: Enable Firestore First!</h3>
+            <p><strong>Before running tests, you MUST enable Firestore:</strong></p>
+            <ol>
+                <li>Go to <a href="https://console.firebase.google.com/project/faculty-feedback-system-f4a83/firestore" target="_blank">Firebase Console → Firestore Database</a></li>
+                <li>If you see <strong>"Create database"</strong> button, click it</li>
+                <li>Choose <strong>"Start in test mode"</strong></li>
+                <li>Select location: <strong>nam5 (United States)</strong></li>
+                <li>Click <strong>"Enable"</strong></li>
+                <li>Wait for database to be created (takes 1-2 minutes)</li>
+                <li>Go to <strong>"Rules"</strong> tab and paste this:
+                    <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+                </li>
+                <li>Click <strong>"Publish"</strong></li>
+            </ol>
+        </div>
+
+        <button onclick="testConnection()" id="testBtn">1. Test Firestore Connection</button>
+        <button onclick="testWrite()" id="writeBtn">2. Test Write Data</button>
+        <button onclick="testRead()" id="readBtn">3. Test Read Data</button>
+        <button onclick="createTestUser()" id="userBtn">4. Create Test User</button>
+        <button onclick="clearOutput()">Clear Output</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script type="module">
+        let db, app;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `step ${type}`;
+            div.innerHTML = message;
+            output.appendChild(div);
+            console.log(message);
+        }
+
+        window.clearOutput = function() {
+            document.getElementById('output').innerHTML = '';
+        };
+
+        async function initFirebase() {
+            if (db) return true;
+
+            try {
+                log('Importing Firebase modules...', 'info');
+                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+                const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+
+                const firebaseConfig = {
+                    apiKey: "AIzaSyA6Nr81548vWJiEPdltuIFtNyEpwc0RjcE",
+                    authDomain: "faculty-feedback-system-f4a83.firebaseapp.com",
+                    projectId: "faculty-feedback-system-f4a83",
+                    storageBucket: "faculty-feedback-system-f4a83.firebasestorage.app",
+                    messagingSenderId: "784604808754",
+                    appId: "1:784604808754:web:6035f842b92ae5bdda5e2b"
+                };
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+
+                log('✅ Firebase modules loaded', 'success');
+                return true;
+            } catch (error) {
+                log(`❌ Firebase initialization error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        window.testConnection = async function() {
+            clearOutput();
+            const btn = document.getElementById('testBtn');
+            btn.disabled = true;
+
+            try {
+                log('<h3>Testing Firestore Connection...</h3>', 'info');
+                
+                const initialized = await initFirebase();
+                if (!initialized) {
+                    throw new Error('Failed to initialize Firebase');
+                }
+
+                log('✅ Firebase initialized successfully', 'success');
+                log('✅ Firestore instance created', 'success');
+                log(`Project ID: <code>${app.options.projectId}</code>`, 'info');
+                
+                log('<h3>✅ Connection Test Passed!</h3>', 'success');
+                log('Firestore is ready. Click "Test Write Data" to continue.', 'success');
+
+            } catch (error) {
+                log(`<h3>❌ Connection Test Failed!</h3>`, 'error');
+                log(`Error: ${error.message}`, 'error');
+                
+                if (error.message.includes('not found') || error.message.includes('does not exist')) {
+                    log('<h4>⚠️ Firestore is NOT enabled!</h4>', 'error');
+                    log('Follow the instructions at the top of this page to enable Firestore.', 'error');
+                }
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        window.testWrite = async function() {
+            const btn = document.getElementById('writeBtn');
+            btn.disabled = true;
+
+            try {
+                log('<h3>Testing Write Operation...</h3>', 'info');
+
+                const initialized = await initFirebase();
+                if (!initialized) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const { collection, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+
+                const testId = 'test_' + Date.now();
+                const testData = {
+                    id: testId,
+                    message: 'Test write from setup page',
+                    timestamp: new Date().toISOString(),
+                    testNumber: Math.random()
+                };
+
+                log('Writing test data to Firestore...', 'info');
+                log(`Collection: <code>test_data</code>`, 'info');
+                log(`Document ID: <code>${testId}</code>`, 'info');
+
+                const testRef = doc(db, 'test_data', testId);
+                await setDoc(testRef, testData);
+
+                log('✅ Write successful!', 'success');
+                log(`Data written: <pre>${JSON.stringify(testData, null, 2)}</pre>`, 'success');
+                log('<h4>Verify in Firebase Console:</h4>', 'info');
+                log('<a href="https://console.firebase.google.com/project/faculty-feedback-system-f4a83/firestore/data" target="_blank">Open Firestore Data</a>', 'info');
+                log('You should see a collection called "test_data"', 'info');
+
+            } catch (error) {
+                log(`<h3>❌ Write Test Failed!</h3>`, 'error');
+                log(`Error: ${error.message}`, 'error');
+                
+                if (error.message.includes('permission') || error.message.includes('PERMISSION_DENIED')) {
+                    log('<h4>⚠️ Permission Denied!</h4>', 'error');
+                    log('Your Firestore rules are blocking writes.', 'error');
+                    log('Go to: <a href="https://console.firebase.google.com/project/faculty-feedback-system-f4a83/firestore/rules" target="_blank">Firestore Rules</a>', 'error');
+                    log('Make sure rules allow read/write (see instructions at top)', 'error');
+                }
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        window.testRead = async function() {
+            const btn = document.getElementById('readBtn');
+            btn.disabled = true;
+
+            try {
+                log('<h3>Testing Read Operation...</h3>', 'info');
+
+                const initialized = await initFirebase();
+                if (!initialized) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+
+                log('Reading from test_data collection...', 'info');
+
+                const testCol = collection(db, 'test_data');
+                const snapshot = await getDocs(testCol);
+
+                if (snapshot.empty) {
+                    log('⚠️ No data found. Run "Test Write Data" first.', 'warning');
+                } else {
+                    log(`✅ Read successful! Found ${snapshot.size} documents`, 'success');
+                    
+                    snapshot.forEach(doc => {
+                        log(`Document ID: <code>${doc.id}</code>`, 'info');
+                        log(`Data: <pre>${JSON.stringify(doc.data(), null, 2)}</pre>`, 'info');
+                    });
+                }
+
+            } catch (error) {
+                log(`<h3>❌ Read Test Failed!</h3>`, 'error');
+                log(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        window.createTestUser = async function() {
+            const btn = document.getElementById('userBtn');
+            btn.disabled = true;
+
+            try {
+                log('<h3>Creating Test User...</h3>', 'info');
+
+                const initialized = await initFirebase();
+                if (!initialized) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                const { collection, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+
+                const userId = 'user_' + Date.now();
+                const userData = {
+                    id: userId,
+                    name: 'Test Student',
+                    email: 'test@student.edu',
+                    rollNumber: 'TEST001',
+                    department: 'BCA',
+                    password: 'Test@123',
+                    role: 'student',
+                    registeredAt: new Date().toISOString()
+                };
+
+                log('Writing user to Firestore...', 'info');
+                log(`Collection: <code>users</code>`, 'info');
+                log(`User ID: <code>${userId}</code>`, 'info');
+
+                const userRef = doc(db, 'users', userId);
+                await setDoc(userRef, userData);
+
+                log('✅ User created successfully!', 'success');
+                log(`User data: <pre>${JSON.stringify(userData, null, 2)}</pre>`, 'success');
+                log('<h4>✅ All Tests Passed!</h4>', 'success');
+                log('Your Firestore database is working correctly!', 'success');
+                log('You can now use the registration and login pages.', 'success');
+
+            } catch (error) {
+                log(`<h3>❌ User Creation Failed!</h3>`, 'error');
+                log(`Error: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        // Auto-run on load
+        setTimeout(() => {
+            log('Page loaded. Click "Test Firestore Connection" to begin.', 'info');
+        }, 500);
+    </script>
+</body>
+
+</html>

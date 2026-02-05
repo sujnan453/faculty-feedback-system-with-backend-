@@ -1,0 +1,158 @@
+====================================================================
+SIMPLE STEP-BY-STEP FIX FOR VISUALIZATION PAGE
+====================================================================
+
+PROBLEM: Departments not loading, year filter still there, sorting not working
+
+SOLUTION: Follow these exact steps
+
+====================================================================
+STEP 1: Open Browser Console
+====================================================================
+1. Open visualization.html in your browser
+2. Press F12 to open Developer Tools
+3. Go to Console tab
+4. Look for these messages:
+   - "Loading departments for dropdown..."
+   - "Departments loaded: X"
+   
+If you DON'T see these messages, the initialization isn't running.
+If you see "Departments loaded: 0", your database is empty.
+
+====================================================================
+STEP 2: Test if Data Exists
+====================================================================
+1. Open test-departments-loading.html in your browser
+2. It will auto-test and show you:
+   - How many departments exist
+   - How many feedbacks exist
+   - Which departments have data
+
+If this shows 0 departments, you need to add departments first!
+
+====================================================================
+STEP 3: Fix visualization.html (Remove Year Filter)
+====================================================================
+1. Open visualization.html
+2. Find line ~660 (search for "Filter by Year")
+3. DELETE these lines:
+   <div>
+       <label style="display: block; font-weight: 600; color: #1a202c; margin-bottom: 8px; font-size: 13px;">Filter by Year</label>
+       <select id="reportYearFilter" style="width: 100%; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #1a202c; cursor: pointer; transition: all 0.3s ease;">
+           <option value="">All Years</option>
+           <option value="1">1st Year</option>
+           <option value="2">2nd Year</option>
+           <option value="3">3rd Year</option>
+       </select>
+   </div>
+
+4. Change the grid columns from 3 to 2:
+   FIND: grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+   CHANGE TO: grid-template-columns: 1fr 1fr
+
+5. Add export buttons after "Generate Report" button:
+   <button onclick="exportReportCSV()" id="exportCSVBtn" disabled style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">📥 Export CSV</button>
+   <button onclick="exportReportPDF()" id="exportPDFBtn" disabled style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">📄 Export PDF</button>
+
+====================================================================
+STEP 4: Fix visualization.js (Replace Faculty Function)
+====================================================================
+1. Open js/visualization.js
+2. Find line ~787: async function displayFacultyRatingsByYear() {
+3. Select from that line down to the closing }
+   (Should end around line 996 with: showAlert('Faculty ratings report generated successfully!', 'success');
+                                      }
+4. DELETE all those lines
+5. Open js/visualization-faculty-fixed.js
+6. COPY the entire function (skip the comment at top)
+7. PASTE it where you deleted in visualization.js
+
+====================================================================
+STEP 5: Verify the Fix
+====================================================================
+1. Refresh visualization.html (Ctrl+F5)
+2. Open Console (F12)
+3. You should see:
+   "Loading departments for dropdown..."
+   "Departments loaded: 5" (or however many you have)
+   "Report filter added: BCA"
+   "Report filter added: BCOM Vocational"
+   etc.
+
+4. Check the dropdowns:
+   - "Select Department" should have options
+   - "Filter by Department" (in report section) should have options
+   - "Filter by Year" should be GONE
+
+5. Test the report:
+   - Select "BCA" from Filter by Department
+   - Click "Generate Report"
+   - Should show ONLY BCA faculty
+   - NOT BCOM faculty
+
+6. Test sorting:
+   - Change "Sort By" to "Highest Rating First"
+   - Click "Generate Report"
+   - Top faculty should have 🥇🥈🥉 medals
+
+7. Test export:
+   - After generating report, buttons should be enabled
+   - Click "Export CSV" - should download CSV file
+   - Click "Export PDF" - should open print preview
+
+====================================================================
+TROUBLESHOOTING
+====================================================================
+
+Problem: Dropdowns still empty
+Solution: 
+- Check console for errors
+- Run test-departments-loading.html
+- Make sure you have departments in Firebase
+
+Problem: BCOM shows BCA data
+Solution:
+- The faculty function wasn't replaced properly
+- Make sure you replaced the ENTIRE function
+- Check that the new function has this line:
+  if (deptFilter && department !== deptFilter) {
+      return; // Skip if not matching selected department
+  }
+
+Problem: Year filter still shows
+Solution:
+- You didn't delete it from HTML
+- Search for "reportYearFilter" in visualization.html
+- Delete that entire <div> block
+
+Problem: Sorting doesn't work
+Solution:
+- The faculty function wasn't replaced
+- Make sure the new function has sorting code:
+  if (sortOrder === 'highest') {
+      facultyArray.sort((a, b) => ...
+
+Problem: Export buttons don't work
+Solution:
+- Make sure you added them to HTML
+- Make sure export functions are in visualization.js
+- Check console for errors
+
+====================================================================
+QUICK CHECK
+====================================================================
+After applying fixes, these should be TRUE:
+
+✅ Console shows "Departments loaded: X" (X > 0)
+✅ Both dropdowns have department options
+✅ Year filter is gone from HTML
+✅ Selecting BCA shows only BCA faculty
+✅ Selecting BCOM shows only BCOM faculty
+✅ Sorting changes the order
+✅ Top 3 get medals when sorted by highest
+✅ Export buttons work after generating report
+
+If ALL are ✅, you're done!
+If ANY are ❌, go back to that step.
+
+====================================================================

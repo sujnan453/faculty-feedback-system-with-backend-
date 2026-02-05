@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Verify Firebase Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 5px;
+        }
+
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+
+        .success {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .warning {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+
+        .info {
+            border-left-color: #2196F3;
+            background: #e3f2fd;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .instructions {
+            background: #fff9c4;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Setup Verification</h1>
+
+        <div class="instructions">
+            <h3>⚠️ Important: Enable Firebase Realtime Database</h3>
+            <p>Before testing, make sure Firebase Realtime Database is enabled:</p>
+            <ol>
+                <li>Go to <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                <li>Select your project: <strong>faculty-feedback-system-f4a83</strong></li>
+                <li>Click <strong>Realtime Database</strong> in the left menu</li>
+                <li>If you see "Create Database" button, click it and choose:
+                    <ul>
+                        <li>Location: <strong>United States (us-central1)</strong></li>
+                        <li>Security rules: <strong>Start in test mode</strong></li>
+                    </ul>
+                </li>
+                <li>Your database URL should be: <code>https://faculty-feedback-system-f4a83-default-rtdb.firebaseio.com</code></li>
+            </ol>
+        </div>
+
+        <button onclick="runTest()">Run Connection Test</button>
+        <button onclick="checkRules()">Check Database Rules</button>
+        <button onclick="clearOutput()">Clear Output</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script type="module">
+        let database, ref, set, get;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `step ${type}`;
+            div.innerHTML = message;
+            output.appendChild(div);
+            console.log(message);
+        }
+
+        window.clearOutput = function() {
+            document.getElementById('output').innerHTML = '';
+        };
+
+        window.runTest = async function() {
+            clearOutput();
+            log('🚀 Starting Firebase connection test...', 'info');
+
+            try {
+                // Step 1: Import modules
+                log('Step 1: Importing Firebase modules...', 'info');
+                const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+                const { getDatabase, ref: dbRef, set: dbSet, get: dbGet, connectDatabaseEmulator } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js");
+                
+                ref = dbRef;
+                set = dbSet;
+                get = dbGet;
+                
+                log('✅ Firebase modules imported successfully', 'success');
+
+                // Step 2: Initialize Firebase
+                log('Step 2: Initializing Firebase app...', 'info');
+                const firebaseConfig = {
+                    apiKey: "AIzaSyA6Nr81548vWJiEPdltuIFtNyEpwc0RjcE",
+                    authDomain: "faculty-feedback-system-f4a83.firebaseapp.com",
+                    databaseURL: "https://faculty-feedback-system-f4a83-default-rtdb.firebaseio.com",
+                    projectId: "faculty-feedback-system-f4a83",
+                    storageBucket: "faculty-feedback-system-f4a83.firebasestorage.app",
+                    messagingSenderId: "784604808754",
+                    appId: "1:784604808754:web:6035f842b92ae5bdda5e2b"
+                };
+
+                const app = initializeApp(firebaseConfig);
+                log('✅ Firebase app initialized', 'success');
+
+                // Step 3: Get database instance
+                log('Step 3: Getting database instance...', 'info');
+                database = getDatabase(app);
+                log('✅ Database instance created', 'success');
+                log(`Database URL: <code>${firebaseConfig.databaseURL}</code>`, 'info');
+
+                // Step 4: Test write with timeout
+                log('Step 4: Testing database write (10 second timeout)...', 'info');
+                const testId = 'test_' + Date.now();
+                const testRef = ref(database, 'connection_test/' + testId);
+                
+                const writePromise = set(testRef, {
+                    message: 'Connection test',
+                    timestamp: new Date().toISOString(),
+                    testId: testId
+                });
+
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Write timeout after 10 seconds')), 10000)
+                );
+
+                await Promise.race([writePromise, timeoutPromise]);
+                log('✅ Write successful!', 'success');
+
+                // Step 5: Test read
+                log('Step 5: Testing database read...', 'info');
+                const readPromise = get(testRef);
+                const snapshot = await Promise.race([readPromise, timeoutPromise]);
+                
+                if (snapshot.exists()) {
+                    log('✅ Read successful!', 'success');
+                    log(`Data retrieved: <pre>${JSON.stringify(snapshot.val(), null, 2)}</pre>`, 'success');
+                } else {
+                    log('⚠️ Write succeeded but read returned no data', 'warning');
+                }
+
+                // Step 6: Test user operations
+                log('Step 6: Testing user creation...', 'info');
+                const userId = 'test_user_' + Date.now();
+                const userRef = ref(database, 'users/' + userId);
+                
+                await Promise.race([
+                    set(userRef, {
+                        id: userId,
+                        name: 'Test User',
+                        email: 'test@example.com',
+                        role: 'student',
+                        createdAt: new Date().toISOString()
+                    }),
+                    timeoutPromise
+                ]);
+                log('✅ User created successfully!', 'success');
+
+                // Step 7: Read all users
+                log('Step 7: Reading all users...', 'info');
+                const usersRef = ref(database, 'users');
+                const usersSnapshot = await Promise.race([get(usersRef), timeoutPromise]);
+                
+                if (usersSnapshot.exists()) {
+                    const users = usersSnapshot.val();
+                    const userCount = Object.keys(users).length;
+                    log(`✅ Found ${userCount} users in database`, 'success');
+                } else {
+                    log('⚠️ No users found in database', 'warning');
+                }
+
+                log('<h3>🎉 ALL TESTS PASSED!</h3><p>Firebase Realtime Database is working correctly!</p>', 'success');
+                log('<p>You can now use the registration and login pages.</p>', 'success');
+
+            } catch (error) {
+                log('<h3>❌ TEST FAILED!</h3>', 'error');
+                log(`<strong>Error:</strong> ${error.message}`, 'error');
+                
+                if (error.message.includes('timeout')) {
+                    log('<h4>Possible causes:</h4>', 'error');
+                    log('<ul>' +
+                        '<li>Firebase Realtime Database is not enabled in your project</li>' +
+                        '<li>Database URL is incorrect</li>' +
+                        '<li>Internet connection issue</li>' +
+                        '<li>Firebase rules are blocking access</li>' +
+                        '</ul>', 'error');
+                    
+                    log('<h4>Solution:</h4>', 'warning');
+                    log('<ol>' +
+                        '<li>Go to <a href="https://console.firebase.google.com/project/faculty-feedback-system-f4a83/database" target="_blank">Firebase Console → Realtime Database</a></li>' +
+                        '<li>If database doesn\'t exist, click "Create Database"</li>' +
+                        '<li>Choose "Start in test mode" for rules</li>' +
+                        '<li>Wait for database to be created</li>' +
+                        '<li>Run this test again</li>' +
+                        '</ol>', 'warning');
+                } else if (error.message.includes('permission')) {
+                    log('<h4>Permission Denied!</h4>', 'error');
+                    log('Your Firebase rules are blocking access. Click "Check Database Rules" button above.', 'error');
+                }
+                
+                console.error('Full error:', error);
+            }
+        };
+
+        window.checkRules = function() {
+            clearOutput();
+            log('<h3>📋 Firebase Database Rules</h3>', 'info');
+            log('<p>Your Firebase Realtime Database rules should look like this for development:</p>', 'info');
+            log('<pre>{\n' +
+                '  "rules": {\n' +
+                '    ".read": true,\n' +
+                '    ".write": true\n' +
+                '  }\n' +
+                '}</pre>', 'info');
+            
+            log('<h4>How to update rules:</h4>', 'warning');
+            log('<ol>' +
+                '<li>Go to <a href="https://console.firebase.google.com/project/faculty-feedback-system-f4a83/database/rules" target="_blank">Firebase Console → Realtime Database → Rules</a></li>' +
+                '<li>Replace the rules with the code above</li>' +
+                '<li>Click "Publish"</li>' +
+                '<li>Run the connection test again</li>' +
+                '</ol>', 'warning');
+            
+            log('<p><strong>⚠️ Note:</strong> These rules allow anyone to read/write. For production, implement proper security rules.</p>', 'warning');
+        };
+
+        // Auto-run test on load
+        setTimeout(() => {
+            log('Page loaded. Click "Run Connection Test" to start.', 'info');
+        }, 500);
+    </script>
+</body>
+
+</html>

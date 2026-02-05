@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Question Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #11998e;
+        }
+
+        button {
+            background: #11998e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #0d7a6f;
+        }
+
+        .log {
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log div {
+            margin: 5px 0;
+        }
+
+        .success {
+            color: #0f0;
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        .info {
+            color: #0ff;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Question Storage</h1>
+
+        <div class="test-section">
+            <h3>Add New Question</h3>
+            <input type="text" id="questionText" placeholder="Enter a question (must end with ?)">
+            <button onclick="testAddQuestion()">Add Question</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Quick Tests</h3>
+            <button onclick="testGetQuestions()">Get All Questions</button>
+            <button onclick="testStorageAvailable()">Check Storage Available</button>
+            <button onclick="testGenerateId()">Test Generate ID</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+
+        <div class="log" id="log">
+            <div class="info">🔍 Test console ready...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth } from './js/firebase-auth.js';
+
+        // Make available globally for testing
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        window.addLog = addLog;
+
+        // Test functions
+        window.testStorageAvailable = function() {
+            addLog('Testing Storage availability...', 'info');
+            if (typeof Storage !== 'undefined') {
+                addLog('✅ Storage module is available', 'success');
+                addLog(`Storage methods: ${Object.keys(Storage).join(', ')}`, 'info');
+            } else {
+                addLog('❌ Storage module is NOT available', 'error');
+            }
+        };
+
+        window.testGenerateId = function() {
+            addLog('Testing ID generation...', 'info');
+            try {
+                const id = Storage.generateId();
+                addLog(`✅ Generated ID: ${id}`, 'success');
+            } catch (error) {
+                addLog(`❌ Error generating ID: ${error.message}`, 'error');
+            }
+        };
+
+        window.testGetQuestions = async function() {
+            addLog('Fetching all questions from Firestore...', 'info');
+            try {
+                const questions = await Storage.getQuestions();
+                addLog(`✅ Found ${questions.length} questions`, 'success');
+                questions.forEach((q, index) => {
+                    addLog(`  ${index + 1}. ${q.text}`, 'info');
+                });
+            } catch (error) {
+                addLog(`❌ Error getting questions: ${error.message}`, 'error');
+                console.error('Full error:', error);
+            }
+        };
+
+        window.testAddQuestion = async function() {
+            const input = document.getElementById('questionText');
+            const text = input.value.trim();
+
+            if (!text) {
+                addLog('❌ Please enter a question', 'error');
+                return;
+            }
+
+            if (!text.endsWith('?')) {
+                addLog('⚠️ Question should end with ?', 'error');
+                return;
+            }
+
+            addLog(`Adding question: "${text}"`, 'info');
+
+            try {
+                const question = {
+                    id: Storage.generateId(),
+                    text: text,
+                    allowComments: true,
+                    createdAt: new Date().toISOString()
+                };
+
+                addLog(`Generated question object with ID: ${question.id}`, 'info');
+                
+                const result = await Storage.saveQuestion(question);
+                
+                if (result) {
+                    addLog(`✅ Question saved successfully!`, 'success');
+                    addLog(`Question ID: ${result.id}`, 'info');
+                    input.value = '';
+                    
+                    // Verify it was saved
+                    setTimeout(async () => {
+                        const questions = await Storage.getQuestions();
+                        const found = questions.find(q => q.id === result.id);
+                        if (found) {
+                            addLog(`✅ Verified: Question exists in database`, 'success');
+                        } else {
+                            addLog(`❌ Warning: Question not found in database after save`, 'error');
+                        }
+                    }, 1000);
+                } else {
+                    addLog(`❌ Failed to save question (returned null)`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ Error saving question: ${error.message}`, 'error');
+                console.error('Full error:', error);
+            }
+        };
+
+        window.clearLog = function() {
+            document.getElementById('log').innerHTML = '<div class="info">🔍 Log cleared...</div>';
+        };
+
+        // Auto-test on load
+        setTimeout(() => {
+            addLog('🚀 Running initial tests...', 'info');
+            testStorageAvailable();
+            testGetQuestions();
+        }, 500);
+    </script>
+</body>
+
+</html>

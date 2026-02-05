@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Submissions - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/submissions.css">
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>📚 Student Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="student-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="student-submissions.html" class="nav-item active">
+                    <span class="icon">📝</span>
+                    <span>My Submissions</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>My Submissions</h1>
+                    <p>View all your submitted feedback surveys</p>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <span id="userInitials">S</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Submissions Content -->
+            <div class="dashboard-content">
+                <div class="submissions-header">
+                    <div class="submissions-title">
+                        <h2>Your Submissions</h2>
+                        <p class="submissions-subtitle">View and manage all your submitted feedback surveys</p>
+                    </div>
+                </div>
+
+                <!-- Statistics Section -->
+                <div id="statisticsContainer" class="statistics-container" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Submissions</div>
+                            <div class="stat-value" id="totalSubmissions">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👨‍🏫</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Teachers Evaluated</div>
+                            <div class="stat-value" id="totalTeachers">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">❓</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Questions Answered</div>
+                            <div class="stat-value" id="totalQuestions">0</div>
+                        </div>
+                    </div>
+                    <!-- Average Rating removed as per request -->
+                </div>
+
+                <!-- Filters & Search Section -->
+                <div class="filters-section">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="🔍 Search by teacher name..." onkeyup="filterAndSort()">
+                    </div>
+                    <div class="filter-controls">
+                        <select id="departmentFilter" onchange="filterAndSort()" class="filter-select">
+                            <option value="">All Departments</option>
+                        </select>
+                        <select id="sortBy" onchange="filterAndSort()" class="filter-select">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="teachers-asc">Teachers (Low to High)</option>
+                            <option value="teachers-desc">Teachers (High to Low)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="submissionsContainer" class="submissions-container">
+                    <!-- Submissions will be loaded here -->
+                </div>
+
+                <!-- Pagination Section -->
+                <div id="paginationContainer" class="pagination-container" style="display: none;">
+                    <button class="pagination-btn" id="prevBtn" onclick="previousPage()">← Previous</button>
+                    <div class="pagination-info">
+                        <span>Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+                    </div>
+                    <button class="pagination-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make Storage and auth functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+    <script src="js/mobile-nav.js"></script>
+    <script>
+        // Wait for modules to be loaded
+        function waitForModules() {
+            return new Promise((resolve) => {
+                const checkModules = () => {
+                    if (typeof window.Storage !== 'undefined' &&
+                        typeof window.checkAuth !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(checkModules, 100);
+                    }
+                };
+                checkModules();
+            });
+        }
+
+        let currentUser;
+        let allFeedbacks = [];
+        let filteredFeedbacks = [];
+        let currentPage = 1;
+        const itemsPerPage = 5;
+
+        (async function() {
+            await waitForModules();
+            currentUser = await checkAuth('student');
+            if (currentUser) {
+                await initializePage();
+            }
+        })();
+
+        async function initializePage() {
+
+            if (!currentUser) {
+                // User will be redirected
+            } else {
+                await initializeSubmissions();
+            }
+        }
+
+        async function initializeSubmissions() {
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('userInitials').textContent = initials;
+
+            await loadSubmissions();
+            populateDepartmentFilter();
+        }
+
+        async function loadSubmissions() {
+            console.log('📥 Loading submissions for student:', currentUser.id);
+
+            allFeedbacks = await Storage.getFeedbacksByStudentId(currentUser.id);
+
+            console.log('📊 Total feedbacks found:', allFeedbacks.length);
+            console.log('📋 Feedbacks:', allFeedbacks);
+
+            filteredFeedbacks = [...allFeedbacks];
+
+            if (allFeedbacks.length > 0) {
+                document.getElementById('statisticsContainer').style.display = 'grid';
+                updateStatistics();
+                displaySubmissions();
+            } else {
+                document.getElementById('statisticsContainer').style.display = 'none';
+                showEmptyState();
+            }
+        }
+
+        function updateStatistics() {
+            // Total submissions
+            document.getElementById('totalSubmissions').textContent = allFeedbacks.length;
+
+            // Total teachers evaluated
+            const allTeachers = new Set();
+            allFeedbacks.forEach(feedback => {
+                feedback.selectedTeachers.forEach(teacher => {
+                    allTeachers.add(teacher.id);
+                });
+            });
+            document.getElementById('totalTeachers').textContent = allTeachers.size;
+
+            // Total questions answered
+            const totalResponses = allFeedbacks.reduce((sum, feedback) => sum + feedback.responses.length, 0);
+            document.getElementById('totalQuestions').textContent = totalResponses;
+
+            // Average rating removed from UI (stat card deleted)
+        }
+
+        function populateDepartmentFilter() {
+            const departments = new Set();
+            allFeedbacks.forEach(feedback => {
+                departments.add(feedback.studentDepartment);
+            });
+
+            const select = document.getElementById('departmentFilter');
+            departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept;
+                option.textContent = dept;
+                select.appendChild(option);
+            });
+        }
+
+        function filterAndSort() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const departmentFilter = document.getElementById('departmentFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+
+            // Filter
+            filteredFeedbacks = allFeedbacks.filter(feedback => {
+                const matchesDept = !departmentFilter || feedback.studentDepartment === departmentFilter;
+                const matchesSearch = !searchTerm || feedback.selectedTeachers.some(t =>
+                    t.name.toLowerCase().includes(searchTerm)
+                );
+                return matchesDept && matchesSearch;
+            });
+
+            // Sort
+            if (sortBy === 'newest') {
+                filteredFeedbacks.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+            } else if (sortBy === 'oldest') {
+                filteredFeedbacks.sort((a, b) => new Date(a.submittedAt) - new Date(b.submittedAt));
+            } else if (sortBy === 'teachers-asc') {
+                filteredFeedbacks.sort((a, b) => a.selectedTeachers.length - b.selectedTeachers.length);
+            } else if (sortBy === 'teachers-desc') {
+                filteredFeedbacks.sort((a, b) => b.selectedTeachers.length - a.selectedTeachers.length);
+            }
+
+            currentPage = 1;
+            displaySubmissions();
+        }
+
+        function displaySubmissions() {
+            const container = document.getElementById('submissionsContainer');
+
+            if (filteredFeedbacks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span>🔍</span>
+                        <h3>No Submissions Found</h3>
+                        <p>Try adjusting your filters or search terms.</p>
+                    </div>
+                `;
+                document.getElementById('paginationContainer').style.display = 'none';
+                return;
+            }
+
+            // Pagination
+            const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedFeedbacks = filteredFeedbacks.slice(startIndex, endIndex);
+
+            container.innerHTML = '';
+            paginatedFeedbacks.forEach(feedback => {
+                const card = createSubmissionCard(feedback);
+                container.appendChild(card);
+            });
+
+            // Show/hide pagination
+            if (totalPages > 1) {
+                document.getElementById('paginationContainer').style.display = 'flex';
+                document.getElementById('currentPage').textContent = currentPage;
+                document.getElementById('totalPages').textContent = totalPages;
+                document.getElementById('prevBtn').disabled = currentPage === 1;
+                document.getElementById('nextBtn').disabled = currentPage === totalPages;
+            } else {
+                document.getElementById('paginationContainer').style.display = 'none';
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displaySubmissions();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displaySubmissions();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function showEmptyState() {
+            const container = document.getElementById('submissionsContainer');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <span>📭</span>
+                    <h3>No Submissions Yet</h3>
+                    <p>You haven't submitted any feedback surveys yet.</p>
+                    <a href="student-dashboard.html" class="btn btn-primary" style="margin-top: 20px; display: inline-block;">Go to Dashboard</a>
+                </div>
+            `;
+        }
+
+        function createSubmissionCard(feedback, survey) {
+            const card = document.createElement('div');
+            card.className = 'submission-card';
+
+            const submittedDate = new Date(feedback.submittedAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Get unique teachers from responses
+            const uniqueTeachers = [...new Set(feedback.responses.map(r => r.teacherId))];
+
+            // Format year display
+            const yearDisplay = feedback.studentYear ?
+                `${feedback.studentYear}${feedback.studentYear === 1 ? 'st' : feedback.studentYear === 2 ? 'nd' : feedback.studentYear === 3 ? 'rd' : 'th'} Year` :
+                'Not specified';
+
+            card.innerHTML = `
+                <div class="submission-header">
+                    <div>
+                        <h3>Faculty Feedback Survey</h3>
+                        <p class="submission-date">Submitted on ${submittedDate}</p>
+                    </div>
+                    <span class="submission-badge">✓ Completed</span>
+                </div>
+                
+                <div class="submission-info">
+                    <div class="info-item">
+                        <span class="info-label">Department:</span>
+                        <span class="info-value">${feedback.studentDepartment}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Year:</span>
+                        <span class="info-value">${yearDisplay}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Teachers Evaluated:</span>
+                        <span class="info-value">${uniqueTeachers.length}</span>
+                    </div>
+                </div>
+                
+                <div class="teachers-evaluated">
+                    <h4>Evaluated Faculties:</h4>
+                    <div class="teachers-list">
+                        ${feedback.selectedTeachers.map(teacher => `
+                            <div class="teacher-item">
+                                <span class="teacher-icon">👨‍🏫</span>
+                                <div>
+                                    <strong>${teacher.name}</strong>
+                                    <p>${teacher.subject || 'Faculty'}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="viewDetails('${feedback.id}')">View Details</button>
+            `;
+
+            return card;
+        }
+
+        async function viewDetails(feedbackId) {
+            const allFeedbacks = await Storage.getFeedbacks();
+            const feedback = allFeedbacks.find(f => f.id === feedbackId);
+            if (!feedback) return;
+
+            // Group responses by teacher
+            const responsesByTeacher = {};
+            feedback.responses.forEach(response => {
+                if (!responsesByTeacher[response.teacherId]) {
+                    responsesByTeacher[response.teacherId] = {
+                        teacherName: response.teacherName,
+                        responses: []
+                    };
+                }
+                responsesByTeacher[response.teacherId].responses.push(response);
+            });
+
+            let detailsHTML = `
+                <div class="feedback-details-overlay" onclick="closeDetails()">
+                    <div class="feedback-details-modal" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h2>Feedback Details</h2>
+                            <button class="close-btn" onclick="closeDetails()">×</button>
+                        </div>
+                        <div class="modal-content">
+            `;
+
+            Object.values(responsesByTeacher).forEach(teacherData => {
+                detailsHTML += `
+                    <div class="teacher-feedback-section">
+                        <h3>👨‍🏫 ${teacherData.teacherName}</h3>
+                        <div class="answers-list">
+                            ${teacherData.responses.map((response, index) => `
+                                <div class="answer-item">
+                                    <p class="question-text"><strong>Q${index + 1}:</strong> ${response.questionText}</p>
+                                    <p class="rating-display">Rating: ${response.rating}/10</p>
+                                    ${response.comment ? `<p class="comment-text"><em>"${response.comment}"</em></p>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            detailsHTML += `
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', detailsHTML);
+        }
+
+        function closeDetails() {
+            const overlay = document.querySelector('.feedback-details-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+    </script>
+</body>
+
+</html>

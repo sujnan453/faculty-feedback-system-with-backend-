@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Faculties - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        .dashboard-content {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn-create-dept {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-create-dept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .departments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        @media (max-width: 1400px) {
+            .departments-grid {
+                grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            .departments-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+
+        @media (max-width: 600px) {
+            .departments-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-create-dept {
+                width: 100%;
+            }
+
+            .dashboard-content {
+                padding: 15px;
+            }
+
+            .header-actions {
+                margin-bottom: 20px;
+            }
+
+            .department-card {
+                padding: 20px 15px;
+            }
+
+            .department-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+                margin-bottom: 15px;
+                padding-bottom: 12px;
+            }
+
+            .department-name {
+                font-size: 18px;
+                margin-bottom: 4px;
+            }
+
+            .department-card p {
+                font-size: 11px;
+            }
+
+            .faculty-list {
+                margin: 15px 0;
+            }
+
+            .faculty-item {
+                padding: 10px 12px;
+                margin-bottom: 8px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .faculty-name {
+                font-size: 13px;
+                margin-bottom: 2px;
+            }
+
+            .faculty-subject {
+                font-size: 11px;
+            }
+
+            .faculty-actions {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+
+            .btn-remove {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .add-faculty-form {
+                padding: 12px;
+                margin-top: 12px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 6px;
+            }
+
+            .form-row input {
+                min-width: auto;
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+
+            .btn-add-faculty {
+                padding: 8px 15px;
+                font-size: 12px;
+                width: 100%;
+            }
+
+            .empty-faculty {
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .modal-content {
+                margin: 5% auto;
+                padding: 25px 20px;
+                width: 95%;
+            }
+
+            .modal-header h2 {
+                font-size: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            .form-group label {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            .form-group input {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .modal-buttons {
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            .btn-cancel,
+            .btn-submit {
+                padding: 10px;
+                font-size: 13px;
+            }
+        }
+
+        .department-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+            border: 2px solid #e8e8ff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .department-card:hover {
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.2);
+            border-color: #7c3aed;
+            transform: translateY(-5px);
+        }
+
+        .department-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #7c3aed;
+            gap: 10px;
+        }
+
+        .department-info {
+            flex: 1;
+        }
+
+        .department-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .department-card p {
+            color: #666;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .faculty-list {
+            margin: 20px 0;
+            flex: 1;
+            min-height: 100px;
+        }
+
+        .faculty-item {
+            background: #f5f7ff;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #7c3aed;
+            transition: all 0.2s ease;
+        }
+
+        .faculty-item:hover {
+            background: #eff2ff;
+            transform: translateX(5px);
+        }
+
+        .faculty-info {
+            flex: 1;
+        }
+
+        .faculty-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .faculty-subject {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .faculty-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+
+        .btn-edit {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-edit:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+
+        .btn-remove {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-remove:hover {
+            background: #ff1744;
+            transform: scale(1.05);
+        }
+
+        .add-faculty-form {
+            background: linear-gradient(135deg, #f0f7ff 0%, #f5f3ff 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px dashed #7c3aed;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .form-row input {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-row input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 8px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-add-faculty {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-add-faculty:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-add-faculty:active {
+            transform: translateY(0);
+        }
+
+        .empty-faculty {
+            color: #999;
+            font-style: italic;
+            padding: 15px;
+            text-align: center;
+            background: #f8f8f8;
+            border-radius: 6px;
+            border: 1px dashed #ddd;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            display: none;
+            border-left: 4px solid;
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: #ffc107;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 40px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #7c3aed;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 22px;
+        }
+
+        .close-btn {
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            color: #333;
+            transform: scale(1.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-submit {
+            flex: 1;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Accessibility: Screen Reader Only Text */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Accessibility: Enhanced Focus Indicators */
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+        }
+
+        .btn-create-dept:focus {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.2);
+        }
+
+        .btn-edit:focus,
+        .btn-remove:focus,
+        .btn-add-faculty:focus {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+        }
+
+        .close-btn:focus {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        .btn-cancel:focus,
+        .btn-submit:focus {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+        }
+
+        /* Focus visible for keyboard navigation */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+        }
+
+        /* Enhanced focus for form inputs */
+        .form-row input:focus {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+            border-color: #0052cc;
+            box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.1);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+            border-color: #0052cc;
+            box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.1);
+        }
+
+        /* Focus indicator for department cards */
+        .department-card:focus-within {
+            outline: 3px solid #0052cc;
+            outline-offset: 2px;
+        }
+
+        /* Focus indicator for faculty items */
+        .faculty-item:focus-within {
+            outline: 2px solid #0052cc;
+            outline-offset: 1px;
+        }
+
+        /* Skip to main content link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #0052cc;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+            border-radius: 0 0 4px 0;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: more) {
+
+            button:focus,
+            input:focus,
+            select:focus,
+            textarea:focus {
+                outline: 4px solid #0052cc;
+                outline-offset: 3px;
+            }
+
+            .btn-create-dept:focus {
+                outline: 4px solid #0052cc;
+                outline-offset: 3px;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item active">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="visualization.html" class="nav-item">
+                    <span class="icon">📈</span>
+                    <span>Visualizations</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>Manage Faculties</h1>
+                    <p>Organize faculties by departments for survey creation</p>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <div class="dashboard-content">
+                <div id="alertMessage" class="alert"></div>
+
+                <div class="header-actions">
+                    <button class="btn-create-dept" onclick="openCreateDeptModal()" aria-label="Create a new department" aria-describedby="create-dept-help">
+                        ➕ Create New Department
+                    </button>
+                    <span id="create-dept-help" class="sr-only">Opens a modal to create a new department with name and full name</span>
+                </div>
+
+                <div id="departmentsContainer" class="departments-grid">
+                    <!-- Departments and faculties will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Department Modal -->
+    <div id="createDeptModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">➕ Create New Department</h2>
+                <button class="close-btn" onclick="closeCreateDeptModal()" aria-label="Close dialog" aria-describedby="close-help">
+                    &times;
+                </button>
+                <span id="close-help" class="sr-only">Press to close this dialog</span>
+            </div>
+
+            <form id="createDeptForm" onsubmit="submitCreateDept(event)" aria-label="Create department form">
+                <div class="form-group">
+                    <label for="deptName">Department Name <span style="color: red;" aria-label="required">*</span></label>
+                    <input type="text" id="deptName" placeholder="e.g., BCA, BSC" required aria-required="true" aria-describedby="deptNameHelp">
+                    <span id="deptNameHelp" class="sr-only">Enter the department name, e.g., BCA or BSC</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="deptFullName">Full Name (Optional)</label>
+                    <input type="text" id="deptFullName" placeholder="e.g., Bachelor of Computer Applications" aria-describedby="deptFullNameHelp">
+                    <span id="deptFullNameHelp" class="sr-only">Enter the full name of the department, optional</span>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" onclick="closeCreateDeptModal()" aria-label="Cancel and close dialog">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-submit" aria-label="Submit and create department">
+                        Create Department
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make Storage and auth functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+    <script src="js/mobile-nav.js"></script>
+    <script src="js/manage-faculties.js"></script>
+</body>
+
+</html>

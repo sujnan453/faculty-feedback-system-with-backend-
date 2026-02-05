@@ -1,0 +1,68 @@
+CRITICAL FIXES TO APPLY - STEP BY STEP
+
+=== STEP 1: Restore visualization.html from backup ===
+1. Delete current visualization.html
+2. Rename visualization.html.backup to visualization.html
+   OR just refresh from your original file
+
+=== STEP 2: Remove Year Filter from HTML ===
+1. Open visualization.html
+2. Find this section (around line 655-670):
+   <div>
+       <label...>Filter by Year</label>
+       <select id="reportYearFilter"...>
+           <option value="">All Years</option>
+           <option value="1">1st Year</option>
+           <option value="2">2nd Year</option>
+           <option value="3">3rd Year</option>
+       </select>
+   </div>
+
+3. DELETE that entire <div> block (the year filter)
+
+4. Change the grid from 3 columns to 2 columns:
+   FIND: grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+   REPLACE WITH: grid-template-columns: 1fr 1fr
+
+5. Add export buttons after the "Generate Report" button:
+   ADD THESE TWO BUTTONS:
+   <button onclick="exportReportCSV()" id="exportCSVBtn" disabled style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">📥 Export CSV</button>
+   <button onclick="exportReportPDF()" id="exportPDFBtn" disabled style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">📄 Export PDF</button>
+
+=== STEP 3: Fix visualization.js ===
+1. Open js/visualization.js
+2. Find the function: async function displayFacultyRatingsByYear()
+3. DELETE the entire function (from line 772 to the end)
+4. Open js/visualization-faculty-fixed.js
+5. COPY the entire displayFacultyRatingsByYear function
+6. PASTE it into visualization.js where you deleted the old one
+
+=== STEP 4: Add Export Functions ===
+1. Open js/visualization-export-functions.js
+2. COPY both functions (exportReportCSV and exportReportPDF)
+3. Open js/visualization.js
+4. PASTE them at the very end of the file (after displayFacultyRatingsByYear)
+
+=== STEP 5: Add Global Variable ===
+1. Open js/visualization.js
+2. Find this line near the top:
+   let chartInstance = null;
+3. ADD this line right after it:
+   let currentReportData = null;
+
+=== DONE! ===
+
+Now test:
+1. Open visualization.html
+2. You should see only 2 filters: Department and Sort By
+3. Select a department (e.g., BCA)
+4. Click "Generate Report"
+5. You should see ONLY BCA faculty
+6. Export buttons should be enabled
+7. Click "Export CSV" or "Export PDF" to test
+
+TROUBLESHOOTING:
+- If BCOM shows BCA data: The filter is not working - check step 3
+- If year filter still shows: Check step 2
+- If export buttons don't work: Check steps 4 and 5
+- If sorting doesn't work: The function wasn't replaced properly - check step 3

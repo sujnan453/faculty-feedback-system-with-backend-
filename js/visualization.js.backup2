@@ -1,0 +1,980 @@
+// Visualization Functionality
+
+let selectedDepartments = [];
+let chartInstance = null;
+
+// Wait for DOM and Storage to be ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait for Storage to be available
+    const checkStorageReady = setInterval(() => {
+        if (window.Storage && window.checkAuth) {
+            clearInterval(checkStorageReady);
+
+            const currentUser = checkAuth('admin');
+            if (!currentUser) {
+                // User will be redirected by checkAuth function
+            } else {
+                initializeVisualization();
+            }
+        }
+    }, 50);
+});
+
+async function initializeVisualization() {
+    // Load available departments into dropdown
+    await loadAvailableDepartmentsDropdown();
+
+    // Load departments for faculty report filter
+    await loadReportDepartmentFilter();
+
+    // Refresh data when page becomes visible (user returns to tab)
+    document.addEventListener('visibilitychange', async () => {
+        if (!document.hidden) {
+            await loadAvailableDepartmentsDropdown();
+            await loadReportDepartmentFilter();
+        }
+    });
+}
+
+async function loadReportDepartmentFilter() {
+    try {
+        const departments = await Storage.getDepartments();
+        const dropdown = document.getElementById('reportDepartmentFilter');
+
+        if (!dropdown) return;
+
+        // Clear existing options except "All Departments"
+        dropdown.innerHTML = '<option value="">All Departments</option>';
+
+        // Add all departments
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept.name;
+            option.textContent = dept.name;
+            dropdown.appendChild(option);
+        });
+    } catch (error) {
+        console.error('❌ Error loading report department filter:', error);
+    }
+}
+
+async function loadAvailableDepartmentsDropdown() {
+    try {
+        console.log('📊 Loading departments for dropdown...');
+        const departments = await Storage.getDepartments();
+        console.log('✅ Departments loaded:', departments.length, departments);
+
+        const dropdown = document.getElementById('departmentDropdown');
+        if (!dropdown) {
+            console.error('❌ Dropdown element not found!');
+            return;
+        }
+
+        // Clear existing options
+        dropdown.innerHTML = '<option value="">-- All Departments --</option>';
+
+        // Add all departments to dropdown
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept.name;
+            option.textContent = dept.name;
+            dropdown.appendChild(option);
+            console.log('  ➕ Added department:', dept.name);
+        });
+
+        window.availableDepartments = departments.map(d => d.name);
+        console.log('✅ Dropdown populated with', departments.length, 'departments');
+    } catch (error) {
+        console.error('❌ Error loading departments:', error);
+        showAlert('Failed to load departments. Please refresh the page.', 'danger');
+    }
+}
+
+async function onDepartmentChange() {
+    const dropdown = document.getElementById('departmentDropdown');
+    const selectedDept = dropdown.value;
+
+    if (!selectedDept) {
+        // "All Departments" selected
+        const allDepts = await Storage.getDepartments();
+        selectedDepartments = allDepts.map(d => d.name);
+        updateSelectedDisplay();
+        updateButtonStates();
+        showAlert('All departments selected!', 'success');
+        return;
+    }
+
+    // Set selected department (single selection)
+    selectedDepartments = [selectedDept];
+    updateSelectedDisplay();
+    updateButtonStates();
+    showAlert(`${selectedDept} selected!`, 'success');
+}
+
+function removeDepartment(dept) {
+    selectedDepartments = selectedDepartments.filter(d => d !== dept);
+    document.getElementById('departmentDropdown').value = '';
+    updateSelectedDisplay();
+    updateButtonStates();
+}
+
+function updateSelectedDisplay() {
+    const container = document.getElementById('selectedDepartments');
+    container.innerHTML = '';
+
+    selectedDepartments.forEach(dept => {
+        const tag = document.createElement('div');
+        tag.className = 'selected-tag';
+        tag.innerHTML = `
+            ${dept}
+            <button onclick="removeDepartment('${dept}')">✕</button>
+        `;
+        container.appendChild(tag);
+    });
+}
+
+function updateButtonStates() {
+    const hasSelection = selectedDepartments.length > 0;
+    document.getElementById('piechartBtn').disabled = !hasSelection;
+    document.getElementById('histogramBtn').disabled = !hasSelection;
+    document.getElementById('linechartBtn').disabled = !hasSelection;
+}
+
+async function calculateDepartmentYearStats() {
+    console.log('📊 Calculating stats for departments:', selectedDepartments);
+    let allFeedbacks = await Storage.getFeedbacks();
+    console.log('📊 Total feedbacks from database:', allFeedbacks.length);
+
+    // VALIDATION: Filter out orphaned feedbacks
+    const validFeedbacks = [];
+    for (const feedback of allFeedbacks) {
+        // Check if survey exists
+        const survey = await Storage.getSurveyById(feedback.surveyId);
+        if (!survey) continue;
+
+        // Check if department exists
+        const department = await Storage.getDepartmentByName(feedback.studentDepartment);
+        if (!department) continue;
+
+        // Check if all faculty members still exist
+        const departmentFacultyIds = (department.faculties || []).map(f => f.id);
+        const invalidFaculty = feedback.selectedTeachers && feedback.selectedTeachers.some(t => !departmentFacultyIds.includes(t.id));
+        if (invalidFaculty) continue;
+
+        validFeedbacks.push(feedback);
+    }
+
+    allFeedbacks = validFeedbacks;
+    console.log('📊 Valid feedbacks after filtering:', allFeedbacks.length);
+
+    // CRITICAL: Only collect data that actually exists - don't pre-initialize empty arrays
+    const stats = {};
+
+    // Process feedbacks and ONLY create entries for data that exists
+    allFeedbacks.forEach(feedback => {
+        const dept = feedback.studentDepartment || feedback.department;
+
+        // Skip if not in selected departments
+        if (!selectedDepartments.includes(dept)) {
+            return;
+        }
+
+        const year = feedback.studentYear;
+
+        // Validate year is a valid number
+        if (!year || (year !== 1 && year !== 2 && year !== 3)) {
+            console.warn('⚠️ Invalid year in feedback:', year, feedback);
+            return;
+        }
+
+        const yearLabel = year === 1 ? '1st Year' : year === 2 ? '2nd Year' : '3rd Year';
+        const key = `${dept}|${yearLabel}`; // Unique key for dept+year combination
+
+        // Initialize only when we have actual data
+        if (!stats[key]) {
+            stats[key] = {
+                department: dept,
+                year: yearLabel,
+                ratings: [],
+                label: `${dept} - ${yearLabel}`
+            };
+        }
+
+        // Add ratings from responses
+        if (feedback.responses && Array.isArray(feedback.responses)) {
+            feedback.responses.forEach(response => {
+                const rating = parseFloat(response.rating);
+                // Only add valid ratings (1-10)
+                if (!isNaN(rating) && rating >= 1 && rating <= 10) {
+                    stats[key].ratings.push(rating);
+                } else {
+                    console.warn('⚠️ Invalid rating value:', response.rating);
+                }
+            });
+        }
+    });
+
+    console.log('📊 Stats collected:', Object.keys(stats).length, 'department-year combinations');
+
+    // Calculate averages ONLY for entries with data
+    const labels = [];
+    const averages = [];
+    const colors = [
+        '#667eea',
+        '#764ba2',
+        '#f093fb',
+        '#f5576c',
+        '#11998e',
+        '#38ef7d',
+        '#ffa502',
+        '#ff6b35',
+        '#004e89',
+        '#1a7f64'
+    ];
+
+    // Sort by department then year for consistent display
+    const sortedKeys = Object.keys(stats).sort((a, b) => {
+        const [deptA, yearA] = a.split('|');
+        const [deptB, yearB] = b.split('|');
+
+        if (deptA !== deptB) return deptA.localeCompare(deptB);
+
+        const yearOrder = {
+            '1st Year': 1,
+            '2nd Year': 2,
+            '3rd Year': 3
+        };
+        return yearOrder[yearA] - yearOrder[yearB];
+    });
+
+    sortedKeys.forEach((key, index) => {
+        const stat = stats[key];
+        const ratings = stat.ratings;
+
+        if (ratings.length > 0) {
+            const average = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(2);
+            labels.push(stat.label);
+            averages.push(parseFloat(average));
+            console.log(`  ✅ ${stat.label}: ${average} (from ${ratings.length} ratings)`);
+        }
+    });
+
+    console.log('📊 Final Chart data - Labels:', labels);
+    console.log('📊 Final Chart data - Averages:', averages);
+
+    return {
+        labels: labels,
+        data: averages,
+        colors: colors.slice(0, labels.length)
+    };
+}
+
+async function createPieChart() {
+    if (selectedDepartments.length === 0) {
+        showAlert('Please select at least one department', 'warning');
+        return;
+    }
+
+    showLoadingSpinner();
+
+    const stats = await calculateDepartmentYearStats();
+
+    if (stats.labels.length === 0) {
+        hideLoadingSpinner();
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('emptyState').innerHTML = `
+            <span>📭</span>
+            <h3>No Feedback Data Available</h3>
+            <p>No feedback has been submitted for the selected department(s): <strong>${selectedDepartments.join(', ')}</strong></p>
+            <p style="margin-top: 10px; color: #7c3aed;">Students need to submit surveys before charts can be generated.</p>
+        `;
+        showAlert('No feedback data available for selected departments', 'warning');
+        return;
+    }
+
+    // Destroy previous chart if exists
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    setTimeout(() => {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: stats.labels,
+                datasets: [{
+                    data: stats.data,
+                    backgroundColor: stats.colors,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            },
+                            padding: 15,
+                            color: '#333'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + ' / 10';
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: selectedDepartments.length === Storage.getDepartments().length ?
+                            'Average Ratings - All Departments' : 'Average Ratings by Department & Year',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#333',
+                        padding: 20
+                    }
+                }
+            }
+        });
+
+        hideLoadingSpinner();
+        displayStatistics(stats.data);
+        enableExportBtn();
+        showAlert('Pie chart created successfully!', 'success');
+    }, 500);
+}
+
+async function createHistogram() {
+    if (selectedDepartments.length === 0) {
+        showAlert('Please select at least one department', 'warning');
+        return;
+    }
+
+    showLoadingSpinner();
+
+    const stats = await calculateDepartmentYearStats();
+
+    if (stats.labels.length === 0) {
+        hideLoadingSpinner();
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('emptyState').innerHTML = `
+            <span>📭</span>
+            <h3>No Feedback Data Available</h3>
+            <p>No feedback has been submitted for the selected department(s): <strong>${selectedDepartments.join(', ')}</strong></p>
+            <p style="margin-top: 10px; color: #7c3aed;">Students need to submit surveys before charts can be generated.</p>
+        `;
+        showAlert('No feedback data available for selected departments', 'warning');
+        return;
+    }
+
+    // Destroy previous chart if exists
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    setTimeout(() => {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: stats.labels,
+                datasets: [{
+                    label: 'Average Rating (out of 10)',
+                    data: stats.data,
+                    backgroundColor: stats.colors,
+                    borderColor: stats.colors.map(c => c.replace(')', ', 0.8)')),
+                    borderWidth: 2,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            },
+                            color: '#333'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Average: ' + context.parsed.x + ' / 10';
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: selectedDepartments.length === Storage.getDepartments().length ?
+                            'Average Ratings - All Departments' : 'Average Ratings by Department & Year',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#333',
+                        padding: 20
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 10,
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#333',
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        hideLoadingSpinner();
+        displayStatistics(stats.data);
+        enableExportBtn();
+        showAlert('Histogram created successfully!', 'success');
+    }, 500);
+}
+
+function showChart() {
+    document.getElementById('chartContainer').classList.add('show');
+    document.getElementById('emptyState').style.display = 'none';
+}
+
+async function createLineChart() {
+    if (selectedDepartments.length === 0) {
+        showAlert('Please select at least one department', 'warning');
+        return;
+    }
+
+    showLoadingSpinner();
+
+    const stats = await calculateDepartmentYearStats();
+
+    if (stats.labels.length === 0) {
+        hideLoadingSpinner();
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('emptyState').innerHTML = `
+            <span>📭</span>
+            <h3>No Feedback Data Available</h3>
+            <p>No feedback has been submitted for the selected department(s): <strong>${selectedDepartments.join(', ')}</strong></p>
+            <p style="margin-top: 10px; color: #7c3aed;">Students need to submit surveys before charts can be generated.</p>
+        `;
+        showAlert('No feedback data available for selected departments', 'warning');
+        return;
+    }
+
+    // Destroy previous chart if exists
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    setTimeout(() => {
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        // Create individual datasets for each department
+        const departmentDatasets = {};
+        const colorMap = {
+            0: '#667eea',
+            1: '#764ba2',
+            2: '#f093fb',
+            3: '#f5576c',
+            4: '#11998e',
+            5: '#38ef7d',
+            6: '#ffa502',
+            7: '#ff6b35',
+            8: '#004e89',
+            9: '#1a7f64'
+        };
+
+        // Group data by department
+        stats.labels.forEach((label, index) => {
+            const dept = label.split(' - ')[0];
+            const year = label.split(' - ')[1];
+
+            if (!departmentDatasets[dept]) {
+                const colorIndex = Object.keys(departmentDatasets).length;
+                departmentDatasets[dept] = {
+                    label: dept,
+                    data: [],
+                    labels: [],
+                    borderColor: colorMap[colorIndex] || '#667eea',
+                    backgroundColor: (colorMap[colorIndex] || '#667eea').replace(')', ', 0.1)').replace('rgb', 'rgba'),
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointBackgroundColor: colorMap[colorIndex] || '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 8,
+                    pointHoverBorderWidth: 3
+                };
+            }
+
+            departmentDatasets[dept].labels.push(year);
+            departmentDatasets[dept].data.push(stats.data[index]);
+        });
+
+        // Convert to array of datasets
+        const datasets = Object.values(departmentDatasets);
+
+        // Use the first department's labels as x-axis (or combine all unique years)
+        const allYears = ['1st Year', '2nd Year', '3rd Year'];
+        const xLabels = allYears.filter(year =>
+            stats.labels.some(label => label.includes(year))
+        );
+
+        // Align data to x-axis labels
+        datasets.forEach(dataset => {
+            const alignedData = xLabels.map(year => {
+                const index = dataset.labels.indexOf(year);
+                return index >= 0 ? dataset.data[index] : null;
+            });
+            dataset.data = alignedData;
+            delete dataset.labels; // Remove temporary labels property
+        });
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: xLabels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            },
+                            color: '#333',
+                            padding: 15,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                if (context.parsed.y === null) return null;
+                                return context.dataset.label + ': ' + context.parsed.y + ' / 10';
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Average Ratings Trend by Department & Year',
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#333',
+                        padding: 20
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            },
+                            stepSize: 1
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)',
+                            drawBorder: true
+                        },
+                        title: {
+                            display: true,
+                            text: 'Average Rating (out of 10)',
+                            color: '#666',
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#333',
+                            font: {
+                                size: 12,
+                                weight: '600'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Academic Year',
+                            color: '#666',
+                            font: {
+                                size: 13,
+                                weight: '600'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        hideLoadingSpinner();
+        displayStatistics(stats.data.filter(d => d !== null));
+        enableExportBtn();
+        showAlert('Line chart created successfully!', 'success');
+    }, 500);
+}
+
+function showAlert(message, type = 'danger') {
+    const alertDiv = document.getElementById('alertMessage');
+    if (alertDiv) {
+        alertDiv.textContent = message;
+        alertDiv.className = `alert alert-${type} show`;
+
+        setTimeout(() => {
+            alertDiv.className = 'alert';
+        }, 5000);
+    }
+}
+
+function showLoadingSpinner() {
+    document.getElementById('loadingSpinner').classList.add('show');
+    document.getElementById('chartContainer').classList.remove('show');
+    document.getElementById('statsSummary').classList.remove('show');
+    document.getElementById('emptyState').style.display = 'none';
+}
+
+function hideLoadingSpinner() {
+    document.getElementById('loadingSpinner').classList.remove('show');
+    document.getElementById('chartContainer').classList.add('show');
+}
+
+function calculateStatistics(data) {
+    if (!data || data.length === 0) {
+        return {
+            min: 0,
+            max: 0,
+            avg: 0,
+            median: 0
+        };
+    }
+
+    const sortedData = [...data].sort((a, b) => a - b);
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const avg = (data.reduce((a, b) => a + parseFloat(b), 0) / data.length).toFixed(2);
+
+    let median;
+    const mid = Math.floor(sortedData.length / 2);
+    if (sortedData.length % 2 !== 0) {
+        median = sortedData[mid].toFixed(2);
+    } else {
+        median = ((parseFloat(sortedData[mid - 1]) + parseFloat(sortedData[mid])) / 2).toFixed(2);
+    }
+
+    return {
+        min: min.toFixed(2),
+        max: max.toFixed(2),
+        avg: avg,
+        median: median
+    };
+}
+
+function displayStatistics(data) {
+    const stats = calculateStatistics(data);
+
+    document.getElementById('maxRating').textContent = stats.max;
+    document.getElementById('minRating').textContent = stats.min;
+    document.getElementById('avgRating').textContent = stats.avg;
+    document.getElementById('medianRating').textContent = stats.median;
+
+    document.getElementById('statsSummary').classList.add('show');
+}
+
+function exportChart() {
+    if (!chartInstance) {
+        showAlert('No chart to export. Please create a chart first.', 'warning');
+        return;
+    }
+
+    // Get the canvas and convert to image
+    const canvas = document.getElementById('myChart');
+    const image = canvas.toDataURL('image/png');
+
+    // Create a link and trigger download
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = `chart_${new Date().getTime()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showAlert('Chart exported successfully!', 'success');
+}
+
+function enableExportBtn() {
+    document.getElementById('exportBtn').disabled = false;
+}
+
+// ===== Faculty Ratings by Year =====
+async function displayFacultyRatingsByYear() {
+    const allFeedbacks = await Storage.getFeedbacks();
+    const container = document.getElementById('facultyRatingsContainer');
+
+    // Get filter values
+    const deptFilter = document.getElementById('reportDepartmentFilter') ? .value || '';
+    const yearFilter = document.getElementById('reportYearFilter') ? .value || '';
+    const sortOrder = document.getElementById('reportSortOrder') ? .value || 'highest';
+
+    if (allFeedbacks.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 249, 255, 0.3) 100%); border-radius: 12px; border: 2px dashed #e0e0e0;">
+                <span style="font-size: 64px; display: block; margin-bottom: 20px;">📭</span>
+                <h3 style="color: #1a202c; margin: 0 0 10px 0; font-size: 20px; font-weight: 700;">No Data Available</h3>
+                <p style="color: #718096; margin: 0; font-size: 14px;">No feedback data available. Students need to submit surveys to generate reports.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Organize data by department, then faculty and year
+    const departmentData = {};
+
+    allFeedbacks.forEach(feedback => {
+        if (feedback.responses && Array.isArray(feedback.responses)) {
+            feedback.responses.forEach(response => {
+                const facultyId = response.teacherId || 'unknown';
+                const facultyName = response.teacherName || 'Unknown Faculty';
+                const year = String(feedback.studentYear || '1');
+                const department = feedback.studentDepartment || feedback.department || 'Unknown';
+                const rating = parseFloat(response.rating);
+
+                // Validate rating
+                if (isNaN(rating) || rating < 1 || rating > 10) {
+                    console.warn('⚠️ Invalid rating in faculty report:', rating);
+                    return;
+                }
+
+                // Initialize department if not exists
+                if (!departmentData[department]) {
+                    departmentData[department] = {};
+                }
+
+                // Initialize faculty if not exists
+                if (!departmentData[department][facultyId]) {
+                    departmentData[department][facultyId] = {
+                        name: facultyName,
+                        '1': {
+                            ratings: [],
+                            count: 0
+                        },
+                        '2': {
+                            ratings: [],
+                            count: 0
+                        },
+                        '3': {
+                            ratings: [],
+                            count: 0
+                        },
+                        combined: {
+                            ratings: [],
+                            count: 0
+                        }
+                    };
+                }
+
+                // Add rating to appropriate year
+                if (departmentData[department][facultyId][year]) {
+                    departmentData[department][facultyId][year].ratings.push(rating);
+                    departmentData[department][facultyId][year].count++;
+                    departmentData[department][facultyId].combined.ratings.push(rating);
+                    departmentData[department][facultyId].combined.count++;
+                }
+            });
+        }
+    });
+
+    // Generate HTML
+    container.innerHTML = '';
+
+    if (Object.keys(departmentData).length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 249, 255, 0.3) 100%); border-radius: 12px; border: 2px dashed #e0e0e0;">
+                <span style="font-size: 64px; display: block; margin-bottom: 20px;">📭</span>
+                <h3 style="color: #1a202c; margin: 0 0 10px 0; font-size: 20px; font-weight: 700;">No Faculty Data</h3>
+                <p style="color: #718096; margin: 0; font-size: 14px;">No faculty ratings available.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Create sections for each department
+    Object.keys(departmentData).sort().forEach((department, deptIndex) => {
+        const facultyInDept = departmentData[department];
+
+        // Department header with icon
+        const deptHeader = document.createElement('div');
+        deptHeader.style.cssText = `
+            margin-top: ${deptIndex === 0 ? '0' : '40px'};
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+        `;
+        deptHeader.innerHTML = `
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">📚</span>
+                ${department} Department
+            </h3>
+            <p style="margin: 8px 0 0 0; font-size: 13px; opacity: 0.9;">Faculty performance metrics by academic year</p>
+        `;
+        container.appendChild(deptHeader);
+
+        // Create table for this department
+        const table = document.createElement('div');
+        table.style.cssText = 'overflow-x: auto; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);';
+
+        let html = `
+            <table style="width: 100%; border-collapse: collapse; background: white;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(109, 40, 217, 0.05) 100%); border-bottom: 2px solid #7c3aed;">
+                        <th style="padding: 16px 20px; text-align: left; font-weight: 700; color: #1a202c; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Faculty Name</th>
+                        <th style="padding: 16px 12px; text-align: center; font-weight: 700; color: #1a202c; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">1st Year</th>
+                        <th style="padding: 16px 12px; text-align: center; font-weight: 700; color: #1a202c; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">2nd Year</th>
+                        <th style="padding: 16px 12px; text-align: center; font-weight: 700; color: #1a202c; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">3rd Year</th>
+                        <th style="padding: 16px 12px; text-align: center; font-weight: 700; color: #1a202c; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Overall Avg</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        Object.values(facultyInDept).forEach((faculty, index) => {
+            const year1Avg = faculty['1'].count > 0 ?
+                (faculty['1'].ratings.reduce((a, b) => a + b, 0) / faculty['1'].count).toFixed(2) :
+                '-';
+
+            const year2Avg = faculty['2'].count > 0 ?
+                (faculty['2'].ratings.reduce((a, b) => a + b, 0) / faculty['2'].count).toFixed(2) :
+                '-';
+
+            const year3Avg = faculty['3'].count > 0 ?
+                (faculty['3'].ratings.reduce((a, b) => a + b, 0) / faculty['3'].count).toFixed(2) :
+                '-';
+
+            const combinedAvg = faculty.combined.count > 0 ?
+                (faculty.combined.ratings.reduce((a, b) => a + b, 0) / faculty.combined.count).toFixed(2) :
+                '-';
+
+            const bgColor = index % 2 === 0 ? '#ffffff' : '#f8f9ff';
+            const borderBottom = '1px solid #e8e8e8';
+
+            // Determine rating color based on value (out of 10)
+            const getRatingColor = (rating) => {
+                if (rating === '-') return '#999';
+                const val = parseFloat(rating);
+                if (val >= 7) return '#059669'; // Green for 7-10
+                if (val >= 5) return '#d97706'; // Orange for 5-6.9
+                return '#dc2626'; // Red for below 5
+            };
+
+            const getRatingBg = (rating) => {
+                if (rating === '-') return 'rgba(200, 200, 200, 0.1)';
+                const val = parseFloat(rating);
+                if (val >= 7) return 'rgba(5, 150, 105, 0.1)';
+                if (val >= 5) return 'rgba(217, 119, 6, 0.1)';
+                return 'rgba(220, 38, 38, 0.1)';
+            };
+
+            html += `
+                <tr style="background: ${bgColor}; border-bottom: ${borderBottom}; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(124, 58, 237, 0.05)';" onmouseout="this.style.background='${bgColor}';">
+                    <td style="padding: 16px 20px; text-align: left; font-weight: 600; color: #1a202c; font-size: 14px;">👨‍🏫 ${faculty.name}</td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        <span style="background: ${getRatingBg(year1Avg)}; color: ${getRatingColor(year1Avg)}; padding: 8px 12px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px; min-width: 50px;">
+                            ${year1Avg === '-' ? '-' : year1Avg + '/10'}
+                        </span>
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        <span style="background: ${getRatingBg(year2Avg)}; color: ${getRatingColor(year2Avg)}; padding: 8px 12px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px; min-width: 50px;">
+                            ${year2Avg === '-' ? '-' : year2Avg + '/10'}
+                        </span>
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        <span style="background: ${getRatingBg(year3Avg)}; color: ${getRatingColor(year3Avg)}; padding: 8px 12px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 13px; min-width: 50px;">
+                            ${year3Avg === '-' ? '-' : year3Avg + '/10'}
+                        </span>
+                    </td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        <span style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(109, 40, 217, 0.1) 100%); color: #7c3aed; padding: 8px 14px; border-radius: 6px; display: inline-block; font-weight: 700; font-size: 14px; min-width: 60px; border: 2px solid #7c3aed;">
+                            ${combinedAvg === '-' ? '-' : combinedAvg + '/10'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        table.innerHTML = html;
+        container.appendChild(table);
+    });
+
+    showAlert('Faculty ratings report generated successfully!', 'success');
+}

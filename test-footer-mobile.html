@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Footer Mobile Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .test-header {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .test-header h1 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .viewport-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .test-btn {
+            padding: 8px 16px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .test-btn:hover {
+            background: #5558d9;
+        }
+
+        .content-spacer {
+            min-height: 50vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .info-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-box h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* Copy footer styles from index.html */
+        :root {
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            --space-12: 48px;
+            --space-16: 64px;
+            --space-20: 80px;
+            --font-size-xs: 12px;
+            --font-size-sm: 14px;
+            --font-size-base: 16px;
+            --font-size-lg: 18px;
+            --font-size-xl: 20px;
+            --font-size-2xl: 24px;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 600;
+            --font-weight-bold: 700;
+            --font-weight-black: 900;
+            --line-height-relaxed: 1.625;
+            --radius-xl: 12px;
+            --radius-2xl: 16px;
+            --radius-full: 9999px;
+            --transition-premium: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            --backdrop-blur-sm: blur(8px);
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #cbd5e1;
+            padding: var(--space-20) 0 var(--space-8);
+            position: relative;
+            overflow: hidden;
+            border-top: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-8);
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: var(--space-16);
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-6);
+        }
+
+        .footer-logo-section {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .footer-logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #6366f1 0%, #06b6d4 50%, #0ea5e9 100%);
+            border-radius: var(--radius-2xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-2xl);
+            color: white;
+            font-weight: var(--font-weight-black);
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .footer-brand-text h3 {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-black);
+            color: #f8fafc;
+            margin-bottom: var(--space-1);
+        }
+
+        .footer-brand-text p {
+            font-size: var(--font-size-base);
+            color: #94a3b8;
+            font-weight: var(--font-weight-medium);
+        }
+
+        .footer-description {
+            color: #94a3b8;
+            line-height: var(--line-height-relaxed);
+            font-size: var(--font-size-base);
+            max-width: 400px;
+        }
+
+        .footer-section h4 {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: #f8fafc;
+            margin-bottom: var(--space-6);
+            position: relative;
+        }
+
+        .footer-section h4::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 30px;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+            border-radius: var(--radius-full);
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: var(--font-size-base);
+            transition: all 0.3s;
+            padding: var(--space-2) 0;
+            display: block;
+        }
+
+        .footer-links a:hover {
+            color: #f8fafc;
+            transform: translateX(8px);
+        }
+
+        .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            border-radius: var(--radius-xl);
+            background: rgba(51, 65, 85, 0.3);
+            border: 1px solid rgba(71, 85, 105, 0.3);
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+            border-radius: var(--radius-xl);
+            font-size: var(--font-size-lg);
+            flex-shrink: 0;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .contact-info strong {
+            color: #f8fafc;
+            font-size: var(--font-size-sm);
+            text-transform: uppercase;
+        }
+
+        .contact-info span {
+            color: #cbd5e1;
+            font-size: var(--font-size-base);
+        }
+
+        .footer-bottom {
+            margin-top: var(--space-16);
+            padding-top: var(--space-8);
+            border-top: 1px solid rgba(51, 65, 85, 0.5);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--space-6);
+        }
+
+        .footer-copyright {
+            color: #94a3b8;
+            font-size: var(--font-size-base);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .social-link {
+            width: 50px;
+            height: 50px;
+            background: rgba(51, 65, 85, 0.6);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: var(--font-size-xl);
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .footer {
+                padding: var(--space-16) 0 var(--space-6);
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+                gap: var(--space-8);
+                padding: 0 var(--space-6);
+            }
+
+            .footer-brand {
+                grid-column: 1 / -1;
+                text-align: center;
+            }
+
+            .footer-logo-section {
+                justify-content: center;
+            }
+
+            .footer-description {
+                text-align: center;
+                max-width: 100%;
+            }
+
+            .footer-section h4 {
+                font-size: var(--font-size-base);
+            }
+
+            .footer-links a {
+                font-size: var(--font-size-sm);
+                padding: var(--space-1) 0;
+            }
+
+            .contact-item {
+                padding: var(--space-3);
+                font-size: var(--font-size-sm);
+            }
+
+            .contact-icon {
+                width: 36px;
+                height: 36px;
+                font-size: var(--font-size-base);
+            }
+
+            .contact-info strong {
+                font-size: var(--font-size-xs);
+            }
+
+            .contact-info span {
+                font-size: var(--font-size-sm);
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+                gap: var(--space-4);
+                margin-top: var(--space-12);
+            }
+
+            .footer-copyright {
+                font-size: var(--font-size-sm);
+            }
+
+            .footer-social {
+                justify-content: center;
+            }
+
+            .social-link {
+                width: 44px;
+                height: 44px;
+                font-size: var(--font-size-lg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                padding: 0 var(--space-4);
+            }
+
+            .footer-brand {
+                grid-column: 1;
+            }
+
+            .footer-logo {
+                width: 60px;
+                height: 60px;
+            }
+
+            .footer-brand-text h3 {
+                font-size: var(--font-size-lg);
+            }
+
+            .footer-brand-text p {
+                font-size: var(--font-size-sm);
+            }
+
+            .footer-description {
+                font-size: var(--font-size-sm);
+            }
+
+            .contact-icon {
+                width: 32px;
+                height: 32px;
+            }
+
+            .social-link {
+                width: 40px;
+                height: 40px;
+                font-size: var(--font-size-base);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-header">
+        <h1>📱 Footer Mobile Responsive Test</h1>
+        <div class="viewport-info">
+            Current viewport: <strong id="viewportWidth">-</strong> x <strong id="viewportHeight">-</strong>
+        </div>
+        <div class="test-buttons">
+            <button class="test-btn" onclick="setViewport(375, 667)">iPhone SE (375px)</button>
+            <button class="test-btn" onclick="setViewport(414, 896)">iPhone 11 (414px)</button>
+            <button class="test-btn" onclick="setViewport(768, 1024)">iPad (768px)</button>
+            <button class="test-btn" onclick="window.open('index.html', '_blank')">Open Real Page</button>
+        </div>
+    </div>
+
+    <div class="content-spacer">
+        <div class="info-box">
+            <h2>✅ Footer Mobile Improvements</h2>
+            <ul>
+                <li><strong>Tablet (768px):</strong> 2-column grid layout</li>
+                <li><strong>Mobile (480px):</strong> Single column layout</li>
+                <li><strong>Brand section:</strong> Centered, spans full width</li>
+                <li><strong>Contact items:</strong> Maintain card design</li>
+                <li><strong>Social links:</strong> Centered at bottom</li>
+                <li><strong>Typography:</strong> Scaled appropriately</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="footer-logo-section">
+                    <div class="footer-logo">
+                        <span>SBC</span>
+                    </div>
+                    <div class="footer-brand-text">
+                        <h3>Sri Bhuvanendra College</h3>
+                        <p>Faculty Feedback System</p>
+                    </div>
+                </div>
+                <p class="footer-description">
+                    Empowering education through innovative technology and meaningful feedback.
+                    Building stronger connections between students and faculty for enhanced learning experiences.
+                </p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Quick Access</h4>
+                <ul class="footer-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#">Student Portal</a></li>
+                    <li><a href="#">Create Account</a></li>
+                    <li><a href="#">About System</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">User Guide</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Technical Support</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Contact Information</h4>
+                <div class="footer-contact">
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div class="contact-info">
+                            <strong>Address</strong>
+                            <span>Sri Bhuvanendra College<br>Karkala, Karnataka, India</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📞</div>
+                        <div class="contact-info">
+                            <strong>Phone</strong>
+                            <span>+91 8252-123456</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">✉️</div>
+                        <div class="contact-info">
+                            <strong>Email</strong>
+                            <span>info@sbcollege.edu.in</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-copyright">
+                © 2024 Sri Bhuvanendra College. All rights reserved.
+            </div>
+            <div class="footer-social">
+                <a href="#" class="social-link"><span>📘</span></a>
+                <a href="#" class="social-link"><span>🐦</span></a>
+                <a href="#" class="social-link"><span>📷</span></a>
+                <a href="#" class="social-link"><span>💼</span></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function updateViewportInfo() {
+            document.getElementById('viewportWidth').textContent = window.innerWidth + 'px';
+            document.getElementById('viewportHeight').textContent = window.innerHeight + 'px';
+        }
+
+        function setViewport(width, height) {
+            alert(`To test ${width}x${height}, please:\n1. Open DevTools (F12)\n2. Toggle device toolbar (Ctrl+Shift+M)\n3. Set dimensions to ${width}x${height}`);
+        }
+
+        updateViewportInfo();
+        window.addEventListener('resize', updateViewportInfo);
+    </script>
+</body>
+
+</html>

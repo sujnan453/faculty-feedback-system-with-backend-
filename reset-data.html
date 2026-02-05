@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Data - Faculty Feedback System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .reset-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reset-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .reset-header h1 {
+            color: #1a202c;
+            font-size: 32px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .reset-header p {
+            color: #667eea;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f4ff 100%);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #e0e7ff;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe8cc 100%);
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 25px;
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.7;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .warning-box::before {
+            content: "⚠️";
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #7d5f00;
+            font-weight: 700;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #e7f3ff 0%, #d4e9ff 100%);
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 25px;
+            color: #0c5394;
+            font-size: 14px;
+            line-height: 1.7;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .info-box::before {
+            content: "ℹ️";
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 6px;
+            color: #0c5394;
+            font-weight: 700;
+        }
+
+        .preserve-list {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f9ff 100%);
+            border-left: 5px solid #667eea;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .preserve-list:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .preserve-list h4 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preserve-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .preserve-list li {
+            color: #333;
+            font-size: 14px;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preserve-list li:before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .delete-list {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            border-left: 5px solid #ff6b6b;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-list:hover {
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
+        }
+
+        .delete-list h4 {
+            color: #ff6b6b;
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delete-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .delete-list li {
+            color: #c62828;
+            font-size: 14px;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .delete-list li:before {
+            content: "✕";
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .confirmation-section {
+            background: #f9f9f9;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .confirmation-section h4 {
+            color: #1a202c;
+            margin-bottom: 15px;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-group label {
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-reset:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff5252 0%, #ff3838 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-reset:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%);
+            color: #333;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(135deg, #d0d0d0 0%, #c0c0c0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .result-message {
+            padding: 18px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+            font-weight: 600;
+            font-size: 15px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-message.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .result-message.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .help-text {
+            background: #f5f7fa;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #666;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .reset-container {
+                padding: 25px;
+            }
+
+            .reset-header h1 {
+                font-size: 26px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .warning-box,
+            .info-box {
+                padding: 15px;
+            }
+
+            .preserve-list,
+            .delete-list {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reset-container">
+        <div class="reset-header">
+            <h1>🔄 Reset System Data</h1>
+            <p>Start fresh with a clean slate</p>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="studentCount">0</div>
+                <div class="stat-label">Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="surveyCount">0</div>
+                <div class="stat-label">Surveys</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="feedbackCount">0</div>
+                <div class="stat-label">Feedbacks</div>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <strong>Warning:</strong> This will permanently delete all surveys, student feedbacks, and all student accounts.
+            Only admin accounts will be preserved. This action cannot be undone!
+        </div>
+
+        <div class="info-box">
+            <strong>Info:</strong> Only admin accounts, Departments, Faculties, and Questions will be preserved.
+        </div>
+
+        <!-- What will be preserved -->
+        <div class="preserve-list">
+            <h4>✓ What will be preserved:</h4>
+            <ul>
+                <li>Admin accounts only</li>
+                <li>Departments (BCA, BSC, BCOM, BBA, BA)</li>
+                <li>Faculty members in departments</li>
+                <li>All questions in Manage Questions</li>
+            </ul>
+        </div>
+
+        <!-- What will be deleted -->
+        <div class="delete-list">
+            <h4>✕ What will be deleted:</h4>
+            <ul>
+                <li>All student accounts</li>
+                <li>All surveys</li>
+                <li>All student feedbacks</li>
+                <li>All faculty performance data</li>
+            </ul>
+        </div>
+
+        <!-- Confirmation Checkboxes -->
+        <div class="confirmation-section">
+            <h4>Confirm Reset Action</h4>
+            <div class="checkbox-group">
+                <input type="checkbox" id="confirmDelete" onchange="updateResetButton()">
+                <label for="confirmDelete">I understand that this action will delete all student accounts, surveys, and feedbacks</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="confirmPermanent" onchange="updateResetButton()">
+                <label for="confirmPermanent">I confirm this action is permanent and cannot be undone</label>
+            </div>
+            <div class="help-text">
+                💡 <strong>Tip:</strong> Make sure to backup important data before resetting.
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-cancel" onclick="goBack()">Cancel</button>
+            <button class="btn btn-reset" id="resetBtn" onclick="resetData()" disabled>Reset Data</button>
+        </div>
+
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px; color: #667eea; font-weight: 600;">Resetting system data...</p>
+        </div>
+
+        <div id="resultMessage" class="result-message"></div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make Storage and auth functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+    <script>
+        // Wait for modules to be loaded
+        function waitForModules() {
+            return new Promise((resolve) => {
+                const checkModules = () => {
+                    if (typeof window.Storage !== 'undefined' &&
+                        typeof window.checkAuth !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(checkModules, 100);
+                    }
+                };
+                checkModules();
+            });
+        }
+
+        // Check authentication
+        (async function() {
+            await waitForModules();
+            const currentUser = await checkAuth('admin');
+            if (!currentUser) {
+                // User will be redirected by checkAuth function
+            }
+        })();
+
+        // Initialize page with current data statistics
+        function initializePage() {
+            try {
+                const students = Storage.getUsers().filter(u => u.role === 'student');
+                const surveys = Storage.getSurveys();
+                const feedbacks = Storage.getFeedbacks();
+
+                document.getElementById('studentCount').textContent = students.length;
+                document.getElementById('surveyCount').textContent = surveys.length;
+                document.getElementById('feedbackCount').textContent = feedbacks.length;
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        function updateResetButton() {
+            const confirmDelete = document.getElementById('confirmDelete').checked;
+            const confirmPermanent = document.getElementById('confirmPermanent').checked;
+            const resetBtn = document.getElementById('resetBtn');
+
+            resetBtn.disabled = !(confirmDelete && confirmPermanent);
+        }
+
+        function resetData() {
+            const confirmed = confirm('⚠️ FINAL CONFIRMATION: Are you absolutely sure? This will permanently delete ALL student accounts, surveys, feedbacks, and faculty performance data!');
+
+            if (confirmed) {
+                showLoadingSpinner(true);
+
+                try {
+                    // Simulate processing delay for better UX
+                    setTimeout(() => {
+                        // Delete all students and surveys/feedbacks
+                        Storage.resetStudentData();
+
+                        // Clear faculty performance data by clearing localStorage
+                        localStorage.removeItem('facultyPerformanceData');
+
+                        showLoadingSpinner(false);
+                        showResult('✅ All students deleted! Surveys, feedbacks, and faculty performance data cleared. Only admin accounts remain. Redirecting...', 'success');
+
+                        // Reset statistics
+                        document.getElementById('studentCount').textContent = '0';
+                        document.getElementById('surveyCount').textContent = '0';
+                        document.getElementById('feedbackCount').textContent = '0';
+
+                        // Reset checkboxes
+                        document.getElementById('confirmDelete').checked = false;
+                        document.getElementById('confirmPermanent').checked = false;
+                        updateResetButton();
+
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 2500);
+                    }, 1500);
+                } catch (error) {
+                    showLoadingSpinner(false);
+                    showResult('❌ Error during reset: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('resultMessage');
+            resultDiv.textContent = message;
+            resultDiv.className = `result-message ${type}`;
+        }
+
+        function showLoadingSpinner(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            spinner.style.display = show ? 'block' : 'none';
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+
+</html>

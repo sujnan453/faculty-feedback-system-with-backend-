@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Hamburger Menu Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .test-info {
+            background: #fff;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-info h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .test-info p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .test-info ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .test-info li {
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status.pass {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .test-section {
+            background: #fff;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .test-button:active {
+            transform: translateY(0);
+        }
+
+        #testResults {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6366f1;
+        }
+
+        .result-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .device-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .device-info strong {
+            color: #1976d2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-info">
+        <h1>🍔 Mobile Hamburger Menu Test</h1>
+        <p>This page tests the hamburger menu functionality on mobile devices.</p>
+
+        <div class="device-info">
+            <strong>Current Device:</strong>
+            <div id="deviceInfo"></div>
+        </div>
+
+        <h3>Test Checklist:</h3>
+        <ul>
+            <li>✅ Hamburger button should ONLY appear on screens ≤ 768px wide</li>
+            <li>✅ Hamburger button should be clickable/tappable</li>
+            <li>✅ Menu should slide down when hamburger is clicked</li>
+            <li>✅ Menu items (Home, About, Contact, Login, Register) should be visible</li>
+            <li>✅ Clicking menu items should close the menu</li>
+            <li>✅ Clicking outside menu should close it</li>
+            <li>✅ Body scroll should be prevented when menu is open</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Automated Tests</h2>
+        <button class="test-button" onclick="runTests()">Run All Tests</button>
+        <button class="test-button" onclick="testHamburgerVisibility()">Test Visibility</button>
+        <button class="test-button" onclick="testMenuToggle()">Test Toggle</button>
+        <button class="test-button" onclick="openIndexPage()">Open Main Page</button>
+
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // Display device info
+        function displayDeviceInfo() {
+            const info = document.getElementById('deviceInfo');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const isMobile = width <= 768;
+
+            info.innerHTML = `
+                <p>Screen Width: ${width}px</p>
+                <p>Screen Height: ${height}px</p>
+                <p>Device Type: ${isMobile ? '📱 Mobile' : '💻 Desktop'}</p>
+                <p>User Agent: ${navigator.userAgent}</p>
+                <p>Touch Support: ${('ontouchstart' in window) ? '✅ Yes' : '❌ No'}</p>
+            `;
+        }
+
+        displayDeviceInfo();
+        window.addEventListener('resize', displayDeviceInfo);
+
+        function addResult(message, status) {
+            const results = document.getElementById('testResults');
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            item.innerHTML = `${message} <span class="status ${status}">${status.toUpperCase()}</span>`;
+            results.appendChild(item);
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '<h3>Test Results:</h3>';
+        }
+
+        function testHamburgerVisibility() {
+            clearResults();
+            const width = window.innerWidth;
+            const isMobile = width <= 768;
+
+            if (isMobile) {
+                addResult('Screen width is ≤ 768px (Mobile)', 'pass');
+                addResult('Hamburger button SHOULD be visible', 'pending');
+            } else {
+                addResult('Screen width is > 768px (Desktop)', 'pass');
+                addResult('Hamburger button should NOT be visible', 'pending');
+            }
+
+            addResult(`Current screen width: ${width}px`, 'pass');
+        }
+
+        function testMenuToggle() {
+            clearResults();
+            addResult('Testing menu toggle functionality...', 'pending');
+            addResult('Please manually click the hamburger button on the main page', 'pending');
+            addResult('Check if menu slides down with items visible', 'pending');
+        }
+
+        function runTests() {
+            clearResults();
+
+            // Test 1: Screen size detection
+            const width = window.innerWidth;
+            const isMobile = width <= 768;
+            addResult(`Screen Width: ${width}px`, 'pass');
+            addResult(`Device Type: ${isMobile ? 'Mobile' : 'Desktop'}`, 'pass');
+
+            // Test 2: Touch support
+            const hasTouch = 'ontouchstart' in window;
+            addResult(`Touch Support: ${hasTouch ? 'Yes' : 'No'}`, hasTouch ? 'pass' : 'pending');
+
+            // Test 3: Viewport meta tag
+            const viewport = document.querySelector('meta[name="viewport"]');
+            addResult('Viewport meta tag present', viewport ? 'pass' : 'fail');
+
+            // Test 4: Instructions
+            addResult('Open index.html to test hamburger menu', 'pending');
+            addResult('Hamburger should appear in top-right on mobile', 'pending');
+            addResult('Click hamburger to see menu items', 'pending');
+        }
+
+        function openIndexPage() {
+            window.open('index.html', '_blank');
+        }
+
+        // Auto-run tests on load
+        setTimeout(runTests, 500);
+    </script>
+</body>
+
+</html>

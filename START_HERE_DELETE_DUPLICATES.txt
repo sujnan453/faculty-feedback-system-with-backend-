@@ -1,0 +1,81 @@
+================================================================================
+                    🚨 DELETE DUPLICATE DEPARTMENTS NOW 🚨
+================================================================================
+
+YOU HAVE DUPLICATE DEPARTMENTS IN YOUR DATABASE!
+
+Current situation:
+- You created 6 departments
+- But you have ~18 departments (each appears 3 times)
+- This is causing confusion in your admin panel
+
+================================================================================
+                            WHAT TO DO NOW
+================================================================================
+
+STEP 1: Open this file in your browser
+        👉 delete-duplicates-now.html
+
+STEP 2: Click the big red button
+        👉 "SCAN & DELETE DUPLICATES NOW"
+
+STEP 3: Confirm when asked
+        👉 Click "OK" in the confirmation dialog
+
+STEP 4: Wait for completion
+        👉 You'll see "SUCCESS!" message
+
+STEP 5: Verify it worked
+        👉 Go to "Manage Faculties" and refresh (F5)
+        👉 You should now see only 6 departments
+
+================================================================================
+                            THAT'S IT!
+================================================================================
+
+Time required: 2 minutes
+Difficulty: Easy (just click a button)
+Risk: Low (keeps the department with most faculty)
+
+The tool will:
+✅ Scan your database for duplicates
+✅ Show you what will be kept/deleted
+✅ Delete all duplicates automatically
+✅ Keep one copy of each department
+
+================================================================================
+                        WHY THIS HAPPENED
+================================================================================
+
+The old code had a bug that created duplicate departments when:
+- Adding faculty members
+- Students submitting feedback
+- Any operation that saved departments
+
+This has been FIXED in the code, but existing duplicates must be deleted.
+
+================================================================================
+                        WHAT'S BEEN FIXED
+================================================================================
+
+✅ js/firebase-storage.js - Prevents new duplicates
+✅ js/storage.js - Prevents new duplicates  
+✅ student-register.html - Validates departments
+✅ js/firebase-auth.js - Validates departments
+
+✅ delete-duplicates-now.html - Deletes existing duplicates (USE THIS!)
+
+================================================================================
+                        NEED HELP?
+================================================================================
+
+If the tool doesn't work:
+1. Check browser console (F12) for errors
+2. Try alternative tool: cleanup-duplicate-departments.html
+3. Read: URGENT_FIX_DUPLICATES.md for detailed instructions
+
+================================================================================
+
+                    👉 OPEN delete-duplicates-now.html NOW! 👈
+
+================================================================================

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item active">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="visualization.html" class="nav-item">
+                    <span class="icon">📈</span>
+                    <span>Visualizations</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>Welcome, <span id="adminName">Admin</span>!</h1>
+                    <p>Manage surveys and view student feedback</p>
+                </div>
+                <div class="user-info">
+                    <div class="info-badge admin-badge">
+                        <span class="label">Role:</span>
+                        <span class="value">Administrator</span>
+                    </div>
+                    <div class="user-avatar admin-avatar">
+                        <span id="userInitials">A</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="stats-grid admin-stats">
+                    <div class="stat-card stat-surveys">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-info">
+                            <h3 id="totalSurveys">0</h3>
+                            <p>Total Surveys</p>
+                            <small id="surveyDetails" style="color: #999; font-size: 12px; margin-top: 8px; display: block;">Active: <span id="activeSurveysCount">0</span> | Inactive: <span id="inactiveSurveysCount">0</span></small>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-responses">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-info">
+                            <h3 id="totalResponses">0</h3>
+                            <p>Total Responses</p>
+                            <small id="responseDetails" style="color: #999; font-size: 12px; margin-top: 8px; display: block;">Avg per Survey: <span id="avgResponsesPerSurvey">0</span></small>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-students">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <h3 id="totalStudents">0</h3>
+                            <p>Registered Students</p>
+                            <small id="studentDetails" style="color: #999; font-size: 12px; margin-top: 8px; display: block;">Admins: <span id="totalAdmins">0</span> | Total Users: <span id="totalUsers">0</span></small>
+                        </div>
+                    </div>
+                    <div class="stat-card stat-active">
+                        <div class="stat-icon">✨</div>
+                        <div class="stat-info">
+                            <h3 id="activeSurveys">0</h3>
+                            <p>Active Surveys</p>
+                            <small id="activeDetails" style="color: #999; font-size: 12px; margin-top: 8px; display: block;">Departments: <span id="totalDepartments">0</span></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-actions">
+                    <a href="create-survey.html" class="action-card create-action">
+                        <div class="action-icon">➕</div>
+                        <h3>Create New Survey</h3>
+                        <p>Design and publish a new faculty feedback survey</p>
+                        <div class="action-arrow">→</div>
+                    </a>
+                </div>
+
+                <div class="recent-surveys-section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <h2>📋 Recent Surveys</h2>
+                            <p class="section-subtitle">Latest surveys created in the system</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <button id="selectAllBtn" class="btn btn-secondary" onclick="toggleSelectMode()" style="padding: 10px 20px; display: none; align-items: center; gap: 8px;">
+                                <span>☑️</span>
+                                <span>Select All</span>
+                            </button>
+                            <button id="bulkActionBtn" class="btn btn-danger" onclick="handleBulkAction()" style="background: #ef4444; padding: 10px 20px; display: none; align-items: center; gap: 8px;">
+                                <span>🗑️</span>
+                                <span>Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="recentSurveysContainer" class="surveys-list">
+                        <!-- Recent surveys will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        // Make functions globally available
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+    </script>
+
+    <script src="js/mobile-nav.js"></script>
+    <script src="js/micro-interactions.js"></script>
+    <script type="module" src="js/admin-dashboard.js"></script>
+</body>
+
+</html>
