@@ -295,7 +295,9 @@ async function createPieChart() {
     const stats = await calculateDepartmentYearStats();
 
     if (stats.labels.length === 0) {
-        hideLoadingSpinner();
+        document.getElementById('loadingSpinner').classList.remove('show');
+        document.getElementById('chartContainer').classList.remove('show');
+        document.getElementById('statsSummary').classList.remove('show');
         document.getElementById('emptyState').style.display = 'block';
         document.getElementById('emptyState').innerHTML = `
             <span>📭</span>
@@ -380,7 +382,9 @@ async function createHistogram() {
     const stats = await calculateDepartmentYearStats();
 
     if (stats.labels.length === 0) {
-        hideLoadingSpinner();
+        document.getElementById('loadingSpinner').classList.remove('show');
+        document.getElementById('chartContainer').classList.remove('show');
+        document.getElementById('statsSummary').classList.remove('show');
         document.getElementById('emptyState').style.display = 'block';
         document.getElementById('emptyState').innerHTML = `
             <span>📭</span>
@@ -500,7 +504,9 @@ async function createLineChart() {
     const stats = await calculateDepartmentYearStats();
 
     if (stats.labels.length === 0) {
-        hideLoadingSpinner();
+        document.getElementById('loadingSpinner').classList.remove('show');
+        document.getElementById('chartContainer').classList.remove('show');
+        document.getElementById('statsSummary').classList.remove('show');
         document.getElementById('emptyState').style.display = 'block';
         document.getElementById('emptyState').innerHTML = `
             <span>📭</span>

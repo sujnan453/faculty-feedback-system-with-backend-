@@ -18,16 +18,12 @@
         }
 
         .welcome-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 30px;
-            flex-wrap: wrap;
+            display: block;
+            width: 100%;
         }
 
         .welcome-section>div:first-child {
-            flex: 1;
-            min-width: 300px;
+            width: 100%;
         }
 
         .welcome-section h1 {
@@ -594,12 +590,8 @@
 
         @media (max-width: 768px) {
             .welcome-section {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .progress-indicator {
-                justify-content: center;
+                display: block;
+                width: 100%;
             }
 
             .form-section {
@@ -636,19 +628,6 @@
 
             .welcome-section p {
                 font-size: 13px;
-            }
-
-            .progress-indicator {
-                display: flex;
-                gap: 8px;
-                overflow-x: auto;
-                padding-bottom: 8px;
-            }
-
-            .progress-step {
-                font-size: 12px;
-                padding: 6px 12px;
-                flex-shrink: 0;
             }
 
             .form-section {

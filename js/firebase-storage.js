@@ -1089,13 +1089,18 @@ const Storage = {
                 await deleteDoc(feedbackRef);
             }
 
-            // Clear sessions
-            sessionStorage.removeItem('currentUser');
-
+            // Preserve admin session - don't clear currentUser if it's an admin
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
+            
             // Clear all caches
             CacheManager.clearAll();
 
-            console.log('✅ Reset complete! Students, surveys, and feedbacks cleared.');
+            // Restore admin session if it was an admin
+            if (currentUser && currentUser.role === 'admin') {
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+
+            console.log('✅ Reset complete! Students, surveys, and feedbacks cleared. Admin session preserved.');
             return true;
         } catch (error) {
             console.error('Error resetting student data:', error);

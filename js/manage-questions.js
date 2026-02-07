@@ -537,90 +537,11 @@ function showAlert(message, type = 'danger') {
     }
 }
 
-// Load specific 10 questions function
+// Load specific 10 questions function - REMOVED (sample-data.js deleted)
+// Admin should manually create questions through the "Add Question" form
 async function loadSpecific10Questions() {
-    console.log('🔍 loadSpecific10Questions function called');
-
-    // Check if SampleData is available
-    if (typeof SampleData === 'undefined') {
-        console.error('❌ SampleData not available');
-        showAlert('Error: SampleData system not loaded. Please refresh the page.', 'danger');
-        return;
-    }
-
-    // Check if the specific function exists
-    if (typeof SampleData.initializeSpecific10Questions !== 'function') {
-        console.error('❌ initializeSpecific10Questions function not found');
-        showAlert('Error: Question loading function not available. Please check the system.', 'danger');
-        return;
-    }
-
-    const confirmed = await showConfirmDialog(
-        'Load Sample Questions',
-        'This will add the 10 specific questions from the faculty feedback form. Continue?',
-        'Yes, Add Questions',
-        'Cancel'
-    );
-
-    if (confirmed) {
-        try {
-            console.log('🚀 Starting to load specific questions...');
-
-            const questionsAdded = await SampleData.initializeSpecific10Questions();
-            console.log(`✅ Questions added: ${questionsAdded}`);
-
-            showAlert(`Successfully added ${questionsAdded} specific questions!`, 'success');
-            await loadQuestions(); // Reload the questions list
-
-        } catch (error) {
-            console.error('❌ Error loading specific questions:', error);
-            showAlert(`Error loading specific questions: ${error.message}`, 'danger');
-        }
-    } else {
-        console.log('ℹ️ User cancelled question loading');
-    }
+    console.log('⚠️ loadSpecific10Questions function has been removed');
+    showAlert('This feature has been removed. Please add questions manually using the "Add Question" button.', 'info');
 }
 
-// Debug function to check system status
-function debugSystemStatus() {
-    console.log('🔍 System Debug Information:');
-    console.log('Storage available:', typeof Storage !== 'undefined');
-    console.log('SampleData available:', typeof SampleData !== 'undefined');
-
-    if (typeof SampleData !== 'undefined') {
-        console.log('SampleData functions:', Object.keys(SampleData));
-        console.log('initializeSpecific10Questions available:', typeof SampleData.initializeSpecific10Questions === 'function');
-    }
-
-    const questions = Storage.getQuestions();
-    console.log('Current questions count:', questions.length);
-
-    return {
-        storage: typeof Storage !== 'undefined',
-        sampleData: typeof SampleData !== 'undefined',
-        specificFunction: typeof SampleData !== 'undefined' && typeof SampleData.initializeSpecific10Questions === 'function',
-        questionsCount: questions.length
-    };
-}
-
-// Add debug info on page load
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-        const status = debugSystemStatus();
-        console.log('📊 System Status:', status);
-
-        if (!status.storage) {
-            console.error('❌ Storage system not loaded');
-        }
-        if (!status.sampleData) {
-            console.error('❌ SampleData system not loaded');
-        }
-        if (!status.specificFunction) {
-            console.error('❌ Specific questions function not available');
-        }
-
-        if (status.storage && status.sampleData && status.specificFunction) {
-            console.log('✅ All systems ready for question loading');
-        }
-    }, 1000);
-});
+// Debug function removed - no longer needed

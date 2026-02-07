@@ -606,7 +606,7 @@
                         localStorage.removeItem('facultyPerformanceData');
 
                         showLoadingSpinner(false);
-                        showResult('✅ All students deleted! Surveys, feedbacks, and faculty performance data cleared. Only admin accounts remain. Redirecting...', 'success');
+                        showResult('✅ All students deleted! Surveys, feedbacks, and faculty performance data cleared. Only admin accounts remain. Redirecting to Admin Dashboard...', 'success');
 
                         // Reset statistics
                         document.getElementById('studentCount').textContent = '0';
@@ -618,8 +618,11 @@
                         document.getElementById('confirmPermanent').checked = false;
                         updateResetButton();
 
+                        // Keep admin logged in and redirect to dashboard
                         setTimeout(() => {
-                            window.location.href = 'index.html';
+                            // Admin session is already maintained in localStorage/sessionStorage
+                            // Just redirect to admin dashboard
+                            window.location.href = 'admin-dashboard.html';
                         }, 2500);
                     }, 1500);
                 } catch (error) {

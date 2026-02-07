@@ -747,6 +747,9 @@ const Storage = {
 
     // Reset - Clear students, surveys, feedbacks (keep admin, departments, faculties, questions)
     resetStudentData() {
+        // Preserve admin session before clearing
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+        
         // Clear all users except admin
         const users = this.getUsers();
         const adminUsers = users.filter(u => u.role === 'admin');
@@ -758,10 +761,12 @@ const Storage = {
         // Clear feedbacks
         localStorage.setItem('feedbacks', JSON.stringify([]));
 
-        // Clear current user session
-        localStorage.removeItem('currentUser');
+        // Restore admin session if it was an admin
+        if (currentUser && currentUser.role === 'admin') {
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
 
-        console.log('✅ Reset complete! Students, surveys, and feedbacks cleared.');
+        console.log('✅ Reset complete! Students, surveys, and feedbacks cleared. Admin session preserved.');
         console.log('✅ Departments, faculties, and questions preserved.');
         return true;
     },
@@ -799,39 +804,6 @@ const Storage = {
 
 // No automatic admin initialization - all admin accounts removed by user request
 
-// Initialize default departments if not exists
-if (Storage.getDepartments().length === 0) {
-    const departments = [{
-            id: Storage.generateId(),
-            name: 'BCA',
-            fullName: 'Bachelor of Computer Applications',
-            faculties: []
-        },
-        {
-            id: Storage.generateId(),
-            name: 'BCOM Vocational',
-            fullName: 'Bachelor of Commerce - Vocational',
-            faculties: []
-        },
-        {
-            id: Storage.generateId(),
-            name: 'BCOM General',
-            fullName: 'Bachelor of Commerce - General',
-            faculties: []
-        },
-        {
-            id: Storage.generateId(),
-            name: 'BSC',
-            fullName: 'Bachelor of Science',
-            faculties: []
-        },
-        {
-            id: Storage.generateId(),
-            name: 'BA',
-            fullName: 'Bachelor of Arts',
-            faculties: []
-        }
-    ];
-
-    departments.forEach(dept => Storage.saveDepartment(dept));
-}
+// REMOVED: Auto-initialization of default departments
+// Departments should be created manually by admin through "Manage Faculties" page
+// This prevents dummy departments from being created automatically
