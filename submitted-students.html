@@ -211,6 +211,33 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background 0.2s ease;
+        }
+
+        .students-table th:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .students-table th.sortable::after {
+            content: '⇅';
+            margin-left: 8px;
+            opacity: 0.5;
+            font-size: 12px;
+        }
+
+        .students-table th.sort-asc::after {
+            content: '↑';
+            opacity: 1;
+            color: #fff;
+        }
+
+        .students-table th.sort-desc::after {
+            content: '↓';
+            opacity: 1;
+            color: #fff;
         }
 
         .students-table th:first-child {
@@ -442,10 +469,6 @@
                         <h4>Total Submissions</h4>
                         <p id="totalSubmissions">0</p>
                     </div>
-                    <div class="stat-box variant-1">
-                        <h4>Unique Students</h4>
-                        <p id="uniqueStudents">0</p>
-                    </div>
                     <div class="stat-box variant-2">
                         <h4>Surveys Completed</h4>
                         <p id="surveysCompleted">0</p>
@@ -469,10 +492,10 @@
                             <thead>
                                 <tr>
                                     <th>S.No</th>
-                                    <th>Roll Number</th>
-                                    <th>Name</th>
-                                    <th>Class</th>
-                                    <th>Year</th>
+                                    <th class="sortable" onclick="sortTable('rollNumber')">Roll Number</th>
+                                    <th class="sortable" onclick="sortTable('name')">Name</th>
+                                    <th class="sortable" onclick="sortTable('department')">Class</th>
+                                    <th class="sortable" onclick="sortTable('year')">Year</th>
                                 </tr>
                             </thead>
                             <tbody id="studentsTableBody">

@@ -3,6 +3,8 @@
 let allSubmissions = [];
 let filteredSubmissions = [];
 let currentUser = null;
+let currentSortColumn = 'rollNumber';
+let currentSortDirection = 'asc';
 
 // Wait for modules to load
 function waitForModules() {
@@ -230,15 +232,12 @@ function displaySubmissions() {
 // Update statistics
 function updateStatistics() {
     const totalSubmissions = filteredSubmissions.length;
-    const uniqueStudents = new Set(filteredSubmissions.map(s => s.studentId)).size;
     const uniqueSurveys = new Set(filteredSubmissions.map(s => s.surveyId)).size;
 
     document.getElementById('totalSubmissions').textContent = totalSubmissions;
-    document.getElementById('uniqueStudents').textContent = uniqueStudents;
     document.getElementById('surveysCompleted').textContent = uniqueSurveys;
 }
 
-// Display students list in table
 // Display students list in table
 function displayStudentsList() {
     const tbody = document.getElementById('studentsTableBody');
@@ -246,25 +245,11 @@ function displayStudentsList() {
 
     tbody.innerHTML = '';
 
-    // Sort by roll number for neat display
-    const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
-        // Extract numeric part from roll number for proper sorting
-        const rollA = String(a.rollNumber).toLowerCase();
-        const rollB = String(b.rollNumber).toLowerCase();
+    // Apply current sorting
+    const sortedSubmissions = sortSubmissions([...filteredSubmissions], currentSortColumn, currentSortDirection);
 
-        // Try to extract numbers for numeric comparison
-        const matchA = rollA.match(/\d+/);
-        const matchB = rollB.match(/\d+/);
-        const numA = parseInt(matchA ? matchA[0] : '0');
-        const numB = parseInt(matchB ? matchB[0] : '0');
-
-        if (numA !== numB) {
-            return numA - numB;
-        }
-
-        // If numbers are same or no numbers found, do string comparison
-        return rollA.localeCompare(rollB);
-    });
+    // Update sort indicators in table headers
+    updateSortIndicators();
 
     sortedSubmissions.forEach((submission, index) => {
         const row = document.createElement('tr');
@@ -285,6 +270,97 @@ function displayStudentsList() {
     });
 }
 
+// Sort submissions based on column and direction
+function sortSubmissions(submissions, column, direction) {
+    return submissions.sort((a, b) => {
+        let valueA, valueB;
+
+        switch (column) {
+            case 'rollNumber':
+                // Extract numeric part from roll number for proper sorting
+                const rollA = String(a.rollNumber).toLowerCase();
+                const rollB = String(b.rollNumber).toLowerCase();
+                const matchA = rollA.match(/\d+/);
+                const matchB = rollB.match(/\d+/);
+                const numA = parseInt(matchA ? matchA[0] : '0');
+                const numB = parseInt(matchB ? matchB[0] : '0');
+                
+                if (numA !== numB) {
+                    valueA = numA;
+                    valueB = numB;
+                } else {
+                    valueA = rollA;
+                    valueB = rollB;
+                }
+                break;
+
+            case 'name':
+                valueA = a.studentName.toLowerCase();
+                valueB = b.studentName.toLowerCase();
+                break;
+
+            case 'department':
+                valueA = a.department.toLowerCase();
+                valueB = b.department.toLowerCase();
+                break;
+
+            case 'year':
+                valueA = a.year;
+                valueB = b.year;
+                break;
+
+            default:
+                return 0;
+        }
+
+        // Compare values
+        let comparison = 0;
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+            comparison = valueA - valueB;
+        } else {
+            comparison = valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+        }
+
+        return direction === 'asc' ? comparison : -comparison;
+    });
+}
+
+// Sort table by column
+function sortTable(column) {
+    // Toggle direction if clicking the same column
+    if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortColumn = column;
+        currentSortDirection = 'asc';
+    }
+
+    // Re-display with new sorting
+    displayStudentsList();
+}
+
+// Update sort indicators in table headers
+function updateSortIndicators() {
+    // Remove all sort classes
+    document.querySelectorAll('.students-table th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+    });
+
+    // Add sort class to current column
+    const columnMap = {
+        'rollNumber': 1,
+        'name': 2,
+        'department': 3,
+        'year': 4
+    };
+
+    const columnIndex = columnMap[currentSortColumn];
+    if (columnIndex) {
+        const th = document.querySelectorAll('.students-table th')[columnIndex];
+        th.classList.add(currentSortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+    }
+}
+
 
 // Export to CSV
 function exportToCSV() {
@@ -297,17 +373,8 @@ function exportToCSV() {
     const year = document.getElementById('filterYear').value;
     const department = document.getElementById('filterDepartment').value;
 
-    // Sort by roll number for neat export
-    const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
-        const rollA = String(a.rollNumber).toLowerCase();
-        const rollB = String(b.rollNumber).toLowerCase();
-        const matchA = rollA.match(/\d+/);
-        const matchB = rollB.match(/\d+/);
-        const numA = parseInt(matchA ? matchA[0] : '0');
-        const numB = parseInt(matchB ? matchB[0] : '0');
-        if (numA !== numB) return numA - numB;
-        return rollA.localeCompare(rollB);
-    });
+    // Apply current sorting to export
+    const sortedSubmissions = sortSubmissions([...filteredSubmissions], currentSortColumn, currentSortDirection);
 
     // Build CSV content
     const csv = [];
@@ -332,7 +399,7 @@ function exportToCSV() {
     // Statistics
     csv.push('Statistics:');
     csv.push(`Total Submissions: ${filteredSubmissions.length}`);
-    csv.push(`Unique Students: ${new Set(filteredSubmissions.map(s => s.studentId)).size}`);
+    csv.push(`Surveys Completed: ${new Set(filteredSubmissions.map(s => s.surveyId)).size}`);
     csv.push('');
 
     // Column headers
@@ -370,6 +437,7 @@ function exportToCSV() {
 window.applyFilters = applyFilters;
 window.resetFilters = resetFilters;
 window.exportToCSV = exportToCSV;
+window.sortTable = sortTable;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', initializePage);
