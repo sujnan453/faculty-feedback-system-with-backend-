@@ -19,14 +19,28 @@ let currentUser = null;
 })();
 
 async function initializeCreateSurvey() {
-    // Load departments into dropdown
-    await loadDepartments();
+    console.log('🚀 Initializing Create Survey page...');
+
+    // Verify Storage is available
+    if (typeof Storage === 'undefined' || !Storage.getClasses) {
+        console.error('❌ Storage module not loaded properly');
+        showAlert('❌ System error: Storage module not available. Please refresh the page.', 'danger');
+        return;
+    }
+
+    // Load classes for survey (from Firebase with localStorage caching)
+    await loadClassesForSurvey();
 
     // Load questions
     await loadAvailableQuestions();
 
     // Form submission
-    document.getElementById('createSurveyForm').addEventListener('submit', handleSurveySubmit);
+    const form = document.getElementById('createSurveyForm');
+    if (form) {
+        form.addEventListener('submit', handleSurveySubmit);
+    } else {
+        console.error('❌ createSurveyForm not found');
+    }
 
     // Setup progress bar tracking
     setupProgressBar();
@@ -34,29 +48,93 @@ async function initializeCreateSurvey() {
     // Refresh data when page becomes visible (user returns to tab)
     document.addEventListener('visibilitychange', async () => {
         if (!document.hidden) {
-            await loadDepartments();
+            console.log('🔄 Page visible again, refreshing data...');
+            await loadClassesForSurvey();
             await loadAvailableQuestions();
         }
     });
+
+    console.log('✅ Create Survey page initialized');
+}
+
+// Load classes created via Class Survey (from Firebase with localStorage caching)
+async function loadClassesForSurvey() {
+    const select = document.getElementById('classForSurvey');
+    if (!select) {
+        console.error('❌ classForSurvey select element not found');
+        return;
+    }
+    try {
+        console.log('🔄 Loading classes from Firebase...');
+
+        // Fetch from Firebase (with automatic caching)
+        const classes = await Storage.getClasses();
+
+        console.log(`✅ Loaded ${classes.length} classes from Firebase:`, classes);
+
+        // Clear all options except the default ones
+        select.innerHTML = '';
+
+        // Add placeholder
+        const placeholderOpt = document.createElement('option');
+        placeholderOpt.value = '';
+        placeholderOpt.textContent = 'Select Class';
+        select.appendChild(placeholderOpt);
+
+        // Check if classes array is valid
+        if (!Array.isArray(classes) || classes.length === 0) {
+            console.warn('⚠️ No classes found in Firebase');
+            const noClassOpt = document.createElement('option');
+            noClassOpt.value = '';
+            noClassOpt.textContent = 'No classes available';
+            noClassOpt.disabled = true;
+            select.appendChild(noClassOpt);
+            return;
+        }
+
+        // Add individual classes
+        classes.forEach(c => {
+            if (!c || !c.id || !c.name) {
+                console.warn('⚠️ Invalid class object:', c);
+                return;
+            }
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            select.appendChild(opt);
+        });
+
+        // Add ALL Classes option at the end
+        const allOpt = document.createElement('option');
+        allOpt.value = 'ALL';
+        allOpt.textContent = 'ALL Classes';
+        select.appendChild(allOpt);
+
+        console.log(`✅ Successfully populated ${classes.length} classes in dropdown`);
+    } catch (err) {
+        console.error('❌ Error loading classes for survey:', err);
+        showAlert('❌ Failed to load classes. Please refresh the page.', 'danger');
+
+        // Add error option
+        const errorOpt = document.createElement('option');
+        errorOpt.value = '';
+        errorOpt.textContent = 'Error loading classes';
+        errorOpt.disabled = true;
+        select.appendChild(errorOpt);
+    }
+}
+
+function onClassSelectionChange() {
+    // Class selection changed, load faculties and update progress bar
+    loadFaculties();
+    updateProgressBar();
 }
 
 function setupProgressBar() {
-    // Track department selection
-    const departmentSelect = document.getElementById('department');
-    if (departmentSelect) {
-        departmentSelect.addEventListener('change', updateProgressBar);
-    }
-
-    // Track faculty selection
-    const facultyContainer = document.getElementById('facultyCheckboxContainer');
-    if (facultyContainer) {
-        const observer = new MutationObserver(() => {
-            updateProgressBar();
-        });
-        observer.observe(facultyContainer, {
-            childList: true,
-            subtree: true
-        });
+    // Track class selection
+    const classSelect = document.getElementById('classForSurvey');
+    if (classSelect) {
+        classSelect.addEventListener('change', updateProgressBar);
     }
 
     // Track question selection
@@ -87,33 +165,40 @@ async function loadDepartments() {
 }
 
 async function loadFaculties() {
-    const departmentId = document.getElementById('department').value;
+    const classId = document.getElementById('classForSurvey').value;
     const container = document.getElementById('facultyCheckboxContainer');
+    const subtitle = document.querySelector('.faculties-subtitle');
 
-    if (!departmentId) {
-        container.innerHTML = '<div class="faculty-list-item empty-state"><p>📭 Please select a department first</p></div>';
+    if (!classId) {
+        container.innerHTML = '<div class="faculty-list-item empty-state"><p>📭 Please select a class first</p></div>';
         updateFacultiesCounter(0);
+        if (subtitle) subtitle.textContent = 'Choose faculty members for this survey';
         return;
     }
 
-    if (departmentId === 'ALL') {
-        const allDepartments = await Storage.getDepartments();
+    if (classId === 'ALL') {
+        const classes = await Storage.getClasses();
         let totalFaculties = 0;
-        let deptList = [];
+        let classList = [];
 
-        allDepartments.forEach(dept => {
-            const facultyCount = (dept.faculties || []).length;
+        classes.forEach(cls => {
+            const facultyCount = (cls.faculties || []).length;
             totalFaculties += facultyCount;
-            deptList.push(`${dept.name} (${facultyCount})`);
+            classList.push(`${cls.name} (${facultyCount})`);
         });
+
+        // Update subtitle with class list
+        if (subtitle) {
+            subtitle.textContent = `All classes: ${classList.join(' • ')}`;
+        }
 
         container.innerHTML = `
             <div class="all-departments-card" style="background: linear-gradient(135deg, rgba(17, 153, 142, 0.08) 0%, rgba(56, 239, 125, 0.05) 100%); border: 2px solid rgba(17, 153, 142, 0.2); border-radius: 12px; padding: 24px; width: 100%;">
                 <div style="display: flex; align-items: flex-start; gap: 24px; margin-bottom: 24px;">
-                    <div style="font-size: 3.5rem; flex-shrink: 0; line-height: 1;">🌍</div>
+                    <div style="font-size: 3.5rem; flex-shrink: 0; line-height: 1;">📚</div>
                     <div style="flex: 1;">
-                        <h3 style="color: #1a202c; margin: 0 0 8px 0; font-size: 1.4rem; font-weight: 700; line-height: 1.3;">All Departments Selected</h3>
-                        <p style="color: #4a5568; margin: 0; font-size: 0.95rem; line-height: 1.5;">Survey will be created for all departments</p>
+                        <h3 style="color: #1a202c; margin: 0 0 8px 0; font-size: 1.4rem; font-weight: 700; line-height: 1.3;">All Classes Selected</h3>
+                        <p style="color: #4a5568; margin: 0; font-size: 0.95rem; line-height: 1.5;">Survey will be created for all classes</p>
                     </div>
                 </div>
 
@@ -124,7 +209,7 @@ async function loadFaculties() {
 
                 <div style="background: white; padding: 18px; border-radius: 10px; border-left: 5px solid #11998e; box-shadow: 0 2px 8px rgba(17, 153, 142, 0.1);">
                     <p style="color: #1a202c; margin: 0; font-size: 0.95rem; line-height: 1.6; font-weight: 600;">
-                        <strong style="color: #1a202c;">Departments:</strong> <span style="color: #4a5568;">${deptList.join(' • ')}</span>
+                        <strong style="color: #1a202c;">Classes:</strong> <span style="color: #4a5568;">${classList.join(' • ')}</span>
                     </p>
                 </div>
             </div>
@@ -133,12 +218,30 @@ async function loadFaculties() {
         return;
     }
 
-    const faculties = await Storage.getFacultiesByDepartment(departmentId);
+    // Get individual class from Firebase
+    const classes = await Storage.getClasses();
+    const selectedClass = classes.find(c => c.id === classId);
+
+    if (!selectedClass) {
+        container.innerHTML = '<div class="faculty-list-item empty-state"><p>📭 Class not found</p></div>';
+        updateFacultiesCounter(0);
+        if (subtitle) subtitle.textContent = 'Choose faculty members for this survey';
+        return;
+    }
+
+    const faculties = selectedClass.faculties || [];
 
     if (faculties.length === 0) {
-        container.innerHTML = '<div class="faculty-list-item empty-state"><p>📭 No faculties added for this department</p><p>Go to <a href="manage-faculties.html">Manage Faculties</a> to add faculty members first.</p></div>';
+        container.innerHTML = '<div class="faculty-list-item empty-state"><p>📭 No faculties assigned to this class</p><p>Go to <a href="select-faculties.html">Class Survey</a> to assign faculties to this class.</p></div>';
         updateFacultiesCounter(0);
+        if (subtitle) subtitle.textContent = 'No faculties available for this class';
         return;
+    }
+
+    // Update subtitle with faculty names
+    const facultyNames = faculties.map(f => f.name).join(', ');
+    if (subtitle) {
+        subtitle.textContent = `All lecturers: ${facultyNames}`;
     }
 
     container.innerHTML = '';
@@ -146,7 +249,7 @@ async function loadFaculties() {
 
     faculties.forEach(faculty => {
         const facultyItem = document.createElement('div');
-        facultyItem.className = 'faculty-list-item';
+        facultyItem.className = 'faculty-list-item selected';
         facultyItem.id = `faculty-item-${faculty.id}`;
 
         facultyItem.innerHTML = `
@@ -157,11 +260,6 @@ async function loadFaculties() {
                 </p>
             </div>
         `;
-
-        facultyItem.addEventListener('click', function() {
-            this.classList.toggle('selected');
-            updateProgressBar();
-        });
 
         container.appendChild(facultyItem);
     });
@@ -178,25 +276,16 @@ function updateProgressBar() {
     const progressBarFill = document.getElementById('progressBarFill');
     if (!progressBarFill) return;
 
-    const departmentId = document.getElementById('department').value;
-    const selectedFaculties = document.querySelectorAll('.faculty-list-item.selected').length;
+    const classId = document.getElementById('classForSurvey').value;
     const selectedQuestions = selectedQuestionIds.length;
 
     let progress = 0;
 
-    if (departmentId) {
-        progress = 25;
-    }
-
-    if (departmentId === 'ALL' || selectedFaculties > 0) {
+    if (classId) {
         progress = 50;
     }
 
-    if (selectedQuestions > 0) {
-        progress = 75;
-    }
-
-    if (departmentId && (departmentId === 'ALL' || selectedFaculties > 0) && selectedQuestions > 0) {
+    if (classId && selectedQuestions > 0) {
         progress = 100;
     }
 
@@ -362,22 +451,22 @@ async function handleSurveySubmit(e) {
     btnText.style.display = 'none';
     btnLoader.classList.add('show');
 
-    const departmentId = document.getElementById('department').value;
+    const classForSurvey = document.getElementById('classForSurvey') ? document.getElementById('classForSurvey').value : '';
 
-    if (!departmentId) {
+    // Require class selection
+    if (!classForSurvey) {
         // Reset button state for validation errors
         submitBtn.disabled = false;
         submitBtn.style.opacity = '1';
         submitBtn.style.cursor = 'pointer';
         btnText.style.display = 'inline-block';
         btnLoader.classList.remove('show');
-
-        showAlert('❌ Please select a department', 'danger');
-        document.getElementById('department').style.borderColor = '#dc3545';
+        showAlert('❌ Please select a class', 'danger');
+        if (document.getElementById('classForSurvey')) document.getElementById('classForSurvey').style.borderColor = '#dc3545';
         return;
     }
 
-    document.getElementById('department').style.borderColor = '';
+    if (document.getElementById('classForSurvey')) document.getElementById('classForSurvey').style.borderColor = '';
 
     const questions = [];
 
@@ -416,53 +505,47 @@ async function handleSurveySubmit(e) {
         }
     }
 
-    let departmentsToCreateFor = [];
+    let classesToCreateFor = [];
 
-    if (departmentId === 'ALL') {
-        departmentsToCreateFor = await Storage.getDepartments();
-    } else {
-        const department = await Storage.getDepartmentById(departmentId);
-        if (!department) {
-            // Reset button state for validation errors
+    if (classForSurvey === 'ALL') {
+        // Create survey for ALL classes from Firebase
+        classesToCreateFor = await Storage.getClasses();
+        if (classesToCreateFor.length === 0) {
             submitBtn.disabled = false;
             submitBtn.style.opacity = '1';
             submitBtn.style.cursor = 'pointer';
             btnText.style.display = 'inline-block';
             btnLoader.classList.remove('show');
-
-            showAlert('❌ Department not found', 'danger');
+            showAlert('❌ No classes found. Create classes first.', 'danger');
             return;
         }
-        departmentsToCreateFor = [department];
+    } else {
+        // Create survey for a single class
+        const classes = await Storage.getClasses();
+        const cls = classes.find(x => x.id === classForSurvey);
+        if (!cls) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.cursor = 'pointer';
+            btnText.style.display = 'inline-block';
+            btnLoader.classList.remove('show');
+            showAlert('❌ Selected class not found. Refresh and try again.', 'danger');
+            return;
+        }
+        classesToCreateFor = [cls];
     }
 
-    if (departmentsToCreateFor.length === 0) {
-        // Reset button state for validation errors
-        submitBtn.disabled = false;
-        submitBtn.style.opacity = '1';
-        submitBtn.style.cursor = 'pointer';
-        btnText.style.display = 'inline-block';
-        btnLoader.classList.remove('show');
-
-        showAlert('❌ No departments found', 'danger');
-        return;
-    }
-
+    // Validate that all classes have faculties
     let allValid = true;
-    departmentsToCreateFor.forEach(department => {
-        const faculties = (department.faculties || []).map(faculty => ({
-            id: faculty.id,
-            name: faculty.name
-        }));
-
+    classesToCreateFor.forEach(cls => {
+        const faculties = cls.faculties || [];
         if (faculties.length === 0) {
-            showAlert(`❌ No faculties available for ${department.name} department. Please add faculties first.`, 'danger');
+            showAlert(`❌ No faculties assigned to class "${cls.name}". Please assign faculties first.`, 'danger');
             allValid = false;
         }
     });
 
     if (!allValid) {
-        // Reset button state for validation errors
         submitBtn.disabled = false;
         submitBtn.style.opacity = '1';
         submitBtn.style.cursor = 'pointer';
@@ -473,15 +556,16 @@ async function handleSurveySubmit(e) {
 
     try {
         let surveysCreated = 0;
-        for (const department of departmentsToCreateFor) {
-            const faculties = (department.faculties || []).map(faculty => ({
+        for (const classItem of classesToCreateFor) {
+            const faculties = (classItem.faculties || []).map(faculty => ({
                 id: faculty.id,
                 name: faculty.name
             }));
 
             const survey = {
                 id: Storage.generateId(),
-                department: department.name,
+                classId: classItem.id,
+                className: classItem.name,
                 faculties: faculties,
                 questions: questions,
                 createdBy: currentUser.id,
@@ -493,7 +577,7 @@ async function handleSurveySubmit(e) {
             surveysCreated++;
         }
 
-        showAlert(`✅ Survey created successfully for ${surveysCreated} department(s)! Redirecting...`, 'success');
+        showAlert(`✅ Survey created successfully for ${surveysCreated} class(es)! Redirecting...`, 'success');
 
         // Keep button disabled during redirect
         setTimeout(() => {
@@ -525,4 +609,5 @@ function showAlert(message, type = 'danger') {
 
 // Make functions globally available
 window.loadFaculties = loadFaculties;
+window.onClassSelectionChange = onClassSelectionChange;
 window.toggleSelectAllQuestions = toggleSelectAllQuestions;

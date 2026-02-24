@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Feedbacks - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/feedbacks.css">
+    <style>
+        .filters-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 255, 0.95) 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #667eea;
+            border-left: none;
+        }
+
+        .filters-section h3 {
+            color: #1a202c;
+            margin: 0 0 25px 0;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-weight: 500;
+            color: #1a202c;
+        }
+
+        .form-group input {
+            cursor: text;
+        }
+
+        .form-group select:hover,
+        .form-group input:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.01) 100%);
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-reset {
+            transition: all 0.3s ease;
+        }
+
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(245, 87, 108, 0.3);
+        }
+
+        .btn-reset:active {
+            transform: translateY(0);
+        }
+
+        /* Reset Section */
+        .reset-section {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reset-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .reset-btn:hover::before {
+            left: 100%;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
+        }
+
+        .reset-btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Quick Stats Cards */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .quick-stat-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .quick-stat-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .quick-stat-icon {
+            font-size: 32px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .quick-stat-content {
+            flex: 1;
+        }
+
+        .quick-stat-content h4 {
+            color: #1a202c;
+            font-size: 12px;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-stat-content p {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0 0 3px 0;
+        }
+
+        .quick-stat-content small {
+            color: #999;
+            font-size: 12px;
+            display: block;
+        }
+
+        /* Statistics Summary */
+        .feedback-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #004e89 0%, #1a7f64 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 78, 137, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 78, 137, 0.3);
+        }
+
+        .stat-box:hover::before {
+            left: 100%;
+        }
+
+        .stat-box h4 {
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 1;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .stat-box p {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            color: #ffffff;
+        }
+
+        .stat-box.variant-1 {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.2);
+            color: #ffffff;
+        }
+
+        .stat-box.variant-1 h4 {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .stat-box.variant-1 p {
+            color: #ffffff;
+        }
+
+        .stat-box.variant-2 {
+            background: linear-gradient(135deg, #ffa502 0%, #ff6b35 100%);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.2);
+            color: #ffffff;
+        }
+
+        .stat-box.variant-2 h4 {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .stat-box.variant-2 p {
+            color: #ffffff;
+        }
+
+        .stat-box.variant-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.2);
+            color: #ffffff;
+        }
+
+        .stat-box.variant-3 h4 {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .stat-box.variant-3 p {
+            color: #ffffff;
+        }
+
+        /* Export Section */
+        .export-section {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        /* Export buttons container */
+        .export-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+        .export-btn {
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .export-btn:hover::before {
+            left: 100%;
+        }
+
+        .export-btn.pdf {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.2);
+        }
+
+        .export-btn.print {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 4px 12px rgba(79, 172, 254, 0.2);
+        }
+
+        .export-btn.csv {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.2);
+        }
+
+        .export-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .export-btn.pdf:hover {
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
+        }
+
+        .export-btn.print:hover {
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .export-btn.csv:hover {
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.3);
+        }
+
+        /* Feedbacks Container */
+        .feedbacks-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #667eea;
+        }
+
+        .feedbacks-container h3 {
+            color: #1a202c;
+            margin: 0 0 25px 0;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        /* Teacher Cards */
+        .teacher-feedback-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(248, 249, 255, 0.3) 100%);
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teacher-feedback-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .teacher-feedback-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .teacher-feedback-card:hover::before {
+            left: 100%;
+        }
+
+        .teacher-feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+            gap: 15px;
+        }
+
+        .teacher-info h4 {
+            color: #1a202c;
+            font-size: 18px;
+            margin: 0 0 5px 0;
+            font-weight: 700;
+        }
+
+        .teacher-info p {
+            color: #667eea;
+            font-size: 14px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .teacher-rating {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 28px;
+            border-radius: 10px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .teacher-rating:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .rating-value {
+            font-size: 32px;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+
+        .rating-label {
+            font-size: 13px;
+            display: block;
+            opacity: 0.95;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Feedback Metrics */
+        .feedback-metrics {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.02) 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+        }
+
+        .metric-item:hover {
+            background: rgba(102, 126, 234, 0.08);
+            padding: 12px 8px;
+            border-radius: 4px;
+        }
+
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #1a202c;
+            font-size: 14px;
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stars {
+            font-size: 16px;
+        }
+
+        .score {
+            color: #667eea;
+            font-weight: 700;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* Toggle Button */
+        .toggle-details {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .toggle-details:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .toggle-details:active {
+            transform: translateY(0);
+        }
+
+        /* Details Section */
+        .details-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .details-content.show {
+            max-height: 2000px;
+        }
+
+        .student-feedbacks-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .student-feedbacks-section h5 {
+            color: #1a202c;
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .student-feedback-item {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(248, 249, 255, 0.5) 100%);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .student-name {
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .feedback-date {
+            color: #667eea;
+            font-size: 12px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .feedback-answers {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .answer-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .answer-question {
+            color: #1a202c;
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .answer-rating {
+            color: #667eea;
+            font-weight: 700;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+
+        .answer-comment {
+            color: #1a202c;
+            font-size: 12px;
+            font-style: italic;
+            margin-top: 8px;
+            padding: 8px;
+            background: white;
+            border-left: 3px solid #ffc107;
+            border-radius: 4px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            color: #4a5568;
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .empty-state p {
+            margin: 10px 0 0 0;
+            font-size: 14px;
+            color: #718096;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .filters-section {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .filters-section h3 {
+                font-size: 16px;
+                margin-bottom: 15px;
+                gap: 8px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .form-group {
+                margin-bottom: 5px;
+            }
+
+            .form-group label {
+                font-size: 12px;
+                margin-bottom: 6px;
+                font-weight: 700;
+            }
+
+            .form-group select,
+            .form-group input {
+                padding: 10px 12px;
+                font-size: 13px;
+                border-radius: 6px;
+            }
+
+            .btn-reset {
+                padding: 10px 12px !important;
+                font-size: 12px !important;
+                font-weight: 700;
+            }
+
+            .btn-reset:hover {
+                transform: translateY(-1px);
+            }
+
+            .reset-section {
+                margin-top: 15px;
+                padding-top: 12px;
+                justify-content: center;
+            }
+
+            .reset-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+                flex-shrink: 0;
+            }
+
+            .reset-btn span:last-child {
+                display: none;
+            }
+
+            .reset-btn span:first-child {
+                margin-right: 0;
+            }
+
+            /* Filter info tip on mobile */
+            .filters-section>div:last-child {
+                margin-top: 12px;
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+
+            .quick-stats {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .quick-stat-card {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .quick-stat-icon {
+                font-size: 24px;
+                min-width: 40px;
+            }
+
+            .quick-stat-content h4 {
+                font-size: 10px;
+                margin-bottom: 4px;
+            }
+
+            .quick-stat-content p {
+                font-size: 14px;
+                margin-bottom: 2px;
+            }
+
+            .quick-stat-content small {
+                font-size: 11px;
+            }
+
+            .feedback-stats {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .stat-box {
+                padding: 20px 15px;
+                text-align: center;
+            }
+
+            .stat-box h4 {
+                font-size: 12px;
+                margin-bottom: 8px;
+            }
+
+            .stat-box p {
+                font-size: 28px;
+            }
+
+            .export-section {
+                margin-top: 15px;
+                padding-top: 15px;
+                justify-content: center;
+            }
+
+            .export-buttons {
+                justify-content: center;
+                gap: 10px;
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+
+            .export-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+                flex-shrink: 0;
+                min-width: fit-content;
+            }
+
+            .export-btn span:last-child {
+                display: none;
+            }
+
+            .export-btn span:first-child {
+                margin-right: 0;
+            }
+
+            .feedbacks-container {
+                padding: 15px;
+            }
+
+            .feedbacks-container h3 {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .teacher-feedback-card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .teacher-feedback-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+                margin-bottom: 15px;
+                padding-bottom: 12px;
+            }
+
+            .teacher-info h4 {
+                font-size: 16px;
+            }
+
+            .teacher-info p {
+                font-size: 13px;
+            }
+
+            .teacher-rating {
+                padding: 12px 20px;
+                min-width: auto;
+                width: 100%;
+                text-align: center;
+            }
+
+            .rating-value {
+                font-size: 24px;
+                margin-bottom: 4px;
+            }
+
+            .rating-label {
+                font-size: 16px;
+            }
+
+            .feedback-metrics {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .metric-item {
+                padding: 10px 0;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .metric-label {
+                font-size: 13px;
+            }
+
+            .metric-value {
+                align-self: flex-end;
+            }
+
+            .score {
+                font-size: 14px;
+                min-width: auto;
+            }
+
+            .toggle-details {
+                padding: 10px 20px;
+                font-size: 13px;
+                margin: 15px 0;
+            }
+
+            .student-feedbacks-section {
+                padding: 15px;
+            }
+
+            .student-feedbacks-section h5 {
+                font-size: 15px;
+                margin-bottom: 15px;
+                padding-bottom: 8px;
+            }
+
+            .student-feedback-item {
+                padding: 12px;
+                margin-bottom: 12px;
+            }
+
+            .student-name {
+                font-size: 13px;
+                margin-bottom: 4px;
+            }
+
+            .feedback-date {
+                font-size: 11px;
+                margin-bottom: 8px;
+            }
+
+            .answer-row {
+                flex-direction: column;
+                gap: 4px;
+                font-size: 12px;
+                align-items: flex-start;
+            }
+
+            .answer-question {
+                font-weight: 500;
+            }
+
+            .answer-rating {
+                margin-left: 0;
+                font-size: 13px;
+            }
+
+            .answer-comment {
+                font-size: 11px;
+                margin-top: 6px;
+                padding: 6px;
+            }
+
+            .empty-state {
+                padding: 40px 15px;
+            }
+
+            .empty-state span {
+                font-size: 40px;
+                margin-bottom: 12px;
+            }
+
+            .empty-state h3 {
+                font-size: 18px;
+            }
+
+            .empty-state p {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .filters-section {
+                padding: 18px;
+                margin-bottom: 25px;
+            }
+
+            .filters-section h3 {
+                font-size: 17px;
+                margin-bottom: 18px;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .form-group label {
+                font-size: 13px;
+                margin-bottom: 7px;
+            }
+
+            .form-group select,
+            .form-group input {
+                padding: 11px 13px;
+                font-size: 13px;
+            }
+
+            .btn-reset {
+                padding: 11px 13px !important;
+                font-size: 13px !important;
+            }
+
+            @media (max-width: 768px) {
+                .filters-section {
+                    padding: 20px;
+                    margin-bottom: 25px;
+                }
+
+                .filters-section h3 {
+                    font-size: 18px;
+                    margin-bottom: 20px;
+                }
+
+                .filters-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                }
+
+                .form-group label {
+                    font-size: 13px;
+                    margin-bottom: 8px;
+                }
+
+                .form-group select,
+                .form-group input {
+                    padding: 11px 14px;
+                    font-size: 13px;
+                }
+
+                .quick-stats {
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 15px;
+                }
+
+                .quick-stat-card {
+                    padding: 15px;
+                    gap: 12px;
+                }
+
+                .quick-stat-icon {
+                    font-size: 28px;
+                }
+
+                .quick-stat-content h4 {
+                    font-size: 11px;
+                }
+
+                .quick-stat-content p {
+                    font-size: 15px;
+                }
+
+                .feedback-stats {
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 15px;
+                }
+
+                .export-section {
+                    margin-top: 18px;
+                    padding-top: 15px;
+                    justify-content: center;
+                }
+
+                .export-buttons {
+                    justify-content: center;
+                    flex-wrap: nowrap;
+                    gap: 12px;
+                    overflow-x: auto;
+                }
+
+                .export-btn {
+                    padding: 10px 18px;
+                    font-size: 13px;
+                    flex-shrink: 0;
+                }
+
+                .export-btn span:last-child {
+                    display: inline;
+                }
+
+                .reset-section {
+                    margin-top: 18px;
+                    padding-top: 15px;
+                    justify-content: center;
+                }
+
+                .reset-btn {
+                    padding: 10px 18px;
+                    font-size: 13px;
+                    flex-shrink: 0;
+                }
+
+                .reset-btn span:last-child {
+                    display: inline;
+                }
+
+                .teacher-feedback-header {
+                    flex-direction: column;
+                    gap: 15px;
+                    align-items: flex-start;
+                }
+
+                .teacher-rating {
+                    width: 100%;
+                    text-align: center;
+                }
+
+                .metric-item {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 6px;
+                }
+
+                .metric-value {
+                    align-self: flex-end;
+                }
+            }
+
+            @media (min-width: 769px) and (max-width: 1024px) {
+                .filters-section {
+                    padding: 25px;
+                    margin-bottom: 30px;
+                }
+
+                .filters-section h3 {
+                    font-size: 1.2rem;
+                    margin-bottom: 22px;
+                }
+
+                .filters-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                    gap: 18px;
+                }
+
+                .form-group label {
+                    font-size: 13px;
+                    margin-bottom: 9px;
+                }
+
+                .form-group select,
+                .form-group input {
+                    padding: 12px 15px;
+                    font-size: 14px;
+                }
+
+                .quick-stats {
+                    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                    gap: 18px;
+                }
+
+                .quick-stat-card {
+                    padding: 18px;
+                    gap: 14px;
+                }
+
+                .feedback-stats {
+                    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                    gap: 18px;
+                }
+
+                .export-section {
+                    margin-top: 20px;
+                    padding-top: 18px;
+                    justify-content: flex-end;
+                }
+
+                .export-buttons {
+                    justify-content: flex-end;
+                    flex-wrap: nowrap;
+                    gap: 12px;
+                }
+
+                .export-btn {
+                    padding: 11px 22px;
+                    font-size: 14px;
+                    flex-shrink: 0;
+                }
+
+                .export-btn span:last-child {
+                    display: inline;
+                }
+
+                .reset-section {
+                    margin-top: 20px;
+                    padding-top: 18px;
+                    justify-content: flex-end;
+                }
+
+                .reset-btn {
+                    padding: 11px 22px;
+                    font-size: 14px;
+                    flex-shrink: 0;
+                }
+
+                .reset-btn span:last-child {
+                    display: inline;
+                }
+            }
+
+            @media (min-width: 1025px) {
+                .filters-section {
+                    padding: 30px;
+                    margin-bottom: 30px;
+                }
+
+                .filters-section h3 {
+                    font-size: 1.3rem;
+                    margin-bottom: 25px;
+                }
+
+                .filters-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 20px;
+                }
+
+                .form-group label {
+                    font-size: 14px;
+                    margin-bottom: 10px;
+                }
+
+                .form-group select,
+                .form-group input {
+                    padding: 12px 15px;
+                    font-size: 14px;
+                }
+
+                .quick-stats {
+                    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                    gap: 20px;
+                }
+
+                .quick-stat-card {
+                    padding: 20px;
+                    gap: 15px;
+                }
+
+                .feedback-stats {
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 20px;
+                }
+
+                .export-section {
+                    margin-top: 25px;
+                    padding-top: 20px;
+                    justify-content: flex-end;
+                }
+
+                .export-buttons {
+                    justify-content: flex-end;
+                    flex-wrap: nowrap;
+                    gap: 12px;
+                }
+
+                .export-btn {
+                    padding: 12px 20px;
+                    font-size: 14px;
+                    flex-shrink: 0;
+                }
+
+                .export-btn span:last-child {
+                    display: inline;
+                }
+
+                .reset-section {
+                    margin-top: 25px;
+                    padding-top: 20px;
+                    justify-content: flex-end;
+                }
+
+                .reset-btn {
+                    padding: 12px 20px;
+                    font-size: 14px;
+                    flex-shrink: 0;
+                }
+
+                .reset-btn span:last-child {
+                    display: inline;
+                }
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="select-faculties.html" class="nav-item">
+                    <span class="icon">🏫</span>
+                    <span>Class Survey</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="view-feedbacks.html" class="nav-item active">
+                    <span class="icon">📊</span>
+                    <span>Faculty Feedback</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">✅</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="clear-duplicates.html" class="nav-item">
+                    <span class="icon">✨</span>
+                    <span>Clear Duplicates</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>📊 Feedback Analysis Dashboard</h1>
+                    <p>Analyze student feedback responses by year and class</p>
+                </div>
+            </header>
+
+            <!-- Feedback Content -->
+            <div class="dashboard-content">
+                <!-- Filters Section -->
+                <div class="filters-section">
+                    <h3>🔍 Filter by Year & Department</h3>
+
+                    <!-- Primary Filters Row -->
+                    <div class="filters-grid">
+                        <div class="form-group">
+                            <label for="filterYear">📅 Academic Year</label>
+                            <select id="filterYear" onchange="applyFilters()">
+                                <option value="">-- Select Year --</option>
+                                <option value="1">1st Year</option>
+                                <option value="2">2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="all">All Years Combined</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="filterClass">🏢 Department</label>
+                            <select id="filterClass" onchange="applyFilters()">
+                                <option value="">-- Select Department --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="facultySelectionGroup" style="display: none;">
+                            <label for="filterFaculty">👨‍🏫 Select Faculty</label>
+                            <select id="filterFaculty" onchange="applyFilters()">
+                                <option value="">-- All Faculties --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Filter Info -->
+                    <div style="margin-top: 15px; padding: 12px 15px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(248, 249, 255, 0.5) 100%); border-left: 4px solid #667eea; border-radius: 6px; font-size: 13px; color: #667eea; font-weight: 500;">
+                        💡 Tip: Select Year and Department to view faculty feedback analysis
+                    </div>
+
+                    <!-- Reset Filters Button -->
+                    <div class="reset-section" style="display: flex; gap: 10px; align-items: center; margin-top: 20px;">
+                        <button onclick="resetFilters()" class="reset-btn" title="Clear all filters and start fresh">
+                            <span>🔄</span>
+                            <span>Reset Filters</span>
+                        </button>
+                    </div>
+
+                    <!-- Year-wise Faculty Average Section -->
+                </div>
+
+                <!-- Quick Stats Cards -->
+                <div class="quick-stats" id="quickStatsSection" style="display: none;">
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-icon">🏆</div>
+                        <div class="quick-stat-content">
+                            <h4>Highest Rated</h4>
+                            <p id="highestRatedTeacher">-</p>
+                            <small id="highestRatedScore">0.0/10</small>
+                        </div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-icon">📉</div>
+                        <div class="quick-stat-content">
+                            <h4>Lowest Rated</h4>
+                            <p id="lowestRatedTeacher">-</p>
+                            <small id="lowestRatedScore">0.0/10</small>
+                        </div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-icon">💬</div>
+                        <div class="quick-stat-content">
+                            <h4>Most Feedback</h4>
+                            <p id="mostFeedbackTeacher">-</p>
+                            <small id="mostFeedbackCount">0 responses</small>
+                        </div>
+                    </div>
+                    <div class="quick-stat-card">
+                        <div class="quick-stat-icon">⭐</div>
+                        <div class="quick-stat-content">
+                            <h4>Department Avg</h4>
+                            <p id="deptAvgRating">0.0</p>
+                            <small>/10</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Summary -->
+                <div class="feedback-stats" id="statsSection" style="display: none;">
+                    <div class="stat-box">
+                        <h4>📋 Total Responses</h4>
+                        <p id="totalFeedbacks">0</p>
+                    </div>
+                    <div class="stat-box variant-1">
+                        <h4>⭐ Average Rating</h4>
+                        <p id="averageRating">0.0</p>
+                    </div>
+                    <div class="stat-box variant-2">
+                        <h4>👨‍🏫 Teachers Evaluated</h4>
+                        <p id="teachersEvaluated">0</p>
+                    </div>
+                    <div class="stat-box variant-3">
+                        <h4>❓ Questions Answered</h4>
+                        <p id="questionsAnswered">0</p>
+                    </div>
+
+                    <!-- Export Buttons Section -->
+                    <div class="export-section">
+                        <div class="export-buttons">
+                            <button onclick="exportFeedbackData()" class="export-btn pdf" title="Export feedback data as PDF">
+                                <span>💾</span>
+                                <span>PDF</span>
+                            </button>
+                            <button onclick="exportToCSV()" class="export-btn csv" title="Export feedback data as CSV">
+                                <span>📊</span>
+                                <span>CSV</span>
+                            </button>
+                            <button onclick="exportToExcel()" class="export-btn csv" title="Export feedback data as Excel (XLSX)">
+                                <span>📥</span>
+                                <span>Excel</span>
+                            </button>
+                            <button onclick="printFeedbackData()" class="export-btn print" title="Print feedback report">
+                                <span>🖨️</span>
+                                <span>Print</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedbacks List -->
+                <div class="feedbacks-container" id="feedbacksContainer" style="display: none;">
+                    <h3>📝 Detailed Feedback Results</h3>
+                    <div id="feedbacksListContainer">
+                        <!-- Feedbacks will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="feedbacks-container">
+                    <div style="text-align: center; padding: 50px 20px;">
+                        <span style="font-size: 64px; display: block; margin-bottom: 20px;">📭</span>
+                        <h3 style="color: #999; margin: 0 0 10px 0;">No Filters Applied</h3>
+                        <p style="color: #ccc; margin: 0;">Select a year and department above to view feedback results</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/mobile-nav.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="js/view-feedbacks.js"></script>
+</body>
+
+</html>

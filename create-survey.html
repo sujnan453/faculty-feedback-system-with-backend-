@@ -687,6 +687,10 @@
                     <span class="icon">👨‍💼</span>
                     <span>Manage Faculties</span>
                 </a>
+                <a href="select-faculties.html" class="nav-item">
+                    <span class="icon">🏫</span>
+                    <span>Class Survey</span>
+                </a>
                 <a href="manage-questions.html" class="nav-item">
                     <span class="icon">❓</span>
                     <span>Manage Questions</span>
@@ -695,17 +699,17 @@
                     <span class="icon">➕</span>
                     <span>Create Survey</span>
                 </a>
-                <a href="visualization.html" class="nav-item">
-                    <span class="icon">📈</span>
-                    <span>Visualizations</span>
-                </a>
                 <a href="faculty-performance.html" class="nav-item">
                     <span class="icon">👨‍🏫</span>
                     <span>Faculty Performance</span>
                 </a>
                 <a href="submitted-students.html" class="nav-item">
-                    <span class="icon">📝</span>
+                    <span class="icon">✅</span>
                     <span>Submitted Students</span>
+                </a>
+                <a href="clear-duplicates.html" class="nav-item">
+                    <span class="icon">✨</span>
+                    <span>Clear Duplicates</span>
                 </a>
                 <a href="reset-data.html" class="nav-item">
                     <span class="icon">🔄</span>
@@ -739,14 +743,14 @@
                     <div id="alertMessage" class="alert"></div>
 
                     <form id="createSurveyForm">
-                        <!-- Basic Information -->
+                        <!-- Class Selection -->
                         <div class="form-section">
-                            <h3>📋 Select Department</h3>
+                            <h3>📚 Select Class</h3>
                             <div class="form-group">
-                                <label for="department">Department / Class</label>
-                                <select id="department" name="department" onchange="loadFaculties()" required>
-                                    <option value="">Select Department</option>
-                                    <option value="ALL">ALL Departments</option>
+                                <label for="classForSurvey">Choose Class for Survey</label>
+                                <select id="classForSurvey" name="classForSurvey" onchange="onClassSelectionChange()" required>
+                                    <option value="">Select Class</option>
+                                    <option value="ALL">ALL Classes</option>
                                 </select>
                             </div>
                         </div>

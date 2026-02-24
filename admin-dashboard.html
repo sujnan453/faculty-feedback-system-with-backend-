@@ -37,6 +37,10 @@
                     <span class="icon">👨‍💼</span>
                     <span>Manage Faculties</span>
                 </a>
+                <a href="select-faculties.html" class="nav-item">
+                    <span class="icon">🏫</span>
+                    <span>Class Survey</span>
+                </a>
                 <a href="manage-questions.html" class="nav-item">
                     <span class="icon">❓</span>
                     <span>Manage Questions</span>
@@ -45,17 +49,17 @@
                     <span class="icon">➕</span>
                     <span>Create Survey</span>
                 </a>
-                <a href="visualization.html" class="nav-item">
-                    <span class="icon">📈</span>
-                    <span>Visualizations</span>
-                </a>
                 <a href="faculty-performance.html" class="nav-item">
                     <span class="icon">👨‍🏫</span>
                     <span>Faculty Performance</span>
                 </a>
                 <a href="submitted-students.html" class="nav-item">
-                    <span class="icon">📝</span>
+                    <span class="icon">✅</span>
                     <span>Submitted Students</span>
+                </a>
+                <a href="clear-duplicates.html" class="nav-item">
+                    <span class="icon">✨</span>
+                    <span>Clear Duplicates</span>
                 </a>
                 <a href="reset-data.html" class="nav-item">
                     <span class="icon">🔄</span>
@@ -124,15 +128,6 @@
                     </div>
                 </div>
 
-                <div class="admin-actions">
-                    <a href="create-survey.html" class="action-card create-action">
-                        <div class="action-icon">➕</div>
-                        <h3>Create New Survey</h3>
-                        <p>Design and publish a new faculty feedback survey</p>
-                        <div class="action-arrow">→</div>
-                    </a>
-                </div>
-
                 <div class="recent-surveys-section">
                     <div class="section-header">
                         <div class="section-title">
@@ -172,6 +167,7 @@
 
     <script src="js/mobile-nav.js"></script>
     <script src="js/micro-interactions.js"></script>
+    <script type="module" src="js/migrate-classes-to-firebase.js"></script>
     <script type="module" src="js/admin-dashboard.js"></script>
 </body>
 

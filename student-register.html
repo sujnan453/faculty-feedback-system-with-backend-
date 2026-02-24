@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/input-selection-fix.css">
 
     <style>
         * {
@@ -1528,9 +1529,9 @@
                     <div class="field-error-container"></div>
                 </div>
                 <div class="form-group">
-                    <label for="department" class="form-label">Department</label>
-                    <select id="department" name="department" class="form-select" required autocomplete="organization">
-                        <option value="">Select Department</option>
+                    <label for="classSelect" class="form-label">Class</label>
+                    <select id="classSelect" name="classSelect" class="form-select" required autocomplete="organization">
+                        <option value="">Select Class</option>
                     </select>
                     <div class="field-error-container"></div>
                 </div>
@@ -1581,6 +1582,7 @@
     <!-- Scripts -->
     <script src="js/validation.js"></script>
     <script src="js/error-handler.js"></script>
+    <script src="js/password-validator.js"></script>
     <script src="js/utils.js"></script>
 
     <!-- Firebase Integration - Load and Initialize -->
@@ -1642,14 +1644,14 @@
                     const fullName = document.getElementById('fullName').value.trim();
                     const email = document.getElementById('email').value.trim().toLowerCase();
                     const rollNumber = document.getElementById('rollNumber').value.trim().toUpperCase();
-                    const department = document.getElementById('department').value;
+                    const classId = document.getElementById('classSelect').value;
                     const password = document.getElementById('password').value;
                     const confirmPassword = document.getElementById('confirmPassword').value;
 
                     console.log('📧 Registering:', email);
 
                     // Basic validation
-                    if (!fullName || !email || !rollNumber || !department || !password || !confirmPassword) {
+                    if (!fullName || !email || !rollNumber || !classId || !password || !confirmPassword) {
                         showAlert('Please fill in all required fields', 'danger');
                         if (submitBtn) {
                             submitBtn.classList.remove('loading');
@@ -1742,6 +1744,10 @@
                         return;
                     }
 
+                    // Resolve selected class name from Firebase
+                    const classesList = await Storage.getClasses();
+                    const selectedClass = classesList.find(x=>x.id===classId) || null;
+
                     // Create new user
                     console.log('Creating new student user...');
                     const newUser = {
@@ -1749,7 +1755,8 @@
                         name: fullName,
                         email: email,
                         rollNumber: rollNumber,
-                        department: department,
+                        classId: classId,
+                        className: selectedClass ? selectedClass.name : '',
                         password: password,
                         role: 'student',
                         registeredAt: new Date().toISOString()
@@ -1791,61 +1798,58 @@
     </script>
 
     <script>
-        // Load departments for registration (dynamically from database)
-        async function loadDepartmentsForRegistration() {
-            const departmentSelect = document.getElementById('department');
+        // Load classes for registration (from Firebase)
+        async function loadClassesForRegistration() {
+            const classSelect = document.getElementById('classSelect');
 
             try {
-                // Load departments from database
-                const departments = await Storage.getDepartments() || [];
-
-                console.log('Loaded departments for registration:', departments);
-
-                // Clear existing options except the first one
-                while (departmentSelect.options.length > 1) {
-                    departmentSelect.remove(1);
+                // Wait for Storage module to be available
+                while (typeof Storage === 'undefined') {
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
 
-                // FIXED: Only use departments from database, no fallback
-                // This prevents students from creating non-existent departments
-                if (departments.length === 0) {
-                    // Show message that admin needs to create departments first
+                // Load classes from Firebase
+                console.log('📊 Loading classes from Firebase...');
+                const classes = await Storage.getClasses();
+
+                console.log('Loaded classes for registration:', classes);
+
+                // Clear existing options except the first one
+                while (classSelect.options.length > 1) {
+                    classSelect.remove(1);
+                }
+
+                if (!classes || classes.length === 0) {
                     const option = document.createElement('option');
                     option.value = '';
-                    option.textContent = 'No departments available - Contact admin';
+                    option.textContent = 'No classes available - Contact admin';
                     option.disabled = true;
-                    departmentSelect.appendChild(option);
+                    classSelect.appendChild(option);
 
-                    // Disable the select and show alert
-                    departmentSelect.disabled = true;
+                    classSelect.disabled = true;
 
-                    // Show alert to user
                     const alertDiv = document.getElementById('alertMessage');
                     if (alertDiv) {
-                        alertDiv.textContent = '⚠️ No departments available. Please contact the administrator to create departments first.';
+                        alertDiv.textContent = '⚠️ No classes available. Please contact the administrator to create classes first.';
                         alertDiv.className = 'alert alert-warning show';
                     }
 
-                    console.warn('⚠️ No departments in database. Students cannot register until admin creates departments.');
+                    console.warn('⚠️ No classes found in Firebase. Students cannot register until admin creates classes.');
                 } else {
-                    // Use departments from database ONLY
-                    departmentSelect.disabled = false;
-                    departments.forEach(dept => {
+                    classSelect.disabled = false;
+                    classes.forEach(cls => {
                         const option = document.createElement('option');
-                        option.value = dept.name; // Use the same name as stored in database
-                        option.textContent = dept.fullName || dept.name;
-                        departmentSelect.appendChild(option);
+                        option.value = cls.id;
+                        option.textContent = cls.name;
+                        classSelect.appendChild(option);
                     });
-
-                    console.log(`✅ Loaded ${departments.length} departments for registration`);
+                    console.log(`✅ Loaded ${classes.length} classes for registration from Firebase`);
                 }
             } catch (error) {
-                console.error('❌ Error loading departments for registration:', error);
-
-                // Show error to user
+                console.error('❌ Error loading classes for registration:', error);
                 const alertDiv = document.getElementById('alertMessage');
                 if (alertDiv) {
-                    alertDiv.textContent = '❌ Error loading departments. Please refresh the page or contact support.';
+                    alertDiv.textContent = '❌ Error loading classes. Please refresh the page or contact support.';
                     alertDiv.className = 'alert alert-danger show';
                 }
             }
@@ -1893,8 +1897,29 @@
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
 
-            // Load departments when page loads
-            await loadDepartmentsForRegistration();
+            // Load classes when page loads
+            await loadClassesForRegistration();
+        });
+    </script>
+
+    <!-- Force Text Selection Fix -->
+    <script src="js/force-text-selection-fix.js"></script>
+    <script>
+        // Ensure all input fields allow text selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.style.userSelect = 'text';
+                input.style.webkitUserSelect = 'text';
+                input.style.MozUserSelect = 'text';
+                input.style.msUserSelect = 'text';
+                input.style.cursor = 'text';
+
+                // Remove any blocking attributes
+                input.removeAttribute('unselectable');
+                input.removeAttribute('onselectstart');
+                input.onselectstart = null;
+            });
         });
     </script>
 </body>

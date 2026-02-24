@@ -15,8 +15,47 @@ function initializeMobileNavigation() {
     // Add event listeners
     setupMobileNavEventListeners();
 
+    // Ensure admin Class Survey link is present in sidebar (robustness for inconsistent HTML copies)
+    ensureClassSurveyLink();
+
     // Handle window resize
     handleWindowResize();
+}
+
+// Ensure 'Class Survey' nav item exists in the sidebar (helps pages missing it)
+function ensureClassSurveyLink() {
+    try {
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+        // Only inject link for admin sidebar variants
+        if (!sidebar.classList.contains('admin-sidebar')) return;
+        const nav = sidebar.querySelector('.sidebar-nav');
+        if (!nav) return;
+        // If link already exists, nothing to do
+        if (nav.querySelector('a[href="select-faculties.html"]')) return;
+
+        // Create the link and insert after Manage Faculties link if present
+        const link = document.createElement('a');
+        link.className = 'nav-item';
+        link.href = 'select-faculties.html';
+        link.innerHTML = '<span class="icon">🏫</span><span>Class Survey</span>';
+
+        // Find Manage Faculties link and insert after it
+        const manageFacultiesLink = nav.querySelector('a[href="manage-faculties.html"]');
+        if (manageFacultiesLink && manageFacultiesLink.parentNode) {
+            manageFacultiesLink.parentNode.insertBefore(link, manageFacultiesLink.nextSibling);
+        } else {
+            // Fallback: insert at position 2 (after dashboard if manage-faculties not found)
+            const dashboardLink = nav.querySelector('a[href="admin-dashboard.html"]');
+            if (dashboardLink && dashboardLink.parentNode) {
+                dashboardLink.parentNode.insertBefore(link, dashboardLink.nextSibling);
+            } else {
+                nav.insertBefore(link, nav.firstChild);
+            }
+        }
+    } catch (e) {
+        console.error('Could not ensure Class Survey link in sidebar', e);
+    }
 }
 
 function createMobileMenuToggle() {

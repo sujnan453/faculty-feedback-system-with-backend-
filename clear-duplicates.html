@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Duplicates - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css?v=3">
+    <link rel="stylesheet" href="css/admin.css?v=3">
+    <style>
+        .dashboard-content {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .duplicate-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .section-header h2 {
+            color: #1a202c;
+            font-size: 24px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #1a202c;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e8e8e8;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-primary:disabled,
+        .btn-secondary:disabled,
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-box {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-box.info {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .status-box.success {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+
+        .status-box.warning {
+            background: #fffbeb;
+            border-color: #fcd34d;
+        }
+
+        .status-box.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .status-title {
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .status-box.info .status-title {
+            color: #1e40af;
+        }
+
+        .status-box.success .status-title {
+            color: #166534;
+        }
+
+        .status-box.warning .status-title {
+            color: #92400e;
+        }
+
+        .status-box.error .status-title {
+            color: #991b1b;
+        }
+
+        .status-message {
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .status-box.success .status-message {
+            color: #166534;
+        }
+
+        .status-box.warning .status-message {
+            color: #92400e;
+        }
+
+        .status-box.error .status-message {
+            color: #991b1b;
+        }
+
+        .status-box.info .status-message {
+            color: #1e40af;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .department-list {
+            margin-top: 20px;
+        }
+
+        .dept-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #7c3aed;
+        }
+
+        .dept-info {
+            flex: 1;
+        }
+
+        .dept-name {
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+        }
+
+        .dept-details {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .dept-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .dept-status.duplicate {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .dept-status.unique {
+            background: #f0fdf4;
+            border-color: #86efac;
+            color: #166534;
+        }
+
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(124, 58, 237, 0.2);
+            border-top-color: #7c3aed;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7c3aed, #6d28d9);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            color: #7c3aed;
+            border-bottom-color: #7c3aed;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-content {
+                padding: 15px;
+            }
+
+            .duplicate-container {
+                padding: 20px;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .action-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary,
+            .btn-danger {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dept-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .dept-status {
+                align-self: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="select-faculties.html" class="nav-item">
+                    <span class="icon">🏫</span>
+                    <span>Class Survey</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">✅</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="clear-duplicates.html" class="nav-item active">
+                    <span class="icon">✨</span>
+                    <span>Clear Duplicates</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <h1>Clear Duplicates & Create Departments</h1>
+                    <p>Manage and clean up duplicate departments</p>
+                </div>
+                <div class="user-info">
+                    <div class="info-badge admin-badge">
+                        <span class="label">Role:</span>
+                        <span class="value">Administrator</span>
+                    </div>
+                    <div class="user-avatar admin-avatar">
+                        <span id="userInitials">A</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Tab Navigation -->
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="auto-create" onclick="window.switchTab('auto-create')">
+                        <span>Auto Create Departments</span>
+                    </button>
+                    <button class="tab-btn" data-tab="duplicates" onclick="window.switchTab('duplicates')">
+                        <span>Find Duplicates</span>
+                    </button>
+                    <button class="tab-btn" data-tab="duplicate-questions" onclick="window.switchTab('duplicate-questions')">
+                        <span>Duplicate Questions</span>
+                    </button>
+                    <button class="tab-btn" data-tab="all-depts" onclick="window.switchTab('all-depts')">
+                        <span>All Departments</span>
+                    </button>
+                </div>
+
+                <!-- Auto Create Tab -->
+                <div id="auto-create" class="tab-content active">
+                    <div class="duplicate-container">
+                        <div class="section-header">
+                            <h2>Auto Create Departments</h2>
+                            <div class="action-buttons">
+                                <button class="btn-primary" onclick="autoCreateDepartments()">
+                                    <span>Auto Create</span>
+                                </button>
+                                <button class="btn-secondary" onclick="refreshStatus()">
+                                    <span>Refresh</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="autoCreateStatus" class="status-box info">
+                            <div class="status-title">Information</div>
+                            <div class="status-message">
+                                Click "Auto Create" to automatically generate departments from existing faculties in the system.
+                                This will extract unique department names and create them in the Firebase database.
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="statFaculties">0</div>
+                                <div class="stat-label">Total Faculties</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="statDepartments">0</div>
+                                <div class="stat-label">Created Departments</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="statDuplicates">0</div>
+                                <div class="stat-label">Duplicate Departments</div>
+                            </div>
+                        </div>
+
+                        <div id="createdDeptsList" class="department-list" style="display:none;">
+                            <h3 style="margin-top: 20px; margin-bottom: 12px; color: #1a202c;">Created Departments:</h3>
+                            <div id="createdDepts"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Duplicates Tab -->
+                <div id="duplicates" class="tab-content">
+                    <div class="duplicate-container">
+                        <div class="section-header">
+                            <h2>Duplicate Departments</h2>
+                            <div class="action-buttons">
+                                <button class="btn-primary" onclick="findDuplicates()">
+                                    <span>Find Duplicates</span>
+                                </button>
+                                <button class="btn-secondary" id="selectAllDeptsBtn" onclick="selectAllDuplicateDepts()" style="display:none;">
+                                    <span>Select All</span>
+                                </button>
+                                <button class="btn-danger" id="deleteBtn" onclick="deleteDuplicates()" style="display:none;">
+                                    <span>Delete Selected</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="duplicateStatus" class="status-box info">
+                            <div class="status-title">Information</div>
+                            <div class="status-message">
+                                Click "Find Duplicates" to scan all departments and identify duplicates based on similar names.
+                            </div>
+                        </div>
+
+                        <div id="duplicateList" class="department-list" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <!-- All Departments Tab -->
+                <div id="all-depts" class="tab-content">
+                    <div class="duplicate-container">
+                        <div class="section-header">
+                            <h2>All Departments</h2>
+                            <div class="action-buttons">
+                                <button class="btn-primary" onclick="loadAllDepartments()">
+                                    <span>Reload</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalDeptCount">0</div>
+                                <div class="stat-label">Total Departments</div>
+                            </div>
+                        </div>
+
+                        <div id="allDeptsList" class="department-list"></div>
+                    </div>
+                </div>
+
+                <!-- Duplicate Questions Tab -->
+                <div id="duplicate-questions" class="tab-content">
+                    <div class="duplicate-container">
+                        <div class="section-header">
+                            <h2>Duplicate Questions</h2>
+                            <div class="action-buttons">
+                                <button class="btn-primary" onclick="findDuplicateQuestions()">
+                                    <span>Find Duplicates</span>
+                                </button>
+                                <button class="btn-secondary" id="selectAllQuestionsBtn" onclick="selectAllDuplicateQuestions()" style="display:none;">
+                                    <span>Select All</span>
+                                </button>
+                                <button class="btn-danger" id="deleteQuestionsBtn" onclick="deleteDuplicateQuestions()" style="display:none;">
+                                    <span>Delete Selected</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="duplicateQuestionsStatus" class="status-box info">
+                            <div class="status-title">Information</div>
+                            <div class="status-message">
+                                Click "Find Duplicates" to scan all questions and identify duplicates based on similar text.
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalQuestionsCount">0</div>
+                                <div class="stat-label">Total Questions</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="duplicateQuestionsCount">0</div>
+                                <div class="stat-label">Duplicate Questions</div>
+                            </div>
+                        </div>
+
+                        <div id="duplicateQuestionsList" class="department-list" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout, showAlert } from './js/firebase-auth.js';
+        
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+        window.showAlert = showAlert;
+        
+        console.log('Firebase modules loaded and exported to window');
+    </script>
+    <script src="js/mobile-nav.js"></script>
+    <script src="js/micro-interactions.js"></script>
+    <script src="js/clear-duplicates.js?v=21" defer></script>
+</body>
+
+</html>

@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Survey - Faculty Feedback System</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        /* Alert Message Styles - Matching admin.css design */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid;
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            min-width: 300px;
+            max-width: 600px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-50%) translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: #ffc107;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: #17a2b8;
+        }
+
+        /* Loading Spinner Animation */
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Enhanced Header */
+        .top-bar {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(109, 40, 217, 0.04) 100%);
+            border-bottom: 2px solid rgba(124, 58, 237, 0.2);
+            padding: 24px 0;
+        }
+
+        .welcome-section {
+            display: block;
+            width: 100%;
+        }
+
+        .welcome-section>div:first-child {
+            width: 100%;
+        }
+
+        .welcome-section h1 {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            animation: slideInDown 0.6s ease-out;
+        }
+
+        .welcome-section p {
+            color: #6b7280;
+            font-size: 15px;
+            margin: 8px 0 0 0;
+            animation: slideInUp 0.6s ease-out 0.1s both;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Main Content Layout */
+        .dashboard-content {
+            padding: 24px;
+        }
+
+        .form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Form Sections */
+        .form-section {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .form-section:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .form-section:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .form-section:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section:hover {
+            border-color: #7c3aed;
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1);
+        }
+
+        .form-section h3 {
+            color: #1f2937;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 24px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .form-section h3::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            border-radius: 2px;
+        }
+
+        /* Create Class Section */
+        .create-class-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .create-class-row input {
+            flex: 1;
+            min-width: 300px;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .create-class-row input:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+        }
+
+        .create-class-row input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            background: white;
+        }
+
+        /* Button Styling */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            border-color: #d1d5db;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        /* Classes Grid */
+        .class-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .class-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .class-card:hover {
+            border-color: #7c3aed;
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .class-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .class-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .class-card-count {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .class-card-faculties {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 80px;
+        }
+
+        .faculty-preview {
+            font-size: 13px;
+            color: #4b5563;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .class-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .class-actions .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* Departments Summary */
+        .dept-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .dept-card {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(109, 40, 217, 0.02) 100%);
+            border: 2px solid rgba(124, 58, 237, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .dept-card:hover {
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+        }
+
+        .dept-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .dept-card-count {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal {
+            width: min(1000px, 96%);
+            max-height: 80vh;
+            overflow: auto;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h3 {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 24px 0;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .modal .dept {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .modal .dept-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .modal .dept-header strong {
+            font-size: 16px;
+            color: #1f2937;
+        }
+
+        .modal .faculty-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal .faculty-item:last-child {
+            border-bottom: none;
+        }
+
+        .modal .faculty-item label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .modal .faculty-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #7c3aed;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid #f3f4f6;
+        }
+
+        /* Empty State */
+        .empty {
+            color: #9ca3af;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 2px dashed #e5e7eb;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .form-section {
+                padding: 20px;
+            }
+
+            .create-class-row {
+                flex-direction: column;
+            }
+
+            .create-class-row input {
+                min-width: 100%;
+            }
+
+            .class-list {
+                grid-template-columns: 1fr;
+            }
+
+            .dept-summary {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                padding: 20px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+
+            .modal-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Alert Message -->
+    <div id="alertMessage" class="alert"></div>
+
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar admin-sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Admin Portal</h2>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html" class="nav-item">
+                    <span class="icon">🏠</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="manage-faculties.html" class="nav-item">
+                    <span class="icon">👨‍💼</span>
+                    <span>Manage Faculties</span>
+                </a>
+                <a href="select-faculties.html" class="nav-item active">
+                    <span class="icon">🏫</span>
+                    <span>Class Survey</span>
+                </a>
+                <a href="manage-questions.html" class="nav-item">
+                    <span class="icon">❓</span>
+                    <span>Manage Questions</span>
+                </a>
+                <a href="create-survey.html" class="nav-item">
+                    <span class="icon">➕</span>
+                    <span>Create Survey</span>
+                </a>
+                <a href="faculty-performance.html" class="nav-item">
+                    <span class="icon">👨‍🏫</span>
+                    <span>Faculty Performance</span>
+                </a>
+                <a href="submitted-students.html" class="nav-item">
+                    <span class="icon">✅</span>
+                    <span>Submitted Students</span>
+                </a>
+                <a href="clear-duplicates.html" class="nav-item">
+                    <span class="icon">✨</span>
+                    <span>Clear Duplicates</span>
+                </a>
+                <a href="reset-data.html" class="nav-item">
+                    <span class="icon">🔄</span>
+                    <span>Reset Data</span>
+                </a>
+                <a href="#" class="nav-item" onclick="logout()">
+                    <span class="icon">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="welcome-section">
+                    <div>
+                        <h1>Class Survey Management</h1>
+                        <p>Create classes and assign faculties from departments</p>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Form Content -->
+            <div class="dashboard-content">
+                <div class="form-container">
+                    <!-- Create Class Section -->
+                    <div class="form-section">
+                        <h3>➕ Create New Class</h3>
+                        <div class="create-class-row">
+                            <input id="newClassName" placeholder="Enter class name (e.g. BSc CS - 3rd Year)" />
+                            <button id="createBtn" class="btn btn-primary">Create Class</button>
+                        </div>
+                    </div>
+
+                    <!-- Classes List Section -->
+                    <div class="form-section">
+                        <h3>🏫 Existing Classes</h3>
+                        <div id="classesContainer" class="class-list">
+                            <!-- class cards will be rendered here -->
+                        </div>
+                        <div id="noClasses" class="empty" style="display:none;">
+                            <p>📭 No classes yet. Create one above to get started.</p>
+                        </div>
+                    </div>
+
+                    <!-- Departments Summary Section -->
+                    <div class="form-section">
+                        <h3>🏢 Available Departments</h3>
+                        <div id="departmentsContainer" class="dept-summary">
+                            <!-- departments will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for selecting faculties -->
+    <div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal" role="document">
+            <h3 id="modalTitle">Select Faculties</h3>
+            <div id="modalBody"></div>
+            <div class="modal-actions">
+                <button id="modalCancel" class="btn btn-secondary">Cancel</button>
+                <button id="modalSave" class="btn btn-primary">Save to Class</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { checkAuth, logout } from './js/firebase-auth.js';
+
+        window.Storage = Storage;
+        window.checkAuth = checkAuth;
+        window.logout = logout;
+
+        // Custom Alert Function
+        function showAlert(message, type = 'danger', duration = 5000) {
+            try {
+                const alertDiv = document.getElementById('alertMessage');
+                if (alertDiv) {
+                    alertDiv.textContent = message;
+                    alertDiv.className = `alert alert-${type} show`;
+
+                    setTimeout(() => {
+                        if (alertDiv.classList.contains('show')) {
+                            alertDiv.className = 'alert';
+                        }
+                    }, duration);
+                } else {
+                    console.warn('Alert div not found, using console:', message);
+                }
+            } catch (error) {
+                console.error('Error showing alert:', error);
+            }
+        }
+
+        // Custom Prompt Function
+        function showPrompt(message, defaultValue, onConfirm) {
+            const promptOverlay = document.createElement('div');
+            promptOverlay.className = 'modal-overlay';
+            promptOverlay.style.display = 'flex';
+            promptOverlay.innerHTML = `
+                <div class="modal" style="max-width: 500px;">
+                    <h3>${message}</h3>
+                    <input type="text" id="promptInput" value="${defaultValue || ''}" 
+                           style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; margin: 20px 0;">
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" id="promptCancel">Cancel</button>
+                        <button class="btn btn-primary" id="promptOk">
+                            <span class="btn-text">OK</span>
+                            <span class="btn-loader" style="display: none;">
+                                <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(promptOverlay);
+
+            const input = promptOverlay.querySelector('#promptInput');
+            const okBtn = promptOverlay.querySelector('#promptOk');
+            const cancelBtn = promptOverlay.querySelector('#promptCancel');
+            const btnText = okBtn.querySelector('.btn-text');
+            const btnLoader = okBtn.querySelector('.btn-loader');
+
+            input.focus();
+            input.select();
+
+            const cleanup = () => {
+                document.body.removeChild(promptOverlay);
+            };
+
+            okBtn.onclick = async () => {
+                const value = input.value.trim();
+                if (!value) return;
+
+                // Show loading state
+                okBtn.disabled = true;
+                okBtn.style.opacity = '0.8';
+                okBtn.style.cursor = 'not-allowed';
+                btnText.style.display = 'none';
+                btnLoader.style.display = 'inline-block';
+                cancelBtn.disabled = true;
+                input.disabled = true;
+
+                try {
+                    if (onConfirm) await onConfirm(value);
+                    cleanup();
+                } catch (error) {
+                    // Reset button state on error
+                    okBtn.disabled = false;
+                    okBtn.style.opacity = '1';
+                    okBtn.style.cursor = 'pointer';
+                    btnText.style.display = 'inline-block';
+                    btnLoader.style.display = 'none';
+                    cancelBtn.disabled = false;
+                    input.disabled = false;
+                }
+            };
+
+            cancelBtn.onclick = cleanup;
+
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    okBtn.click();
+                } else if (e.key === 'Escape') {
+                    cancelBtn.click();
+                }
+            };
+        }
+
+        // Custom Confirm Function
+        function showConfirm(message, onConfirm, onCancel) {
+            const confirmOverlay = document.createElement('div');
+            confirmOverlay.className = 'modal-overlay';
+            confirmOverlay.style.display = 'flex';
+            confirmOverlay.innerHTML = `
+                <div class="modal" style="max-width: 500px;">
+                    <h3>Confirm Action</h3>
+                    <p style="margin: 20px 0; line-height: 1.6;">${message}</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" id="confirmCancel">Cancel</button>
+                        <button class="btn btn-danger" id="confirmOk">
+                            <span class="btn-text">Delete</span>
+                            <span class="btn-loader" style="display: none;">
+                                <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(confirmOverlay);
+
+            const okBtn = confirmOverlay.querySelector('#confirmOk');
+            const cancelBtn = confirmOverlay.querySelector('#confirmCancel');
+            const btnText = okBtn.querySelector('.btn-text');
+            const btnLoader = okBtn.querySelector('.btn-loader');
+
+            const cleanup = () => {
+                document.body.removeChild(confirmOverlay);
+            };
+
+            okBtn.onclick = async () => {
+                // Show loading state
+                okBtn.disabled = true;
+                okBtn.style.opacity = '0.8';
+                okBtn.style.cursor = 'not-allowed';
+                btnText.style.display = 'none';
+                btnLoader.style.display = 'inline-block';
+                cancelBtn.disabled = true;
+
+                try {
+                    if (onConfirm) await onConfirm();
+                    cleanup();
+                } catch (error) {
+                    // Reset button state on error
+                    okBtn.disabled = false;
+                    okBtn.style.opacity = '1';
+                    okBtn.style.cursor = 'pointer';
+                    btnText.style.display = 'inline-block';
+                    btnLoader.style.display = 'none';
+                    cancelBtn.disabled = false;
+                }
+            };
+
+            cancelBtn.onclick = () => {
+                cleanup();
+                if (onCancel) onCancel();
+            };
+
+            okBtn.focus();
+        }
+
+        // Make functions globally available
+        window.showAlert = showAlert;
+        window.showPrompt = showPrompt;
+        window.showConfirm = showConfirm;
+
+        // Local class storage helpers - now using Firebase
+        async function _getClasses() {
+            try {
+                // Fetch from Firebase (with caching)
+                const classes = await Storage.getClasses();
+                // Also update localStorage cache for backward compatibility
+                localStorage.setItem('ffs_classes', JSON.stringify(classes));
+                return classes;
+            } catch(e) {
+                console.warn('Failed to load classes from Firebase, trying localStorage fallback', e);
+                // Fallback to localStorage if Firebase fails
+                try {
+                    const raw = localStorage.getItem('ffs_classes');
+                    return raw ? JSON.parse(raw) : [];
+                } catch(err) {
+                    console.error('Failed to load classes from localStorage', err);
+                    return [];
+                }
+            }
+        }
+        
+        async function _saveClass(classData) {
+            try {
+                // Save to Firebase
+                await Storage.saveClass(classData);
+                // Also update localStorage cache
+                const classes = await _getClasses();
+                localStorage.setItem('ffs_classes', JSON.stringify(classes));
+                return true;
+            } catch(e) {
+                console.error('Failed to save class to Firebase', e);
+                return false;
+            }
+        }
+        
+        async function _updateClass(classId, updates) {
+            try {
+                // Update in Firebase
+                await Storage.updateClass(classId, updates);
+                // Refresh cache
+                const classes = await _getClasses();
+                localStorage.setItem('ffs_classes', JSON.stringify(classes));
+                return true;
+            } catch(e) {
+                console.error('Failed to update class in Firebase', e);
+                return false;
+            }
+        }
+        
+        async function _deleteClass(classId) {
+            try {
+                // Delete from Firebase
+                await Storage.deleteClass(classId);
+                // Refresh cache
+                const classes = await _getClasses();
+                localStorage.setItem('ffs_classes', JSON.stringify(classes));
+                return true;
+            } catch(e) {
+                console.error('Failed to delete class from Firebase', e);
+                return false;
+            }
+        }
+
+        // Page state
+        let departments = [];
+        let activeClassId = null;
+
+        // UI elements
+        const newClassNameEl = document.getElementById('newClassName');
+        const createBtn = document.getElementById('createBtn');
+        const classesContainer = document.getElementById('classesContainer');
+        const noClassesEl = document.getElementById('noClasses');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalBody = document.getElementById('modalBody');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSave = document.getElementById('modalSave');
+        const modalCancel = document.getElementById('modalCancel');
+
+        // Ensure admin is authenticated before actions
+        (async function init(){
+            const user = await checkAuth('admin');
+            if (!user) return; // checkAuth handles redirect
+            await loadDepartments();
+            await renderClasses();
+        })();
+
+        // Load departments from Storage
+        async function loadDepartments(){
+            departments = await Storage.getDepartments();
+            renderDepartmentsSummary();
+        }
+
+        function renderDepartmentsSummary(){
+            const container = document.getElementById('departmentsContainer');
+            container.innerHTML = '';
+            if (!departments || departments.length === 0) {
+                container.innerHTML = '<div class="empty">No departments found. Add departments and faculties from Manage Faculties.</div>';
+                return;
+            }
+
+            // Compact summary cards
+            departments.forEach(dept => {
+                const el = document.createElement('div');
+                el.className = 'dept panel';
+                el.innerHTML = `<h4 style="margin:0 0 8px 0">${dept.name} <small style="color:#64748b">(${(dept.faculties||[]).length} faculties)</small></h4>`;
+                container.appendChild(el);
+            });
+        }
+
+        // Classes UI
+        async function renderClasses(){
+            const classes = await _getClasses();
+            classesContainer.innerHTML = '';
+            if (!classes || classes.length === 0) {
+                noClassesEl.style.display = 'block';
+                return;
+            }
+            noClassesEl.style.display = 'none';
+
+            classes.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'class-card';
+                const facultyCount = (c.faculties||[]).length;
+                const facultyList = (c.faculties||[]).slice(0,4).map(f => `<div style="font-size:13px; color:#0f172a;">👨‍🏫 ${escapeHtml(f.name)}</div>`).join('');
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;"><strong>${escapeHtml(c.name)}</strong><small style="color:#64748b">${facultyCount} faculty</small></div>
+                    <div style="margin-top:8px;">${facultyList || '<div style="color:#64748b">No faculties assigned</div>'}</div>
+                    <div class="class-actions">
+                        <button class="btn btn-primary" data-action="select" data-id="${c.id}">Select Faculties</button>
+                        <button class="btn btn-secondary" data-action="edit" data-id="${c.id}">Edit</button>
+                        <button class="btn btn-danger" data-action="delete" data-id="${c.id}">Delete</button>
+                    </div>
+                `;
+
+                classesContainer.appendChild(card);
+            });
+
+            // wire actions
+            classesContainer.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = btn.dataset.action;
+                    const id = btn.dataset.id;
+                    if (action === 'select') openSelectModal(id);
+                    if (action === 'edit') editClassName(id);
+                    if (action === 'delete') deleteClass(id);
+                });
+            });
+        }
+
+        function escapeHtml(s){ return String(s).replace(/[&<>"']/g, (c)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+
+        // Create class
+        createBtn.addEventListener('click', async () => {
+            const name = newClassNameEl.value.trim();
+            if (!name) { 
+                showAlert('Please enter a class name', 'warning'); 
+                newClassNameEl.focus(); 
+                return; 
+            }
+            
+            try {
+                const classes = await _getClasses();
+                if (classes.some(c=>c.name.toLowerCase()===name.toLowerCase())) { 
+                    showAlert('A class with this name already exists', 'warning'); 
+                    return; 
+                }
+                
+                const newClass = {
+                    id: Storage.generateId(),
+                    name: name,
+                    faculties: [],
+                    createdAt: new Date().toISOString()
+                };
+                
+                await _saveClass(newClass);
+                newClassNameEl.value='';
+                await renderClasses();
+                showAlert(`Class "${name}" created successfully!`, 'success');
+                // open modal immediately
+                openSelectModal(newClass.id);
+            } catch (error) {
+                console.error('Error creating class:', error);
+                showAlert('Failed to create class: ' + error.message, 'danger');
+            }
+        });
+
+        async function editClassName(id){
+            const classes = await _getClasses();
+            const cls = classes.find(c=>c.id===id);
+            if (!cls) return;
+            
+            showPrompt('Edit class name', cls.name, async (newName) => {
+                if (!newName || !newName.trim()) {
+                    showAlert('Class name cannot be empty', 'warning');
+                    return;
+                }
+                
+                try {
+                    await _updateClass(id, { name: newName.trim() });
+                    await renderClasses();
+                    showAlert(`Class renamed to "${newName.trim()}" successfully!`, 'success');
+                } catch (error) {
+                    console.error('Error editing class:', error);
+                    showAlert('Failed to edit class: ' + error.message, 'danger');
+                }
+            });
+        }
+
+        async function deleteClass(id){
+            const classes = await _getClasses();
+            const cls = classes.find(c=>c.id===id);
+            const className = cls ? cls.name : 'this class';
+            
+            showConfirm(`Are you sure you want to delete "${className}"? This action cannot be undone.`, async () => {
+                try {
+                    await _deleteClass(id);
+                    await renderClasses();
+                    showAlert(`Class "${className}" deleted successfully!`, 'success');
+                } catch (error) {
+                    console.error('Error deleting class:', error);
+                    showAlert('Failed to delete class: ' + error.message, 'danger');
+                }
+            });
+        }
+
+        // Modal: open selection for class
+        async function openSelectModal(classId){
+            activeClassId = classId;
+            const classes = await _getClasses();
+            const cls = classes.find(c=>c.id===classId) || { name: 'Unnamed', faculties: [] };
+            modalTitle.textContent = `Select Faculties for: ${cls.name}`;
+            // Build modal body grouped by department
+            modalBody.innerHTML = '';
+            if (!departments || departments.length===0) {
+                modalBody.innerHTML = '<div class="empty">No departments available.</div>';
+            } else {
+                const assigned = new Set((cls.faculties||[]).map(f=>f.id));
+                departments.forEach(dept=>{
+                    const d = document.createElement('div'); d.className='dept';
+                    const header = document.createElement('div'); header.style.display='flex'; header.style.justifyContent='space-between'; header.style.alignItems='center'; header.style.marginBottom='8px';
+                    header.innerHTML = `<div><strong>${dept.name}</strong> <small style="color:#64748b">(${(dept.faculties||[]).length})</small></div>`;
+                    
+                    // Add Select All/Unselect All toggle button for this department
+                    if (dept.faculties && dept.faculties.length > 0) {
+                        const selectAllBtn = document.createElement('button');
+                        selectAllBtn.textContent = 'Select All';
+                        selectAllBtn.style.cssText = 'padding:4px 8px;border-radius:4px;background:#e0e7ff;color:#4f46e5;border:1px solid #c7d2fe;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;';
+                        
+                        // Function to update button text based on checkbox states
+                        const updateButtonText = () => {
+                            const deptCheckboxes = d.querySelectorAll(`input[type=checkbox][data-dept="${dept.id}"]`);
+                            const allChecked = Array.from(deptCheckboxes).every(cb => cb.checked);
+                            selectAllBtn.textContent = allChecked ? 'Unselect All' : 'Select All';
+                        };
+                        
+                        selectAllBtn.addEventListener('mouseover', ()=>{ selectAllBtn.style.background='#c7d2fe'; });
+                        selectAllBtn.addEventListener('mouseout', ()=>{ selectAllBtn.style.background='#e0e7ff'; });
+                        selectAllBtn.addEventListener('click', function(e){
+                            e.preventDefault();
+                            const deptCheckboxes = d.querySelectorAll(`input[type=checkbox][data-dept="${dept.id}"]`);
+                            const allChecked = Array.from(deptCheckboxes).every(cb => cb.checked);
+                            
+                            // Toggle: if all checked, uncheck all; otherwise, check all
+                            deptCheckboxes.forEach(cb => cb.checked = !allChecked);
+                            updateButtonText();
+                        });
+                        
+                        // Add change listeners to checkboxes to update button text
+                        setTimeout(() => {
+                            const deptCheckboxes = d.querySelectorAll(`input[type=checkbox][data-dept="${dept.id}"]`);
+                            deptCheckboxes.forEach(cb => {
+                                cb.addEventListener('change', updateButtonText);
+                            });
+                            updateButtonText(); // Initial update
+                        }, 0);
+                        
+                        header.appendChild(selectAllBtn);
+                    }
+                    
+                    d.appendChild(header);
+
+                    const list = document.createElement('div');
+                    if (!dept.faculties || dept.faculties.length===0){ list.innerHTML = '<div class="empty">No faculties in this department</div>'; }
+                    else {
+                        dept.faculties.forEach(f=>{
+                            const item = document.createElement('div'); item.className='faculty-item';
+                            const checked = assigned.has(f.id)?'checked':'';
+                            item.innerHTML = `
+                                <label style="display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;">
+                                    <input type="checkbox" data-dept="${dept.id}" data-fid="${f.id}" ${checked} />
+                                    <div style="flex:1">👨‍🏫 ${escapeHtml(f.name)}</div>
+                                </label>
+                            `;
+                            list.appendChild(item);
+                        });
+                    }
+                    d.appendChild(list);
+                    modalBody.appendChild(d);
+                });
+            }
+
+            modalOverlay.style.display='flex';
+            // focus first checkbox if present
+            const first = modalBody.querySelector('input[type=checkbox]'); if (first) first.focus();
+        }
+
+        modalCancel.addEventListener('click', ()=>{ modalOverlay.style.display='none'; modalBody.innerHTML=''; activeClassId=null; });
+
+        modalSave.addEventListener('click', async ()=>{
+            if (!activeClassId) return;
+            
+            // Store original button content
+            const originalContent = modalSave.innerHTML;
+            
+            // Show loading animation immediately
+            modalSave.disabled = true;
+            modalSave.style.opacity = '0.8';
+            modalSave.style.cursor = 'not-allowed';
+            modalSave.innerHTML = `
+                <span style="display: inline-flex; align-items: center; gap: 8px;">
+                    <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+                    Saving...
+                </span>
+            `;
+            modalCancel.disabled = true;
+            
+            try {
+                const checkboxes = modalBody.querySelectorAll('input[type=checkbox][data-fid]');
+                const selected = [];
+                checkboxes.forEach(cb=>{ 
+                    if (cb.checked){ 
+                        const fid=cb.dataset.fid; 
+                        const deptId=cb.dataset.dept; 
+                        const nameEl = cb.parentElement.querySelector('div'); 
+                        const name = nameEl ? nameEl.textContent.trim().replace(/^👨‍🏫\s*/,'') : fid; 
+                        selected.push({ id: fid, name, departmentId: deptId }); 
+                    }
+                });
+                
+                // Update class with selected faculties
+                await _updateClass(activeClassId, { faculties: selected });
+                
+                modalOverlay.style.display='none'; 
+                modalBody.innerHTML=''; 
+                activeClassId=null; 
+                await renderClasses(); 
+                showAlert('Faculties assigned to class successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving faculties:', error);
+                showAlert('Failed to save class selection: ' + error.message, 'danger');
+            } finally {
+                // Reset button state
+                modalSave.disabled = false;
+                modalSave.style.opacity = '1';
+                modalSave.style.cursor = 'pointer';
+                modalSave.innerHTML = originalContent;
+                modalCancel.disabled = false;
+            }
+        });
+
+    </script>
+
+    <!-- Mobile Navigation Script -->
+    <script src="js/mobile-nav.js"></script>
+</body>
+
+</html>

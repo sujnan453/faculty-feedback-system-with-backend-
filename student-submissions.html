@@ -10,6 +10,14 @@
 </head>
 
 <body>
+    <!-- Loading Animation -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading your submissions...</p>
+        </div>
+    </div>
+
     <div class="dashboard-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -83,24 +91,6 @@
                     <!-- Average Rating removed as per request -->
                 </div>
 
-                <!-- Filters & Search Section -->
-                <div class="filters-section">
-                    <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="🔍 Search by teacher name..." onkeyup="filterAndSort()">
-                    </div>
-                    <div class="filter-controls">
-                        <select id="departmentFilter" onchange="filterAndSort()" class="filter-select">
-                            <option value="">All Departments</option>
-                        </select>
-                        <select id="sortBy" onchange="filterAndSort()" class="filter-select">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="teachers-asc">Teachers (Low to High)</option>
-                            <option value="teachers-desc">Teachers (High to Low)</option>
-                        </select>
-                    </div>
-                </div>
-
                 <div id="submissionsContainer" class="submissions-container">
                     <!-- Submissions will be loaded here -->
                 </div>
@@ -130,6 +120,22 @@
     </script>
     <script src="js/mobile-nav.js"></script>
     <script>
+        // Show loading overlay
+        function showLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('hidden');
+            }
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
         // Wait for modules to be loaded
         function waitForModules() {
             return new Promise((resolve) => {
@@ -152,10 +158,19 @@
         const itemsPerPage = 5;
 
         (async function() {
-            await waitForModules();
-            currentUser = await checkAuth('student');
-            if (currentUser) {
-                await initializePage();
+            showLoading();
+            try {
+                await waitForModules();
+                currentUser = await checkAuth('student');
+                if (currentUser) {
+                    await initializePage();
+                    hideLoading();
+                } else {
+                    hideLoading();
+                }
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                hideLoading();
             }
         })();
 
@@ -173,7 +188,6 @@
             document.getElementById('userInitials').textContent = initials;
 
             await loadSubmissions();
-            populateDepartmentFilter();
         }
 
         async function loadSubmissions() {
@@ -217,45 +231,13 @@
         }
 
         function populateDepartmentFilter() {
-            const departments = new Set();
-            allFeedbacks.forEach(feedback => {
-                departments.add(feedback.studentDepartment);
-            });
-
-            const select = document.getElementById('departmentFilter');
-            departments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept;
-                option.textContent = dept;
-                select.appendChild(option);
-            });
+            // Removed - filters no longer needed
         }
 
         function filterAndSort() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const departmentFilter = document.getElementById('departmentFilter').value;
-            const sortBy = document.getElementById('sortBy').value;
-
-            // Filter
-            filteredFeedbacks = allFeedbacks.filter(feedback => {
-                const matchesDept = !departmentFilter || feedback.studentDepartment === departmentFilter;
-                const matchesSearch = !searchTerm || feedback.selectedTeachers.some(t =>
-                    t.name.toLowerCase().includes(searchTerm)
-                );
-                return matchesDept && matchesSearch;
-            });
-
-            // Sort
-            if (sortBy === 'newest') {
-                filteredFeedbacks.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-            } else if (sortBy === 'oldest') {
-                filteredFeedbacks.sort((a, b) => new Date(a.submittedAt) - new Date(b.submittedAt));
-            } else if (sortBy === 'teachers-asc') {
-                filteredFeedbacks.sort((a, b) => a.selectedTeachers.length - b.selectedTeachers.length);
-            } else if (sortBy === 'teachers-desc') {
-                filteredFeedbacks.sort((a, b) => b.selectedTeachers.length - a.selectedTeachers.length);
-            }
-
+            // Removed - filters and search no longer needed
+            // Just display all submissions
+            filteredFeedbacks = [...allFeedbacks];
             currentPage = 1;
             displaySubmissions();
         }
@@ -266,9 +248,9 @@
             if (filteredFeedbacks.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <span>🔍</span>
-                        <h3>No Submissions Found</h3>
-                        <p>Try adjusting your filters or search terms.</p>
+                        <span>📝</span>
+                        <h3>No Submissions Yet</h3>
+                        <p>You haven't submitted any feedback yet.</p>
                     </div>
                 `;
                 document.getElementById('paginationContainer').style.display = 'none';
@@ -366,7 +348,7 @@
                 <div class="submission-info">
                     <div class="info-item">
                         <span class="info-label">Department:</span>
-                        <span class="info-value">${feedback.studentDepartment}</span>
+                        <span class="info-value">${feedback.studentDepartment || feedback.studentClassName || 'Not specified'}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Year:</span>

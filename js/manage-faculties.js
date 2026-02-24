@@ -195,9 +195,46 @@ async function submitCreateDept(event) {
 
     const deptNameInput = document.getElementById('deptName');
     const deptFullNameInput = document.getElementById('deptFullName');
+    const submitBtn = document.querySelector('#createDeptForm .btn-submit');
+    const cancelBtn = document.querySelector('#createDeptForm .btn-cancel');
+    const editingId = document.getElementById('createDeptForm').dataset.editingId;
+
+    // Store original button content
+    const originalBtnText = submitBtn.innerHTML;
+
+    // Add spin animation if not already present
+    if (!document.getElementById('spinAnimation')) {
+        const style = document.createElement('style');
+        style.id = 'spinAnimation';
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Show loading animation IMMEDIATELY - before any validation
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.7';
+    submitBtn.style.cursor = 'not-allowed';
+    cancelBtn.disabled = true;
+    deptNameInput.disabled = true;
+    deptFullNameInput.disabled = true;
+
+    submitBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px;">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+        </svg>
+        ${editingId ? 'Updating...' : 'Creating...'}
+    `;
+
+    // Small delay to ensure animation renders
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     const deptName = deptNameInput.value.trim();
     const deptFullName = deptFullNameInput.value.trim();
-    const editingId = document.getElementById('createDeptForm').dataset.editingId;
 
     // Clear previous errors
     clearFieldErrors();
@@ -220,7 +257,7 @@ async function submitCreateDept(event) {
     }
 
     // Check if department already exists (only if not editing)
-    if (!editingId) {
+    if (!editingId && !errors.deptName) {
         const existingDept = await Storage.getDepartmentByName(deptName);
         if (existingDept) {
             errors.deptName = '❌ Department already exists!';
@@ -231,34 +268,57 @@ async function submitCreateDept(event) {
     if (Object.keys(errors).length > 0) {
         displayFieldErrors(errors);
         showAlert('Please fix the errors below', 'danger');
+
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        submitBtn.innerHTML = originalBtnText;
+        cancelBtn.disabled = false;
+        deptNameInput.disabled = false;
+        deptFullNameInput.disabled = false;
         return;
     }
 
-    if (editingId) {
-        // Update existing department
-        const department = await Storage.getDepartmentById(editingId);
-        if (department) {
-            department.name = deptName;
-            department.fullName = deptFullName || deptName;
-            await Storage.saveDepartment(department);
-            showAlert(`✅ Department "${deptName}" updated successfully!`, 'success');
+    try {
+        if (editingId) {
+            // Update existing department
+            const department = await Storage.getDepartmentById(editingId);
+            if (department) {
+                department.name = deptName;
+                department.fullName = deptFullName || deptName;
+                await Storage.saveDepartment(department);
+                showAlert(`✅ Department "${deptName}" updated successfully!`, 'success');
+            }
+        } else {
+            // Create new department
+            const newDept = {
+                id: Storage.generateId(),
+                name: deptName,
+                fullName: deptFullName || deptName,
+                faculties: []
+            };
+
+            await Storage.saveDepartment(newDept);
+            showAlert(`✅ Department "${deptName}" created successfully!`, 'success');
         }
-    } else {
-        // Create new department
-        const newDept = {
-            id: Storage.generateId(),
-            name: deptName,
-            fullName: deptFullName || deptName,
-            faculties: []
-        };
 
-        await Storage.saveDepartment(newDept);
-        showAlert(`✅ Department "${deptName}" created successfully!`, 'success');
+        // Close modal and reload
+        closeCreateDeptModal();
+        await loadDepartments();
+    } catch (error) {
+        console.error('❌ Error saving department:', error);
+        showAlert('❌ Failed to save department. Please try again.', 'danger');
+
+        // Reset button state on error
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        submitBtn.innerHTML = originalBtnText;
+        cancelBtn.disabled = false;
+        deptNameInput.disabled = false;
+        deptFullNameInput.disabled = false;
     }
-
-    // Close modal and reload
-    closeCreateDeptModal();
-    await loadDepartments();
 }
 
 function clearFieldErrors() {
@@ -369,30 +429,106 @@ function createDepartmentCard(department) {
 
 async function addFacultyToDept(departmentId) {
     const nameInput = document.getElementById(`facultyName-${departmentId}`);
+    const addButton = document.querySelector(`button[onclick="addFacultyToDept('${departmentId}')"]`);
+
+    // Check if button is already disabled (prevent multiple clicks)
+    if (addButton && addButton.disabled) {
+        return;
+    }
+
+    // Store original button text
+    const originalBtnText = addButton ? addButton.innerHTML : 'Add Faculty';
+
+    // Add spin animation if not already present
+    if (!document.getElementById('spinAnimation')) {
+        const style = document.createElement('style');
+        style.id = 'spinAnimation';
+        style.textContent = `
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Add loading animation to button IMMEDIATELY - before any validation
+    if (addButton) {
+        addButton.disabled = true;
+        addButton.style.opacity = '0.7';
+        addButton.style.cursor = 'not-allowed';
+        nameInput.disabled = true;
+        addButton.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 4px;">
+                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+            </svg>
+            Adding...
+        `;
+    }
+
+    // Small delay to ensure animation renders
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     const name = nameInput.value.trim();
 
     // Validation
     if (!name) {
         showAlert('❌ Please enter faculty name', 'danger');
         nameInput.style.borderColor = '#dc3545';
+
+        // Reset button
+        if (addButton) {
+            addButton.innerHTML = originalBtnText;
+            addButton.disabled = false;
+            addButton.style.opacity = '1';
+            addButton.style.cursor = 'pointer';
+            nameInput.disabled = false;
+        }
         return;
     }
 
     if (name.length < 2) {
         showAlert('❌ Faculty name must be at least 2 characters', 'danger');
         nameInput.style.borderColor = '#dc3545';
+
+        // Reset button
+        if (addButton) {
+            addButton.innerHTML = originalBtnText;
+            addButton.disabled = false;
+            addButton.style.opacity = '1';
+            addButton.style.cursor = 'pointer';
+            nameInput.disabled = false;
+        }
         return;
     }
 
     if (name.length > 100) {
         showAlert('❌ Faculty name must not exceed 100 characters', 'danger');
         nameInput.style.borderColor = '#dc3545';
+
+        // Reset button
+        if (addButton) {
+            addButton.innerHTML = originalBtnText;
+            addButton.disabled = false;
+            addButton.style.opacity = '1';
+            addButton.style.cursor = 'pointer';
+            nameInput.disabled = false;
+        }
         return;
     }
 
     if (!/^[a-zA-Z\s\.\-']+$/.test(name)) {
         showAlert('❌ Faculty name can only contain letters, spaces, dots, hyphens, and apostrophes', 'danger');
         nameInput.style.borderColor = '#dc3545';
+
+        // Reset button
+        if (addButton) {
+            addButton.innerHTML = originalBtnText;
+            addButton.disabled = false;
+            addButton.style.opacity = '1';
+            addButton.style.cursor = 'pointer';
+            nameInput.disabled = false;
+        }
         return;
     }
 
@@ -403,25 +539,73 @@ async function addFacultyToDept(departmentId) {
         if (isDuplicate) {
             showAlert('❌ This faculty already exists in this department', 'danger');
             nameInput.style.borderColor = '#dc3545';
+
+            // Reset button
+            if (addButton) {
+                addButton.innerHTML = originalBtnText;
+                addButton.disabled = false;
+                addButton.style.opacity = '1';
+                addButton.style.cursor = 'pointer';
+                nameInput.disabled = false;
+            }
             return;
         }
     }
 
-    const faculty = {
-        id: Storage.generateId(),
-        name: name
-    };
+    try {
+        const faculty = {
+            id: Storage.generateId(),
+            name: name
+        };
 
-    await Storage.addFacultyToDepartment(departmentId, faculty);
+        await Storage.addFacultyToDepartment(departmentId, faculty);
 
-    // Clear inputs and reset style
-    nameInput.value = '';
-    nameInput.style.borderColor = '';
+        // Success animation
+        if (addButton) {
+            addButton.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                    <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+                Added!
+            `;
+            addButton.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        }
 
-    // Reload departments
-    await loadDepartments();
+        // Clear inputs and reset style
+        nameInput.value = '';
+        nameInput.style.borderColor = '';
 
-    showAlert(`✅ Faculty "${name}" added successfully!`, 'success');
+        // Reload departments
+        await loadDepartments();
+
+        showAlert(`✅ Faculty "${name}" added successfully!`, 'success');
+
+        // Reset button after delay
+        if (addButton) {
+            setTimeout(() => {
+                const newButton = document.querySelector(`button[onclick="addFacultyToDept('${departmentId}')"]`);
+                if (newButton) {
+                    newButton.innerHTML = originalBtnText;
+                    newButton.style.background = '';
+                    newButton.disabled = false;
+                    newButton.style.opacity = '1';
+                    newButton.style.cursor = 'pointer';
+                }
+            }, 1500);
+        }
+    } catch (error) {
+        console.error('❌ Error adding faculty:', error);
+        showAlert('❌ Failed to add faculty. Please try again.', 'danger');
+
+        // Reset button on error
+        if (addButton) {
+            addButton.innerHTML = originalBtnText;
+            addButton.disabled = false;
+            addButton.style.opacity = '1';
+            addButton.style.cursor = 'pointer';
+            nameInput.disabled = false;
+        }
+    }
 }
 
 async function removeFaculty(departmentId, facultyId) {

@@ -1,0 +1,84 @@
+/**
+ * Input Field Text Selection Fix
+ * Ensures all input fields allow text selection
+ */
+
+/* Enable text selection for all input fields */
+input,
+textarea,
+.form-input,
+.form-select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"] {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    cursor: text !important;
+}
+
+/* Allow text selection in input placeholders */
+input::placeholder,
+textarea::placeholder {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+/* Ensure text selection cursor appears */
+input:focus,
+textarea:focus,
+.form-input:focus {
+    cursor: text !important;
+}
+
+/* Allow selection in password fields */
+input[type="password"] {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    cursor: text !important;
+}
+
+/* Override any conflicting styles */
+.password-wrapper input,
+.modern-input-container input,
+.auth-card input,
+.auth-form input {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    cursor: text !important;
+}
+
+/* Ensure parent containers don't block selection */
+.modern-input-container,
+.password-wrapper,
+.form-group,
+.auth-form {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+/* Override any global user-select: none */
+* {
+    -webkit-user-select: inherit !important;
+    -moz-user-select: inherit !important;
+    -ms-user-select: inherit !important;
+    user-select: inherit !important;
+}
+
+/* Specifically for input elements - highest priority */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    cursor: text !important;
+}

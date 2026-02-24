@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Admin with Firebase Auth</title>
+    <link rel="stylesheet" href="css/perfect-design.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔐 Create Admin Account</h1>
+        <p class="subtitle">Create admin account with Firebase Authentication</p>
+
+        <div class="info-box">
+            <h3>ℹ️ Important Information</h3>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>This creates an admin account in Firebase Authentication</li>
+                <li>Password will be securely encrypted by Firebase</li>
+                <li>Admin data will be stored in Firestore database</li>
+                <li>Use this email and password to login to admin dashboard</li>
+            </ul>
+        </div>
+
+        <div id="alertMessage" class="alert"></div>
+
+        <form id="createAdminForm">
+            <div class="form-group">
+                <label for="fullName">Full Name *</label>
+                <input type="text" id="fullName" name="fullName" required placeholder="Enter admin full name">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required placeholder="admin@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username *</label>
+                <input type="text" id="username" name="username" required placeholder="admin_username">
+            </div>
+
+            <div class="form-group">
+                <label for="employeeId">Employee ID (Optional)</label>
+                <input type="text" id="employeeId" name="employeeId" placeholder="EMP001">
+            </div>
+
+            <div class="form-group">
+                <label for="department">Department (Optional)</label>
+                <input type="text" id="department" name="department" placeholder="Administration">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" name="password" required placeholder="Enter secure password">
+                <div class="password-requirements">
+                    Password must be at least 6 characters long
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password *</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Re-enter password">
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                Create Admin Account
+            </button>
+        </form>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="index.html" style="color: #667eea; text-decoration: none;">← Back to Home</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import Storage from './js/firebase-storage.js';
+        import { auth, createUserWithEmailAndPassword } from './js/firebase-config.js';
+
+        function showAlert(message, type = 'danger') {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alertDiv.className = 'alert';
+            }, 5000);
+        }
+
+        document.getElementById('createAdminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Admin Account...';
+
+            try {
+                const fullName = document.getElementById('fullName').value.trim();
+                const email = document.getElementById('email').value.trim().toLowerCase();
+                const username = document.getElementById('username').value.trim().toLowerCase();
+                const employeeId = document.getElementById('employeeId').value.trim();
+                const department = document.getElementById('department').value.trim();
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // Validation
+                if (!fullName || !email || !username || !password) {
+                    showAlert('Please fill in all required fields');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showAlert('Passwords do not match!');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showAlert('Password must be at least 6 characters long');
+                    return;
+                }
+
+                // Check if email already exists in database
+                const existingUser = await Storage.findUserByEmail(email);
+                if (existingUser) {
+                    showAlert('Email already registered in database!');
+                    return;
+                }
+
+                // Check if username already exists
+                const existingUsername = await Storage.findUserByUsername(username);
+                if (existingUsername) {
+                    showAlert('Username already taken!');
+                    return;
+                }
+
+                console.log('🔐 Creating admin in Firebase Authentication...');
+
+                // Create user in Firebase Authentication
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const firebaseUser = userCredential.user;
+
+                console.log('✅ Firebase Auth account created:', firebaseUser.uid);
+
+                // Create admin data in Firestore
+                const adminData = {
+                    id: Storage.generateId(),
+                    firebaseUid: firebaseUser.uid,
+                    name: fullName,
+                    email: email,
+                    username: username,
+                    employeeId: employeeId || '',
+                    department: department || 'Administration',
+                    role: 'admin',
+                    registeredAt: new Date().toISOString(),
+                    createdVia: 'firebase-auth'
+                };
+
+                console.log('💾 Saving admin data to Firestore...');
+                const savedAdmin = await Storage.saveUser(adminData);
+
+                if (savedAdmin) {
+                    console.log('✅ Admin account created successfully');
+                    showAlert('✅ Admin account created successfully! You can now login with this email and password.', 'success');
+                    
+                    // Clear form
+                    document.getElementById('createAdminForm').reset();
+                    
+                    // Redirect to login after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 3000);
+                } else {
+                    throw new Error('Failed to save admin data to database');
+                }
+
+            } catch (error) {
+                console.error('❌ Error creating admin:', error);
+                
+                let errorMessage = 'Failed to create admin account. ';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage += 'This email is already registered in Firebase Authentication.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage += 'Invalid email format.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage += 'Password is too weak. Use at least 6 characters.';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMessage += 'Network error. Please check your internet connection.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showAlert(errorMessage);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Admin Account';
+            }
+        });
+    </script>
+</body>
+
+</html>

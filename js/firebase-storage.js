@@ -13,92 +13,74 @@ import {
     updateDoc,
     deleteDoc,
     query,
-    where
+    where,
+    limit,
+    startAfter
 } from './firebase-config.js';
 
 /**
  * Cache Manager for localStorage
- * Reduces Firestore reads by caching data locally
+ * DISABLED: All caching is turned off - always fetch fresh data from Firebase
  */
 const CacheManager = {
     CACHE_PREFIX: 'ffs_cache_',
-    CACHE_DURATION: 5 * 60 * 1000, // 5 minutes in milliseconds
-
-    /**
-     * Set cache with timestamp
-     */
-    set(key, data) {
-        try {
-            const cacheData = {
-                data: data,
-                timestamp: Date.now()
-            };
-            localStorage.setItem(this.CACHE_PREFIX + key, JSON.stringify(cacheData));
-        } catch (error) {
-            console.warn('Cache set failed:', error);
-        }
+    // Different cache durations for different data types
+    CACHE_DURATIONS: {
+        users: 5 * 60 * 1000, // 5 minutes (changes frequently)
+        surveys: 10 * 60 * 1000, // 10 minutes
+        feedbacks: 2 * 60 * 1000, // 2 minutes (changes very frequently)
+        departments: 60 * 60 * 1000, // 1 hour (rarely changes)
+        questions: 60 * 60 * 1000, // 1 hour (rarely changes)
+        classes: 30 * 60 * 1000, // 30 minutes (changes occasionally)
+        stats: 5 * 60 * 1000 // 5 minutes (for aggregated stats)
     },
 
     /**
-     * Get cache if not expired
+     * Set cache with timestamp - DISABLED
+     */
+    set(key, data, customDuration = null) {
+        // DISABLED: Do not cache anything
+        return;
+    },
+
+    /**
+     * Get cache if not expired - DISABLED
      */
     get(key) {
-        try {
-            const cached = localStorage.getItem(this.CACHE_PREFIX + key);
-            if (!cached) return null;
-
-            const cacheData = JSON.parse(cached);
-            const age = Date.now() - cacheData.timestamp;
-
-            // Check if cache is still valid
-            if (age < this.CACHE_DURATION) {
-                console.log(`📦 Cache hit for: ${key} (age: ${Math.round(age / 1000)}s)`);
-                return cacheData.data;
-            } else {
-                // Cache expired, remove it
-                this.remove(key);
-                return null;
-            }
-        } catch (error) {
-            console.warn('Cache get failed:', error);
-            return null;
-        }
+        // DISABLED: Always return null to force fresh data fetch
+        return null;
     },
 
     /**
-     * Remove specific cache
+     * Remove specific cache - DISABLED
      */
     remove(key) {
-        try {
-            localStorage.removeItem(this.CACHE_PREFIX + key);
-        } catch (error) {
-            console.warn('Cache remove failed:', error);
-        }
+        // DISABLED: Do nothing
+        return;
     },
 
     /**
-     * Clear all caches
+     * Clear all caches - DISABLED
      */
     clearAll() {
-        try {
-            const keys = Object.keys(localStorage);
-            keys.forEach(key => {
-                if (key.startsWith(this.CACHE_PREFIX)) {
-                    localStorage.removeItem(key);
-                }
-            });
-            console.log('🗑️ All caches cleared');
-        } catch (error) {
-            console.warn('Cache clear failed:', error);
-        }
+        // DISABLED: Do nothing
+        return;
     },
 
     /**
-     * Invalidate related caches when data changes
+     * Clear old/expired caches to free space - DISABLED
+     */
+    clearOldCaches() {
+        // DISABLED: Do nothing
+        return;
+    },
+
+    /**
+     * Invalidate related caches when data changes - DISABLED
      */
     invalidate(collection) {
-        this.remove(collection);
-        console.log(`🔄 Cache invalidated for: ${collection}`);
+        // DISABLED: Do nothing
+        return;
     }
 };
 
@@ -112,7 +94,8 @@ const Storage = {
         FEEDBACKS: 'feedbacks',
         DEPARTMENTS: 'departments',
         QUESTIONS: 'questions',
-        SESSIONS: 'sessions'
+        SESSIONS: 'sessions',
+        CLASSES: 'classes'
     },
 
     /**
@@ -172,12 +155,25 @@ const Storage = {
 
     /**
      * Generate unique ID with better entropy
+     * Uses timestamp + random + counter for uniqueness
      */
     generateId() {
         const timestamp = Date.now();
         const random = Math.random().toString(36).substr(2, 9);
         const counter = (this._idCounter = (this._idCounter || 0) + 1);
         return `${timestamp}_${random}_${counter}`;
+    },
+
+    /**
+     * Generate Firestore-native unique ID (RECOMMENDED)
+     * Uses Firestore's built-in ID generator for guaranteed uniqueness
+     * @param {string} collectionName - Collection name
+     * @returns {string} Guaranteed unique ID
+     */
+    generateFirestoreId(collectionName) {
+        const collectionRef = collection(db, collectionName);
+        const docRef = doc(collectionRef);
+        return docRef.id;
     },
 
     // ==================== USER MANAGEMENT ====================
@@ -271,9 +267,11 @@ const Storage = {
                 throw new Error('Username already exists');
             }
 
-            // Save to Firestore
+            // Save to Firestore with merge option to prevent accidental overwrites
             const userRef = doc(db, this.COLLECTIONS.USERS, sanitizedUser.id);
-            await setDoc(userRef, sanitizedUser);
+            await setDoc(userRef, sanitizedUser, {
+                merge: true
+            });
 
             // Invalidate cache
             CacheManager.invalidate(this.COLLECTIONS.USERS);
@@ -283,6 +281,29 @@ const Storage = {
         } catch (error) {
             console.error('Failed to save user:', error.message);
             return null;
+        }
+    },
+
+    /**
+     * Delete a user by ID
+     */
+    async deleteUser(userId) {
+        try {
+            if (!userId) {
+                throw new Error('User ID is required');
+            }
+
+            const userRef = doc(db, this.COLLECTIONS.USERS, userId);
+            await deleteDoc(userRef);
+
+            // Invalidate cache
+            CacheManager.invalidate(this.COLLECTIONS.USERS);
+
+            console.log(`✅ User deleted: ${userId}`);
+            return true;
+        } catch (error) {
+            console.error('Failed to delete user:', error.message);
+            throw error;
         }
     },
 
@@ -399,7 +420,9 @@ const Storage = {
             // Also store in Firestore for persistence
             if (rememberMe) {
                 const sessionRef = doc(db, this.COLLECTIONS.SESSIONS, user.id);
-                await setDoc(sessionRef, sessionData);
+                await setDoc(sessionRef, sessionData, {
+                    merge: true
+                });
             }
 
             return true;
@@ -501,7 +524,9 @@ const Storage = {
             survey.id = surveyId;
 
             const surveyRef = doc(db, this.COLLECTIONS.SURVEYS, surveyId);
-            await setDoc(surveyRef, survey);
+            await setDoc(surveyRef, survey, {
+                merge: true
+            });
 
             // Invalidate cache
             CacheManager.invalidate(this.COLLECTIONS.SURVEYS);
@@ -648,8 +673,14 @@ const Storage = {
 
     async getFeedbacks() {
         try {
-            // CRITICAL FIX: Always fetch fresh data from Firestore, ignore cache
-            console.log('📊 Fetching feedbacks from Firestore (bypassing cache)...');
+            // Check cache first for better performance
+            const cached = CacheManager.get(this.COLLECTIONS.FEEDBACKS);
+            if (cached) {
+                console.log(`📦 Using cached feedbacks (${cached.length} items)`);
+                return cached;
+            }
+
+            console.log('📊 Fetching feedbacks from Firestore...');
 
             // Fetch from Firestore
             const feedbacksCol = collection(db, this.COLLECTIONS.FEEDBACKS);
@@ -678,35 +709,48 @@ const Storage = {
         try {
             console.log('💾 saveFeedback called for student:', feedback.studentId, 'survey:', feedback.surveyId);
 
+            // CRITICAL FIX: Remove undefined values to prevent Firestore errors
+            const cleanedFeedback = {};
+            Object.keys(feedback).forEach(key => {
+                const value = feedback[key];
+                if (value !== undefined) {
+                    cleanedFeedback[key] = value;
+                } else {
+                    console.warn(`⚠️ Removing undefined field: ${key}`);
+                }
+            });
+
             // CRITICAL FIX: Check if feedback already exists for this student+survey
             CacheManager.invalidate(this.COLLECTIONS.FEEDBACKS);
             const existingFeedbacks = await this.getFeedbacks();
 
             // Check for duplicate submission
             const duplicate = existingFeedbacks.find(f =>
-                f.studentId === feedback.studentId && f.surveyId === feedback.surveyId
+                f.studentId === cleanedFeedback.studentId && f.surveyId === cleanedFeedback.surveyId
             );
 
             if (duplicate) {
                 console.error(`❌ BLOCKED: Feedback already exists!`);
-                console.error(`❌ Student: ${feedback.studentId}, Survey: ${feedback.surveyId}`);
-                console.error(`❌ Existing ID: ${duplicate.id}, Attempted ID: ${feedback.id || 'NEW'}`);
+                console.error(`❌ Student: ${cleanedFeedback.studentId}, Survey: ${cleanedFeedback.surveyId}`);
+                console.error(`❌ Existing ID: ${duplicate.id}, Attempted ID: ${cleanedFeedback.id || 'NEW'}`);
                 console.error(`❌ Returning existing feedback to prevent duplicate`);
                 // Return existing feedback - DO NOT CREATE NEW
                 return duplicate;
             }
 
-            const feedbackId = feedback.id || this.generateId();
-            feedback.id = feedbackId;
+            const feedbackId = cleanedFeedback.id || this.generateId();
+            cleanedFeedback.id = feedbackId;
 
             console.log(`✅ Creating NEW feedback: ${feedbackId}`);
             const feedbackRef = doc(db, this.COLLECTIONS.FEEDBACKS, feedbackId);
-            await setDoc(feedbackRef, feedback);
+            await setDoc(feedbackRef, cleanedFeedback, {
+                merge: true
+            });
 
             // Invalidate cache
             CacheManager.invalidate(this.COLLECTIONS.FEEDBACKS);
 
-            return feedback;
+            return cleanedFeedback;
         } catch (error) {
             console.error('❌ Error in saveFeedback:', error);
             return null;
@@ -730,6 +774,101 @@ const Storage = {
         } catch (error) {
             console.error('Error getting feedbacks by survey ID:', error);
             return [];
+        }
+    },
+
+    /**
+     * Get feedbacks with pagination support (OPTIMIZED for large datasets)
+     * @param {number} limit - Number of feedbacks to fetch (default: 100)
+     * @param {object} lastDoc - Last document from previous page (for pagination)
+     * @returns {Promise<{feedbacks: Array, lastDoc: object}>}
+     */
+    async getFeedbacksPaginated(limitCount = 100, lastDoc = null) {
+        try {
+            console.log(`📊 Fetching ${limitCount} feedbacks (paginated)...`);
+
+            const feedbacksCol = collection(db, this.COLLECTIONS.FEEDBACKS);
+            let q;
+
+            if (lastDoc) {
+                // Continue from last document
+                q = query(feedbacksCol, startAfter(lastDoc), limit(limitCount));
+            } else {
+                // First page
+                q = query(feedbacksCol, limit(limitCount));
+            }
+
+            const snapshot = await getDocs(q);
+            const feedbacks = [];
+            let newLastDoc = null;
+
+            snapshot.forEach(doc => {
+                feedbacks.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+                newLastDoc = doc; // Keep track of last document
+            });
+
+            console.log(`✅ Loaded ${feedbacks.length} feedbacks (paginated)`);
+            return {
+                feedbacks,
+                lastDoc: newLastDoc
+            };
+        } catch (error) {
+            console.error('Error getting paginated feedbacks:', error);
+            return {
+                feedbacks: [],
+                lastDoc: null
+            };
+        }
+    },
+
+    /**
+     * Get feedbacks with server-side filtering (OPTIMIZED)
+     * @param {object} filters - Filter criteria
+     * @param {number} limit - Max results (default: 1000)
+     * @returns {Promise<Array>}
+     */
+    async getFeedbacksFiltered(filters = {}, limitCount = 1000) {
+        try {
+            console.log('📊 Fetching filtered feedbacks from Firestore...', filters);
+
+            const feedbacksCol = collection(db, this.COLLECTIONS.FEEDBACKS);
+            const constraints = [];
+
+            // Add where clauses for each filter
+            if (filters.department) {
+                constraints.push(where('department', '==', filters.department));
+            }
+            if (filters.year) {
+                constraints.push(where('year', '==', filters.year));
+            }
+            if (filters.semester) {
+                constraints.push(where('semester', '==', filters.semester));
+            }
+
+            // Add limit
+            constraints.push(limit(limitCount));
+
+            // Build and execute query
+            const q = query(feedbacksCol, ...constraints);
+            const snapshot = await getDocs(q);
+
+            const feedbacks = [];
+            snapshot.forEach(doc => {
+                feedbacks.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            console.log(`✅ Loaded ${feedbacks.length} filtered feedbacks`);
+            return feedbacks;
+        } catch (error) {
+            console.error('Error getting filtered feedbacks:', error);
+            // Fallback to client-side filtering
+            return this.getFeedbacksByFilter(filters);
         }
     },
 
@@ -800,27 +939,42 @@ const Storage = {
             // CRITICAL FIX: Always check for duplicates FIRST, even if ID exists
             const existingDepartments = await this.getDepartments();
 
+            // Normalize department name for comparison
+            const normalizeName = (name) => {
+                return name.toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, ' ') // Multiple spaces to single space
+                    .replace(/[()]/g, '') // Remove parentheses
+                    .replace(/\./g, '') // Remove periods
+                    .replace(/_/g, ' '); // Underscores to spaces
+            };
+
+            const normalizedInputName = normalizeName(department.name);
+
             // If department has an ID, verify it exists in database
             if (department.id) {
                 const existsById = existingDepartments.find(d => d.id === department.id);
                 if (existsById) {
                     // Update existing department
                     const deptRef = doc(db, this.COLLECTIONS.DEPARTMENTS, department.id);
-                    await setDoc(deptRef, department);
+                    await setDoc(deptRef, department, {
+                        merge: true
+                    });
                     CacheManager.invalidate(this.COLLECTIONS.DEPARTMENTS);
                     console.log(`✅ Updated department: ${department.name} (ID: ${department.id})`);
                     return department;
                 }
             }
 
-            // Check if department with same name already exists (case-insensitive)
+            // Check if department with same name already exists (normalized comparison)
             const duplicate = existingDepartments.find(d =>
-                d.name.toLowerCase().trim() === department.name.toLowerCase().trim()
+                normalizeName(d.name) === normalizedInputName
             );
 
             if (duplicate) {
                 console.error(`❌ BLOCKED: Department "${department.name}" already exists with ID: ${duplicate.id}`);
                 console.error(`❌ BLOCKED: Attempted to create duplicate with ID: ${department.id || 'NEW'}`);
+                console.error(`❌ BLOCKED: Normalized names - Existing: "${normalizeName(duplicate.name)}", New: "${normalizedInputName}"`);
                 console.error(`❌ BLOCKED: Returning existing department to prevent duplicate`);
                 // Return existing department - DO NOT CREATE NEW
                 return duplicate;
@@ -831,7 +985,9 @@ const Storage = {
             department.id = deptId;
 
             const deptRef = doc(db, this.COLLECTIONS.DEPARTMENTS, deptId);
-            await setDoc(deptRef, department);
+            await setDoc(deptRef, department, {
+                merge: true
+            });
 
             // Invalidate cache
             CacheManager.invalidate(this.COLLECTIONS.DEPARTMENTS);
@@ -985,7 +1141,9 @@ const Storage = {
                     // Update existing question
                     console.log(`✅ Updating existing question: ${question.id}`);
                     const questionRef = doc(db, this.COLLECTIONS.QUESTIONS, question.id);
-                    await setDoc(questionRef, question);
+                    await setDoc(questionRef, question, {
+                        merge: true
+                    });
                     CacheManager.invalidate(this.COLLECTIONS.QUESTIONS);
                     return question;
                 }
@@ -1014,7 +1172,9 @@ const Storage = {
 
             console.log(`✅ Creating NEW question: ${questionId}`);
             const questionRef = doc(db, this.COLLECTIONS.QUESTIONS, questionId);
-            await setDoc(questionRef, question);
+            await setDoc(questionRef, question, {
+                merge: true
+            });
 
             // Invalidate cache
             CacheManager.invalidate(this.COLLECTIONS.QUESTIONS);
@@ -1091,7 +1251,7 @@ const Storage = {
 
             // Preserve admin session - don't clear currentUser if it's an admin
             const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
-            
+
             // Clear all caches
             CacheManager.clearAll();
 
@@ -1142,149 +1302,326 @@ const Storage = {
     refreshCache() {
         CacheManager.clearAll();
         console.log('🔄 Cache manually refreshed');
+    },
+
+    // ==================== CLASSES MANAGEMENT ====================
+
+    /**
+     * Get all classes from Firestore (with caching)
+     */
+    async getClasses() {
+        try {
+            // Check cache first
+            const cached = CacheManager.get(this.COLLECTIONS.CLASSES);
+            if (cached) {
+                console.log(`📦 Using cached classes (${cached.length} items)`);
+                return cached;
+            }
+
+            console.log('📊 Fetching classes from Firestore...');
+
+            // Fetch from Firestore
+            const classesCol = collection(db, this.COLLECTIONS.CLASSES);
+            const snapshot = await getDocs(classesCol);
+
+            const classes = [];
+            snapshot.forEach(doc => {
+                classes.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+
+            // Cache the result
+            CacheManager.set(this.COLLECTIONS.CLASSES, classes);
+
+            console.log(`✅ Loaded ${classes.length} classes from Firestore`);
+            return classes;
+        } catch (error) {
+            console.error('Error getting classes:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Save a class to Firestore
+     */
+    async saveClass(classData) {
+        try {
+            console.log('💾 saveClass called with:', classData);
+
+            // Validate class data
+            if (!classData || !classData.name) {
+                throw new Error('Class name is required');
+            }
+
+            // Sanitize class data
+            const sanitizedClass = {
+                ...classData,
+                id: classData.id || this.generateId(),
+                name: this._sanitizeInput(classData.name.trim()),
+                faculties: classData.faculties || [],
+                createdAt: classData.createdAt || new Date().toISOString()
+            };
+
+            // Check for duplicate class name
+            const existingClasses = await this.getClasses();
+            const duplicate = existingClasses.find(c =>
+                c.name.toLowerCase().trim() === sanitizedClass.name.toLowerCase().trim() &&
+                c.id !== sanitizedClass.id
+            );
+
+            if (duplicate) {
+                console.error(`❌ BLOCKED: Class "${sanitizedClass.name}" already exists with ID: ${duplicate.id}`);
+                throw new Error('A class with this name already exists');
+            }
+
+            // Save to Firestore
+            const classRef = doc(db, this.COLLECTIONS.CLASSES, sanitizedClass.id);
+            await setDoc(classRef, sanitizedClass, {
+                merge: true
+            });
+
+            // Invalidate cache
+            CacheManager.invalidate(this.COLLECTIONS.CLASSES);
+
+            console.log(`✅ Class saved: ${sanitizedClass.name} (ID: ${sanitizedClass.id})`);
+            return sanitizedClass;
+        } catch (error) {
+            console.error('Error saving class:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get class by ID
+     */
+    async getClassById(classId) {
+        try {
+            if (!classId) {
+                return null;
+            }
+
+            const classRef = doc(db, this.COLLECTIONS.CLASSES, classId);
+            const snapshot = await getDoc(classRef);
+
+            if (snapshot.exists()) {
+                return {
+                    id: snapshot.id,
+                    ...snapshot.data()
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting class by ID:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Update class (e.g., add/remove faculties)
+     */
+    async updateClass(classId, updates) {
+        try {
+            if (!classId) {
+                throw new Error('Class ID is required');
+            }
+
+            const classRef = doc(db, this.COLLECTIONS.CLASSES, classId);
+            await updateDoc(classRef, {
+                ...updates,
+                updatedAt: new Date().toISOString()
+            });
+
+            // Invalidate cache
+            CacheManager.invalidate(this.COLLECTIONS.CLASSES);
+
+            console.log(`✅ Class updated: ${classId}`);
+            return true;
+        } catch (error) {
+            console.error('Error updating class:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Delete a class
+     */
+    async deleteClass(classId) {
+        try {
+            if (!classId) {
+                throw new Error('Class ID is required');
+            }
+
+            const classRef = doc(db, this.COLLECTIONS.CLASSES, classId);
+            await deleteDoc(classRef);
+
+            // Invalidate cache
+            CacheManager.invalidate(this.COLLECTIONS.CLASSES);
+
+            console.log(`✅ Class deleted: ${classId}`);
+            return true;
+        } catch (error) {
+            console.error('Error deleting class:', error);
+            throw error;
+        }
+    },
+
+    // ==================== OPTIMIZED STATISTICS (NEW) ====================
+
+    /**
+     * Get aggregated statistics without loading all feedbacks
+     * OPTIMIZED for 1000+ users
+     */
+    async getStatistics() {
+        try {
+            // Check cache first
+            const cached = CacheManager.get('stats');
+            if (cached) {
+                console.log('📦 Using cached statistics');
+                return cached;
+            }
+
+            console.log('📊 Calculating fresh statistics...');
+
+            // Get counts efficiently
+            const [surveys, feedbacks, users, departments] = await Promise.all([
+                this.getSurveys(),
+                this.getFeedbacksCount(), // Use count instead of loading all
+                this.getUsers(),
+                this.getDepartments()
+            ]);
+
+            const students = users.filter(u => u.role === 'student');
+            const admins = users.filter(u => u.role === 'admin');
+            const activeSurveys = surveys.filter(s => s.isActive !== false);
+
+            const stats = {
+                totalSurveys: surveys.length,
+                activeSurveys: activeSurveys.length,
+                inactiveSurveys: surveys.length - activeSurveys.length,
+                totalFeedbacks: feedbacks,
+                totalStudents: students.length,
+                totalAdmins: admins.length,
+                totalUsers: users.length,
+                totalDepartments: departments.length,
+                avgResponsesPerSurvey: surveys.length > 0 ? (feedbacks / surveys.length).toFixed(2) : 0,
+                timestamp: new Date().toISOString()
+            };
+
+            // Cache for 5 minutes
+            CacheManager.set('stats', stats, 5 * 60 * 1000);
+
+            return stats;
+        } catch (error) {
+            console.error('Error getting statistics:', error);
+            return null;
+        }
+    },
+
+    /**
+     * Get feedback count without loading all documents
+     * MUCH faster than getFeedbacks().length
+     */
+    async getFeedbacksCount() {
+        try {
+            // Check cache
+            const cached = CacheManager.get('feedbacks_count');
+            if (cached !== null) return cached;
+
+            const feedbacksCol = collection(db, this.COLLECTIONS.FEEDBACKS);
+            const snapshot = await getDocs(feedbacksCol);
+            const count = snapshot.size;
+
+            // Cache for 2 minutes
+            CacheManager.set('feedbacks_count', count, 2 * 60 * 1000);
+
+            return count;
+        } catch (error) {
+            console.error('Error getting feedback count:', error);
+            return 0;
+        }
+    },
+
+    /**
+     * Get recent surveys with pagination (for dashboard)
+     * OPTIMIZED: Only loads what's needed
+     */
+    async getRecentSurveys(limitCount = 10) {
+        try {
+            const surveys = await this.getSurveys();
+
+            // Sort by creation date (most recent first)
+            const sorted = surveys.sort((a, b) =>
+                new Date(b.createdAt) - new Date(a.createdAt)
+            );
+
+            // Return only the requested number
+            return sorted.slice(0, limitCount);
+        } catch (error) {
+            console.error('Error getting recent surveys:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Get feedback statistics for a specific survey
+     * OPTIMIZED: Only loads feedbacks for one survey
+     */
+    async getSurveyStatistics(surveyId) {
+        try {
+            const cacheKey = `survey_stats_${surveyId}`;
+            const cached = CacheManager.get(cacheKey);
+            if (cached) return cached;
+
+            const feedbacks = await this.getFeedbacksBySurveyId(surveyId);
+
+            const stats = {
+                totalResponses: feedbacks.length,
+                uniqueStudents: new Set(feedbacks.map(f => f.studentId)).size,
+                avgRating: 0,
+                teachersEvaluated: new Set(),
+                timestamp: new Date().toISOString()
+            };
+
+            // Calculate average rating
+            let totalRatings = 0;
+            let ratingCount = 0;
+
+            feedbacks.forEach(feedback => {
+                if (feedback.responses) {
+                    feedback.responses.forEach(response => {
+                        totalRatings += response.rating || 0;
+                        ratingCount++;
+                        if (response.teacherId) {
+                            stats.teachersEvaluated.add(response.teacherId);
+                        }
+                    });
+                }
+            });
+
+            stats.avgRating = ratingCount > 0 ? (totalRatings / ratingCount).toFixed(2) : 0;
+            stats.teachersEvaluated = stats.teachersEvaluated.size;
+
+            // Cache for 5 minutes
+            CacheManager.set(cacheKey, stats, 5 * 60 * 1000);
+
+            return stats;
+        } catch (error) {
+            console.error('Error getting survey statistics:', error);
+            return null;
+        }
     }
 };
 
-// Initialize default departments if not exists
-(async () => {
-    const departments = await Storage.getDepartments();
-    if (departments.length === 0) {
-        const defaultDepartments = [{
-                id: Storage.generateId(),
-                name: 'BCA',
-                fullName: 'Bachelor of Computer Applications',
-                faculties: []
-            },
-            {
-                id: Storage.generateId(),
-                name: 'BCOM Vocational',
-                fullName: 'Bachelor of Commerce - Vocational',
-                faculties: []
-            },
-            {
-                id: Storage.generateId(),
-                name: 'BCOM General',
-                fullName: 'Bachelor of Commerce - General',
-                faculties: []
-            },
-            {
-                id: Storage.generateId(),
-                name: 'BSC',
-                fullName: 'Bachelor of Science',
-                faculties: []
-            },
-            {
-                id: Storage.generateId(),
-                name: 'BA',
-                fullName: 'Bachelor of Arts',
-                faculties: []
-            }
-        ];
+// AUTO-INITIALIZATION REMOVED
+// Departments should be created manually by admin through "Manage Faculties" page
+// This prevents dummy departments (BCA, BCOM, etc.) from being created automatically
+// Questions should be manually created by admin through the "Manage Questions" page
+// This prevents unwanted auto-creation of questions
 
-        for (const dept of defaultDepartments) {
-            const deptRef = doc(db, Storage.COLLECTIONS.DEPARTMENTS, dept.id);
-            await setDoc(deptRef, dept);
-        }
-        console.log('✅ Default departments initialized');
-    }
-})();
-
-// Initialize default questions if not exists
-(async () => {
-    const questions = await Storage.getQuestions();
-    if (questions.length === 0) {
-        console.log('?? Initializing default 10 faculty feedback questions...');
-
-        const defaultQuestions = [{
-                id: Storage.generateId(),
-                text: 'Regularity in conducting classes',
-                type: 'rating',
-                category: 'Professionalism',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Punctuality',
-                type: 'rating',
-                category: 'Professionalism',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Preparation for the class',
-                type: 'rating',
-                category: 'Teaching Preparation',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Completion of the syllabus on time',
-                type: 'rating',
-                category: 'Syllabus Management',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Competency to handle the subject',
-                type: 'rating',
-                category: 'Subject Knowledge',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Presentation skills (Voice, Clarity, Language)',
-                type: 'rating',
-                category: 'Communication Skills',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Methodology used to impart the knowledge',
-                type: 'rating',
-                category: 'Teaching Methods',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Interaction with the students',
-                type: 'rating',
-                category: 'Student Engagement',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Accessibility to the students outside the classroom',
-                type: 'rating',
-                category: 'Student Support',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: Storage.generateId(),
-                text: 'Role as mentor',
-                type: 'rating',
-                category: 'Mentorship',
-                allowComments: true,
-                createdAt: new Date().toISOString()
-            }
-        ];
-
-        for (const question of defaultQuestions) {
-            await Storage.saveQuestion(question);
-        }
-        console.log('? Default 10 questions initialized and saved to Firestore');
-    } else {
-        console.log('?? Questions already exist (' + questions.length + ' found), skipping initialization');
-    }
-})();
+// Expose CacheManager through Storage for manual cache control
+Storage.CacheManager = CacheManager;
 
 // Export for global use
 window.Storage = Storage;

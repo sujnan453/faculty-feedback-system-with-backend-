@@ -63,6 +63,179 @@
             box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
         }
 
+        /* Custom Searchable Dropdown Styles */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-select-trigger {
+            padding: 14px 40px 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: #1a202c;
+            font-weight: 500;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .custom-select-trigger:hover {
+            border-color: #7c3aed;
+        }
+
+        .custom-select-trigger.active {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .custom-select-arrow {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.3s ease;
+            color: #7c3aed;
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        .custom-select-trigger.active .custom-select-arrow {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .custom-select-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #7c3aed;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
+            z-index: 1000;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .custom-select-dropdown.active {
+            max-height: 400px;
+            opacity: 1;
+        }
+
+        .custom-select-search {
+            padding: 12px;
+            border-bottom: 2px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .custom-select-search input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: #1a202c;
+            font-weight: 500;
+            background: #f9fafb;
+        }
+
+        .custom-select-search input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .custom-select-search input::placeholder {
+            color: #9ca3af;
+        }
+
+        .custom-select-search-icon {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7c3aed;
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .custom-select-options {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .custom-select-options::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-thumb {
+            background: #7c3aed;
+            border-radius: 4px;
+        }
+
+        .custom-select-options::-webkit-scrollbar-thumb:hover {
+            background: #6d28d9;
+        }
+
+        .custom-select-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            color: #1a202c;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .custom-select-option:hover {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(109, 40, 217, 0.05) 100%);
+            color: #7c3aed;
+        }
+
+        .custom-select-option.selected {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            font-weight: 700;
+        }
+
+        .custom-select-option.hidden {
+            display: none;
+        }
+
+        .custom-select-no-results {
+            padding: 20px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        /* Hide original select when custom dropdown is active */
+        .filter-group select.hidden-select {
+            display: none;
+        }
+
         .filter-buttons {
             display: flex;
             gap: 12px;
@@ -909,7 +1082,8 @@
                 font-size: 18px;
             }
         }
-    </style>
+    </style><!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 
 <body>
@@ -923,41 +1097,34 @@
             <nav class="sidebar-nav">
                 <a href="admin-dashboard.html" class="nav-item">
                     <span class="icon">🏠</span>
-                    <span>Dashboard</span>
-                </a>
+                    <span>Dashboard</span></a>
                 <a href="manage-faculties.html" class="nav-item">
                     <span class="icon">👨‍💼</span>
-                    <span>Manage Faculties</span>
-                </a>
+                    <span>Manage Faculties</span></a>
+                <a href="select-faculties.html" class="nav-item">
+                    <span class="icon">🏫</span>
+                    <span>Class Survey</span></a>
                 <a href="manage-questions.html" class="nav-item">
                     <span class="icon">❓</span>
-                    <span>Manage Questions</span>
-                </a>
+                    <span>Manage Questions</span></a>
                 <a href="create-survey.html" class="nav-item">
                     <span class="icon">➕</span>
-                    <span>Create Survey</span>
-                </a>
-                <a href="visualization.html" class="nav-item">
-                    <span class="icon">📈</span>
-                    <span>Visualizations</span>
-                </a>
+                    <span>Create Survey</span></a>
                 <a href="faculty-performance.html" class="nav-item active">
                     <span class="icon">👨‍🏫</span>
-                    <span>Faculty Performance</span>
-                </a>
+                    <span>Faculty Performance</span></a>
                 <a href="submitted-students.html" class="nav-item">
-                    <span class="icon">📝</span>
-                    <span>Submitted Students</span>
-                </a>
+                    <span class="icon">✅</span>
+                    <span>Submitted Students</span></a>
+                <a href="clear-duplicates.html" class="nav-item">
+                    <span class="icon">✨</span>
+                    <span>Clear Duplicates</span></a>
                 <a href="reset-data.html" class="nav-item">
                     <span class="icon">🔄</span>
-                    <span>Reset Data</span>
-                </a>
+                    <span>Reset Data</span></a>
                 <a href="#" class="nav-item" onclick="logout()">
                     <span class="icon">🚪</span>
-                    <span>Logout</span>
-                </a>
-            </nav>
+                    <span>Logout</span></a></nav>
         </aside>
 
         <!-- Main Content -->
@@ -968,10 +1135,6 @@
                     <h1>Faculty Performance</h1>
                     <p>View and analyze faculty ratings and feedback data</p>
                 </div>
-                <button class="btn-print" onclick="printPerformanceTable()" title="Print performance report" style="margin-right: 20px;">
-                    <span>🖨️</span>
-                    <span>Print</span>
-                </button>
             </header>
 
             <!-- Dashboard Content -->
@@ -984,108 +1147,72 @@
                         <h3 style="margin-top: 0; color: #1a202c; border-bottom: 2px solid #7c3aed; padding-bottom: 15px;">Filters</h3>
                         <div class="filters-grid">
                             <div class="filter-group">
-                                <label for="deptFilter">Department</label>
-                                <select id="deptFilter" onchange="updateFacultyDropdown(this.value); applyFilters()">
-                                    <option value="">All Departments</option>
+                                <label for="facultyFilter">👨‍🏫 Faculty Name</label>
+                                <select id="facultyFilter" class="hidden-select">
+                                    <option value="">Select Faculty</option>
                                 </select>
+                                <div class="custom-select-wrapper" id="facultyCustomSelect">
+                                    <div class="custom-select-trigger">
+                                        <span class="custom-select-value">Select Faculty</span>
+                                        <span class="custom-select-arrow">▼</span>
+                                    </div>
+                                    <div class="custom-select-dropdown">
+                                        <div class="custom-select-search">
+                                            <span class="custom-select-search-icon">🔍</span>
+                                            <input type="text" placeholder="Search faculty..." id="facultySearchInput">
+                                        </div>
+                                        <div class="custom-select-options" id="facultyOptions">
+                                            <div class="custom-select-option" data-value="">Select Faculty</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="filter-group">
-                                <label for="facultyNameFilter">Faculty Name</label>
-                                <select id="facultyNameFilter" onchange="applyFilters()">
-                                    <option value="">All Faculty</option>
-                                </select>
-                            </div>
+                                <label for="yearFilter">📚 Academic Year</label>
+                                <select id="yearFilter">
+                                    <option value="">Select Year</option>
+                                    <option value="1">First Year</option>
+                                    <option value="2">Second Year</option>
+                                    <option value="3">Third Year</option>
+                                    <option value="all">All Years Combined</option>
+                                </select></div>
+                            <div class="filter-group">
+                                <label for="classFilter">🏫 Class</label>
+                                <select id="classFilter">
+                                    <option value="">Select Class</option>
+                                </select></div>
+                        </div>
+                        <div style="display:flex; gap:12px; align-items:center; margin-top:10px;">
+                            <div id="classesDebug" style="font-size:13px; color:#475569; display:none;"></div>
+                            <button id="createFromDeptsBtn" class="btn-reset" style="display:none; padding:6px 10px; font-size:13px;">Create classes from Departments</button>
                         </div>
                         <div class="filter-buttons">
-                            <button class="btn-search" onclick="applyFilters()">Search</button>
-                            <button class="btn-reset" onclick="resetFilters()">Reset</button>
-                        </div>
+                            <button class="btn-search" onclick="applyNewFilters()">🔍 Search</button>
+                            <button class="btn-reset" onclick="resetNewFilters()">↻ Reset</button>
+                            <button class="btn-reset" onclick="refreshData()" title="Refresh data from Firebase">🔄 Refresh Data</button></div>
                     </div>
 
-                    <!-- Summary Stats -->
-                    <div class="stats-summary">
-                        <div class="summary-card">
-                            <h4>Total Faculty</h4>
-                            <p class="value" id="totalFacultyCount">0</p>
-                            <p class="subtext">Registered faculty members</p>
-                        </div>
-                        <div class="summary-card">
-                            <h4>Average Rating</h4>
-                            <p class="value" id="avgRating">0</p>
-                            <p class="subtext">Overall average rating</p>
-                        </div>
-                        <div class="summary-card">
-                            <h4>Top Rated</h4>
-                            <p class="value" id="topRated">-</p>
-                            <p class="subtext">Highest rated faculty</p>
-                        </div>
-                        <div class="summary-card">
-                            <h4>Departments</h4>
-                            <p class="value" id="totalDepts">0</p>
-                            <p class="subtext">Active departments</p>
-                        </div>
-                    </div>
-
-                    <!-- Performance Table -->
+                    <!-- Performance Results Section -->
                     <div class="performance-table-container">
                         <div class="table-header">
                             <div class="table-header-left">
                                 <span style="font-size: 24px;">📊</span>
-                                <h3>Faculty Performance Data</h3>
+                                <h3>Faculty Ratings Report</h3>
                             </div>
-                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; width: 100%; justify-content: space-between;">
-                                <div class="table-header-info">
-                                    <div class="header-stat">
-                                        <span>Total Records:</span>
-                                        <span class="header-stat-value" id="headerTotalRecords">0</span>
-                                    </div>
-                                    <div class="header-stat">
-                                        <span>Avg Rating:</span>
-                                        <span class="header-stat-value" id="headerAvgRating">0</span>
-                                    </div>
-                                </div>
-                                <div class="table-header-actions">
-                                    <button class="btn-csv" onclick="exportPerformanceToCSV()" title="Export to CSV">
-                                        <span>📊</span>
-                                        <span>CSV</span>
-                                    </button>
-                                    <button class="btn-print" onclick="printPerformanceTable()" title="Print performance report">
-                                        <span>🖨️</span>
-                                        <span>Print</span>
-                                    </button>
-                                </div>
+                            <div class="table-header-actions">
+                                <button class="btn-csv" onclick="exportPerformanceToCSV()" title="Export table as CSV">
+                                    <span>📊</span>
+                                    <span>Export</span>
+                                </button>
                             </div>
                         </div>
-                        <table class="performance-table" id="performanceTable">
-                            <thead>
-                                <tr>
-                                    <th>Department</th>
-                                    <th>Faculty Name</th>
-                                    <th>Student</th>
-                                    <th>Q1</th>
-                                    <th>Q2</th>
-                                    <th>Q3</th>
-                                    <th>Q4</th>
-                                    <th>Q5</th>
-                                    <th>Q6</th>
-                                    <th>Q7</th>
-                                    <th>Q8</th>
-                                    <th>Q9</th>
-                                    <th>Q10</th>
-                                    <th>Total</th>
-                                    <th>Avg</th>
-                                </tr>
-                            </thead>
-                            <tbody id="performanceTableBody">
-                                <tr>
-                                    <td colspan="15" class="empty-state">
-                                        <div class="empty-state-icon">📭</div>
-                                        <h3>No Data Available</h3>
-                                        <p>No faculty or survey data found. Use filters to search or load sample data.</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div id="resultsContainer" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                            <div class="empty-state" style="text-align: center; padding: 40px;">
+                                <div class="empty-state-icon" style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                                <h3>No Data Yet</h3>
+                                <p>Select a faculty, year, and class to view ratings</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1119,501 +1246,1307 @@
                 checkModules();
             });
         }
+
         // Fallback showAlert if not loaded from firebase-auth
         if (typeof window.showAlert === 'undefined') {
             window.showAlert = function(message, type = 'info') {
                 console.log(`[${type.toUpperCase()}] ${message}`);
-                // Use console only - no alert popup
             };
         }
-        // Load faculty performance data from storage
-        let facultyPerformanceData = [];
-        // Function declarations
-        async function loadFacultyPerformanceData() {
-            await waitForModules();
-            facultyPerformanceData = [];
-            // Get all departments and faculties
-            const departments = await Storage.getDepartments() || [];
-            let feedbacks = await Storage.getFeedbacks() || [];
-            // VALIDATION: Filter out orphaned feedbacks
-            const validFeedbacks = [];
-            for (const feedback of feedbacks) {
-                // Check if survey exists
-                const survey = await Storage.getSurveyById(feedback.surveyId);
-                if (!survey) continue;
-                // Check if department exists
-                const department = await Storage.getDepartmentByName(feedback.studentDepartment);
-                if (!department) continue;
-                // Check if all faculty members still exist
-                const departmentFacultyIds = (department.faculties || []).map(f => f.id);
-                const invalidFaculty = feedback.selectedTeachers.some(t => !departmentFacultyIds.includes(t.id));
-                if (invalidFaculty) continue;
-                validFeedbacks.push(feedback);
-            }
-            feedbacks = validFeedbacks;
-            console.log('📊 Loading Faculty Performance Data:', {
-                departments: departments.length,
-                feedbacks: feedbacks.length
-            });
-            // ONLY create entries for faculties that have actual feedback data
-            // Don't create placeholder entries for years without feedback
-            feedbacks.forEach((feedback, feedbackIndex) => {
-                // For each feedback, create one record per selected teacher
-                feedback.selectedTeachers.forEach((teacher, teacherIndex) => {
-                    const ratings = [];
-                    // Extract ratings from feedback responses for this specific teacher
-                    if (feedback.responses) {
-                        feedback.responses.forEach(response => {
-                            if (response.teacherId === teacher.id && response.rating) {
-                                ratings.push(response.rating);
-                            }
-                        });
-                    }
-                    // Ensure we have exactly 10 ratings (one per question)
-                    while (ratings.length < 10) {
-                        ratings.push(0);
-                    }
-                    ratings.length = 10;
-                    // Get year from feedback - handle both studentYear and year fields
-                    const year = feedback.studentYear || feedback.year || 1;
-                    const yearSuffix = getYearSuffix(year);
-                    const displayDept = `${year}${yearSuffix} Year - ${feedback.studentDepartment}`;
-                    // Use S1, S2, S3... for each student feedback
-                    const studentNumber = feedbackIndex + 1;
-                    facultyPerformanceData.push({
-                        name: teacher.name,
-                        department: feedback.studentDepartment,
-                        year: year,
-                        displayDept: displayDept,
-                        displayStudent: `S${studentNumber}`,
-                        ratings: ratings,
-                        feedbackId: feedback.id,
-                        studentId: feedback.studentId,
-                        studentName: feedback.studentName
-                    });
-                });
-            });
-            // Sort by year, department, faculty name
-            facultyPerformanceData.sort((a, b) => {
-                if (a.year !== b.year) return a.year - b.year;
-                if (a.department !== b.department) return a.department.localeCompare(b.department);
-                if (a.name !== b.name) return a.name.localeCompare(b.name);
-                return 0;
-            });
-            console.log('✅ Faculty Performance Data Loaded:', {
-                totalRecords: facultyPerformanceData.length,
-                data: facultyPerformanceData
-            });
-        }
 
-        function getYearSuffix(year) {
-            if (year === 1) return 'st';
-            if (year === 2) return 'nd';
-            if (year === 3) return 'rd';
-            return 'th';
-        }
+        // Data storage
+        let allFeedbacks = [];
+        let allDepartments = [];
+        let allClasses = [];
 
-        function getTotal(ratings) {
-            return ratings.reduce((a, b) => a + b, 0);
-        }
+        // Initialize custom searchable dropdown for faculty
+        function initializeCustomFacultyDropdown(facultyMap) {
+            const customSelect = document.getElementById('facultyCustomSelect');
+            const trigger = customSelect.querySelector('.custom-select-trigger');
+            const dropdown = customSelect.querySelector('.custom-select-dropdown');
+            const valueDisplay = customSelect.querySelector('.custom-select-value');
+            const searchInput = document.getElementById('facultySearchInput');
+            const optionsContainer = document.getElementById('facultyOptions');
+            const hiddenSelect = document.getElementById('facultyFilter');
 
-        function getAverage(ratings) {
-            return (getTotal(ratings) / ratings.length).toFixed(2);
-        }
+            // Clear and populate options
+            optionsContainer.innerHTML = '';
 
-        function getRatingClass(rating) {
-            if (rating >= 4) return 'high';
-            if (rating >= 3) return 'medium';
-            return 'low';
-        }
-
-        function loadPerformanceData() {
-            const tableBody = document.getElementById('performanceTableBody');
-            if (facultyPerformanceData.length === 0) {
-                tableBody.innerHTML = `
-            <tr>
-                <td colspan="15" class="empty-state">
-            <div class="empty-state-icon">📭</div>
-            <h3>No Data Available</h3>
-            <p>No faculty or survey data found. Add faculties in Manage Faculties page and submit surveys to see performance data.</p>
-                </td>
-            </tr>
-        `;
-                document.getElementById('headerTotalRecords').textContent = '0';
-                document.getElementById('headerAvgRating').textContent = '0';
-                return;
-            }
-            let html = facultyPerformanceData.map((faculty) => {
-                const total = getTotal(faculty.ratings);
-                const avg = getAverage(faculty.ratings);
-                const ratingCells = faculty.ratings.map(rating => {
-                    if (faculty.isPlaceholder && rating === 0) {
-                        return `<td class="rating-cell" style="color: #ccc;">-</td>`;
-                    }
-                    return `<td class="rating-cell ${getRatingClass(rating)}">${rating}</td>`;
-                }).join('');
-                return `
-            <tr>
-                <td class="dept-cell">${faculty.displayDept}</td>
-                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.name}</td>
-                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.displayStudent}</td>
-                ${ratingCells}
-                <td class="total-cell">${total}</td>
-                <td class="avg-cell">${avg}</td>
-            </tr>
-        `;
-            }).join('');
-            // Add average of averages row
-            const allAvgs = facultyPerformanceData.filter(f => !f.isPlaceholder).map(f => parseFloat(getAverage(f.ratings)));
-            const avgOfAvgs = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length).toFixed(2) : '0';
-            html += `
-        <tr class="avg-row">
-            <td class="dept-cell">Average of Averages</td>
-            <td colspan="12" style="text-align: right; padding-right: 20px;"></td>
-            <td class="total-cell" style="text-align: center; font-weight: 700; color: #1a202c;">-</td>
-            <td class="avg-cell">${avgOfAvgs}</td>
-        </tr>
-            `;
-            tableBody.innerHTML = html;
-            // Update header statistics
-            const actualData = facultyPerformanceData.filter(f => !f.isPlaceholder);
-            document.getElementById('headerTotalRecords').textContent = actualData.length;
-            document.getElementById('headerAvgRating').textContent = avgOfAvgs;
-            updateSummaryStats();
-        }
-
-        function updateSummaryStats() {
-            document.getElementById('totalFacultyCount').textContent = facultyPerformanceData.length;
-            const avgRating = facultyPerformanceData.reduce((sum, f) => sum + parseFloat(getAverage(f.ratings)), 0) / facultyPerformanceData.length;
-            document.getElementById('avgRating').textContent = avgRating.toFixed(2);
-            const topFaculty = facultyPerformanceData.reduce((max, f) => parseFloat(getAverage(f.ratings)) > parseFloat(getAverage(max.ratings)) ? f : max);
-            document.getElementById('topRated').textContent = topFaculty.name;
-            const depts = new Set(facultyPerformanceData.map(f => f.department));
-            document.getElementById('totalDepts').textContent = depts.size;
-        }
-
-        function applyFilters() {
-            const deptFilter = document.getElementById('deptFilter').value;
-            const facultyName = document.getElementById('facultyNameFilter').value;
-
-            // Update faculty dropdown based on selected department
-            updateFacultyDropdown(deptFilter);
-
-            let filtered = facultyPerformanceData;
-            // Filter by department if selected
-            if (deptFilter) {
-                filtered = filtered.filter(record => record.displayDept === deptFilter);
-            }
-            // Filter by faculty if selected
-            if (facultyName) {
-                filtered = filtered.filter(record => record.name === facultyName);
-            }
-            const tableBody = document.getElementById('performanceTableBody');
-            if (filtered.length === 0) {
-                tableBody.innerHTML = `
-            <tr>
-                <td colspan="15" class="empty-state">
-            <div class="empty-state-icon">🔍</div>
-            <h3>No Results Found</h3>
-            <p>No faculty match your filter criteria.</p>
-                </td>
-            </tr>
-        `;
-                document.getElementById('headerTotalRecords').textContent = '0';
-                document.getElementById('headerAvgRating').textContent = '0';
-                return;
-            }
-            let html = filtered.map((faculty) => {
-                const total = getTotal(faculty.ratings);
-                const avg = getAverage(faculty.ratings);
-                const ratingCells = faculty.ratings.map(rating => {
-                    if (faculty.isPlaceholder && rating === 0) {
-                        return `<td class="rating-cell" style="color: #ccc;">-</td>`;
-                    }
-                    return `<td class="rating-cell ${getRatingClass(rating)}">${rating}</td>`;
-                }).join('');
-                return `
-            <tr>
-                <td class="dept-cell">${faculty.displayDept}</td>
-                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.name}</td>
-                <td class="dept-cell" style="color: #1a202c; font-weight: 600;">${faculty.displayStudent}</td>
-                ${ratingCells}
-                <td class="total-cell">${total}</td>
-                <td class="avg-cell">${avg}</td>
-            </tr>
-        `;
-            }).join('');
-            // Add average of averages row
-            const actualData = filtered.filter(f => !f.isPlaceholder);
-            const allAvgs = actualData.map(f => parseFloat(getAverage(f.ratings)));
-            const avgOfAvgs = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length).toFixed(2) : '0';
-            html += `
-        <tr class="avg-row">
-            <td class="dept-cell">Average of Averages</td>
-            <td colspan="12" style="text-align: right; padding-right: 20px;"></td>
-            <td class="total-cell" style="text-align: center; font-weight: 700; color: #1a202c;">-</td>
-            <td class="avg-cell">${avgOfAvgs}</td>
-        </tr>
-            `;
-            tableBody.innerHTML = html;
-            // Update header statistics
-            document.getElementById('headerTotalRecords').textContent = actualData.length;
-            document.getElementById('headerAvgRating').textContent = avgOfAvgs;
-        }
-
-        function updateFacultyDropdown(selectedDept) {
-            const facultyNameFilter = document.getElementById('facultyNameFilter');
-            const currentValue = facultyNameFilter.value;
-
-            // Clear existing options except "All Faculty"
-            facultyNameFilter.innerHTML = '<option value="">All Faculty</option>';
-
-            // Get faculty names for the selected department only
-            let facultyNames;
-            if (selectedDept) {
-                // Filter faculty by selected department
-                facultyNames = new Set(
-                    facultyPerformanceData
-                    .filter(f => f.displayDept === selectedDept)
-                    .map(f => f.name)
-                );
-            } else {
-                // Show all faculty if no department selected
-                facultyNames = new Set(facultyPerformanceData.map(f => f.name));
-            }
+            // Add default option
+            const defaultOption = document.createElement('div');
+            defaultOption.className = 'custom-select-option selected';
+            defaultOption.setAttribute('data-value', '');
+            defaultOption.textContent = 'Select Faculty';
+            optionsContainer.appendChild(defaultOption);
 
             // Add faculty options
-            Array.from(facultyNames).sort().forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                facultyNameFilter.appendChild(option);
+            Array.from(facultyMap.entries()).sort((a, b) => String(a[1]).localeCompare(String(b[1]))).forEach(([id, name]) => {
+                const option = document.createElement('div');
+                option.className = 'custom-select-option';
+                option.setAttribute('data-value', id);
+                option.innerHTML = `<span>👨‍🏫</span><span>${name}</span>`;
+                optionsContainer.appendChild(option);
             });
 
-            // Restore previous selection if it still exists in the new list
-            if (currentValue && facultyNameFilter.querySelector(`option[value="${currentValue}"]`)) {
-                facultyNameFilter.value = currentValue;
+            // Toggle dropdown
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isActive = dropdown.classList.contains('active');
+
+                // Close all other dropdowns
+                document.querySelectorAll('.custom-select-dropdown.active').forEach(d => {
+                    if (d !== dropdown) {
+                        d.classList.remove('active');
+                        d.parentElement.querySelector('.custom-select-trigger').classList.remove('active');
+                    }
+                });
+
+                if (isActive) {
+                    dropdown.classList.remove('active');
+                    trigger.classList.remove('active');
+                } else {
+                    dropdown.classList.add('active');
+                    trigger.classList.add('active');
+                    searchInput.value = '';
+                    searchInput.focus();
+                    filterOptions('');
+                }
+            });
+
+            // Search functionality
+            searchInput.addEventListener('input', (e) => {
+                filterOptions(e.target.value);
+            });
+
+            searchInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
+            // Filter options based on search
+            function filterOptions(searchTerm) {
+                const options = optionsContainer.querySelectorAll('.custom-select-option');
+                let hasVisibleOptions = false;
+
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    const matches = text.includes(searchTerm.toLowerCase());
+
+                    if (matches || option.getAttribute('data-value') === '') {
+                        option.classList.remove('hidden');
+                        hasVisibleOptions = true;
+                    } else {
+                        option.classList.add('hidden');
+                    }
+                });
+
+                // Show/hide no results message
+                let noResults = optionsContainer.querySelector('.custom-select-no-results');
+                if (!hasVisibleOptions) {
+                    if (!noResults) {
+                        noResults = document.createElement('div');
+                        noResults.className = 'custom-select-no-results';
+                        noResults.textContent = 'No faculty found';
+                        optionsContainer.appendChild(noResults);
+                    }
+                } else if (noResults) {
+                    noResults.remove();
+                }
+            }
+
+            // Select option
+            optionsContainer.addEventListener('click', (e) => {
+                const option = e.target.closest('.custom-select-option');
+                if (!option) return;
+
+                const value = option.getAttribute('data-value');
+                const text = option.textContent.trim();
+
+                // Update display
+                valueDisplay.textContent = text;
+
+                // Update hidden select
+                hiddenSelect.value = value;
+
+                // Update selected state
+                optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
+
+                // Close dropdown
+                dropdown.classList.remove('active');
+                trigger.classList.remove('active');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!customSelect.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                    trigger.classList.remove('active');
+                }
+            });
+
+            // Sync with hidden select changes (for programmatic updates)
+            hiddenSelect.addEventListener('change', () => {
+                const value = hiddenSelect.value;
+                const option = optionsContainer.querySelector(`[data-value="${value}"]`);
+                if (option) {
+                    valueDisplay.textContent = option.textContent.trim();
+                    optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    option.classList.add('selected');
+                }
+            });
+        }
+
+        // Load all necessary data
+        async function initializeData() {
+            await waitForModules();
+
+            // CRITICAL FIX: Clear feedback cache to ensure fresh data from Firebase
+            if (typeof Storage !== 'undefined' && Storage.CacheManager) {
+                Storage.CacheManager.invalidate('feedbacks');
+                console.log('🔄 Cleared feedback cache to load fresh data');
+            }
+
+            allDepartments = await Storage.getDepartments() || [];
+            allFeedbacks = await Storage.getFeedbacks() || [];
+
+            console.log('📊 Loaded departments:', allDepartments.length);
+            console.log('📊 Loaded feedbacks:', allFeedbacks.length);
+
+            // Debug: Log sample feedback structure
+            if (allFeedbacks.length > 0) {
+                console.log('📋 Sample feedback structure:', JSON.stringify(allFeedbacks[0], null, 2));
+            }
+
+            // Debug: Log all feedback student info
+            allFeedbacks.forEach((fb, idx) => {
+                console.log(`Feedback ${idx + 1}:`, {
+                    studentName: fb.studentName,
+                    studentYear: fb.studentYear,
+                    studentClassName: fb.studentClassName,
+                    studentClassId: fb.studentClassId,
+                    selectedTeachers: fb.selectedTeachers,
+                    hasResponses: fb.responses && fb.responses.length > 0
+                });
+            });
+
+            // Load classes from Firebase (not localStorage)
+            try {
+                allClasses = await Storage.getClasses() || [];
+                console.log('📚 Loaded classes from Firebase:', allClasses.length);
+
+                // Debug: Log class names
+                allClasses.forEach((cls, idx) => {
+                    console.log(`Class ${idx + 1}:`, {
+                        id: cls.id,
+                        name: cls.name,
+                        facultiesCount: (cls.faculties || []).length
+                    });
+                });
+            } catch (e) {
+                allClasses = [];
+                console.error('Error loading classes from Firebase:', e);
+            }
+
+            populateAllDropdowns();
+
+            // Restore saved filters (if any) and auto-apply
+            try {
+                const savedRaw = localStorage.getItem('ffs_facultyPerformanceFilters');
+                if (savedRaw) {
+                    const saved = JSON.parse(savedRaw);
+                    if (saved.faculty) {
+                        document.getElementById('facultyFilter').value = saved.faculty;
+                        // Trigger change event to sync custom dropdown
+                        document.getElementById('facultyFilter').dispatchEvent(new Event('change'));
+                    }
+                    if (saved.year) document.getElementById('yearFilter').value = saved.year;
+                    if (saved.classId) document.getElementById('classFilter').value = saved.classId;
+
+                    // Auto-apply only if all three filters exist
+                    if (saved.faculty && saved.year && saved.classId) {
+                        // small delay to ensure UI is ready
+                        setTimeout(() => applyNewFilters(), 50);
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not restore saved filters', e);
+            }
+        }
+
+        // Populate all filter dropdowns
+        function populateAllDropdowns() {
+            // Populate Faculty dropdown (use faculty IDs as values)
+            const facultyFilter = document.getElementById('facultyFilter');
+            // Clear existing options
+            facultyFilter.innerHTML = '';
+            const facultyPlaceholder = document.createElement('option');
+            facultyPlaceholder.value = '';
+            facultyPlaceholder.textContent = 'Select Faculty';
+            facultyFilter.appendChild(facultyPlaceholder);
+
+            // CRITICAL FIX: Get faculty IDs from BOTH departments AND feedbacks
+            const facultyMap = new Map();
+
+            // First, get faculties from departments
+            allDepartments.forEach(dept => {
+                (dept.faculties || []).forEach(faculty => {
+                    if (faculty && faculty.id) {
+                        facultyMap.set(faculty.id, faculty.name || 'Unknown');
+                        console.log('  Faculty from dept:', {
+                            id: faculty.id,
+                            name: faculty.name
+                        });
+                    }
+                });
+            });
+
+            // CRITICAL: Also get faculties from feedbacks (in case they're not in departments)
+            allFeedbacks.forEach(feedback => {
+                // Check selectedTeachers
+                if (feedback.selectedTeachers && Array.isArray(feedback.selectedTeachers)) {
+                    feedback.selectedTeachers.forEach(teacher => {
+                        if (teacher && (teacher.id || teacher.name)) {
+                            const id = teacher.id || teacher.name;
+                            const name = teacher.name || 'Unknown';
+                            if (!facultyMap.has(id)) {
+                                facultyMap.set(id, name);
+                                console.log('  Faculty from feedback (selectedTeachers):', {
+                                    id,
+                                    name
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // Check responses
+                if (feedback.responses && Array.isArray(feedback.responses)) {
+                    feedback.responses.forEach(response => {
+                        if (response && response.teacherId && response.teacherName) {
+                            if (!facultyMap.has(response.teacherId)) {
+                                facultyMap.set(response.teacherId, response.teacherName);
+                                console.log('  Faculty from feedback (responses):', {
+                                    id: response.teacherId,
+                                    name: response.teacherName
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            console.log('📋 Total unique faculties found:', facultyMap.size);
+
+            Array.from(facultyMap.entries()).sort((a, b) => String(a[1]).localeCompare(String(b[1]))).forEach(([id, name]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = name;
+                facultyFilter.appendChild(option);
+            });
+
+            // Initialize custom searchable dropdown for faculty
+            initializeCustomFacultyDropdown(facultyMap);
+
+            // Populate Class dropdown
+            const classFilter = document.getElementById('classFilter');
+            classFilter.innerHTML = '';
+            const classPlaceholder = document.createElement('option');
+            classPlaceholder.value = '';
+            classPlaceholder.textContent = 'Select Class';
+            classFilter.appendChild(classPlaceholder);
+
+            const allOption = document.createElement('option');
+            allOption.value = 'all';
+            allOption.textContent = 'All Classes';
+            classFilter.appendChild(allOption);
+
+            // Use classes from Firebase (allClasses is already loaded from Firebase)
+            let classesToUse = [];
+            if (Array.isArray(allClasses)) {
+                classesToUse = allClasses;
+            } else if (allClasses && Array.isArray(allClasses.classes)) {
+                classesToUse = allClasses.classes;
+            }
+
+            console.log('📚 Populating class dropdown with', classesToUse.length, 'classes');
+
+            classesToUse.forEach(cls => {
+                const id = cls && (cls.id || cls.classId || cls.value || cls._id || null);
+                const name = cls && (cls.name || cls.className || String(cls) || 'Unnamed Class');
+                if (!id && !name) return;
+                const option = document.createElement('option');
+                option.value = id || name;
+                option.textContent = name;
+                classFilter.appendChild(option);
+                console.log('  Added class:', {
+                    id: option.value,
+                    name: option.textContent
+                });
+            });
+
+            if ((classesToUse.length || 0) === 0) {
+                const noneOpt = document.createElement('option');
+                noneOpt.value = '';
+                noneOpt.textContent = 'No classes found in Firebase';
+                noneOpt.disabled = true;
+                classFilter.appendChild(noneOpt);
+                console.warn('⚠️ No classes found in Firebase');
+            }
+
+            // Update visible debug area with parsed classes for quick diagnostics
+            try {
+                const dbg = document.getElementById('classesDebug');
+                if (dbg) {
+                    const names = classesToUse.map(c => (c && (c.name || c.className)) || String(c)).filter(Boolean);
+                    if (names.length > 0) {
+                        dbg.textContent = `Found ${names.length} classes: ${names.join(', ')}`;
+                        dbg.style.display = 'block';
+                    } else {
+                        dbg.textContent = 'No classes parsed from localStorage (ffs_classes). You can recreate classes from existing Departments.';
+                        dbg.style.display = 'block';
+                        // show helper button to create classes from departments
+                        const btn = document.getElementById('createFromDeptsBtn');
+                        if (btn) {
+                            btn.style.display = 'inline-block';
+                            btn.onclick = createClassesFromDepartments;
+                        }
+                    }
+                }
+            } catch (e) {
+                /* ignore */
+            }
+        }
+
+        // Resolve a class name from various possible sources (id, stored classes, feedback fields)
+        function resolveClassName(classIdOrVal, feedback) {
+            if (classIdOrVal) {
+                const byId = allClasses.find(c => String(c.id) === String(classIdOrVal));
+                if (byId && byId.name) return byId.name;
+                const byName = allClasses.find(c => String(c.name).toLowerCase() === String(classIdOrVal).toLowerCase());
+                if (byName && byName.name) return byName.name;
+            }
+
+            if (feedback) {
+                if (feedback.surveyClassName) return feedback.surveyClassName;
+                if (feedback.studentClassName) return feedback.studentClassName;
+                if (feedback.studentClass && typeof feedback.studentClass === 'string') return feedback.studentClass;
+                if (feedback.studentClass && feedback.studentClass.name) return feedback.studentClass.name;
+            }
+
+            if (classIdOrVal && String(classIdOrVal).length < 60) return String(classIdOrVal);
+            return 'Unknown Class';
+        }
+
+        // Create class entries from departments fallback
+        function createClassesFromDepartments() {
+            try {
+                const existing = Array.isArray(allClasses) ? allClasses.slice() : [];
+                const deptNames = (allDepartments || []).map(d => d.name).filter(Boolean);
+                deptNames.forEach(name => {
+                    if (!existing.some(c => String(c.name).toLowerCase() === String(name).toLowerCase())) {
+                        const id = (typeof Storage !== 'undefined' && Storage.generateId) ? Storage.generateId() : ('cls_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
+                        existing.push({
+                            id,
+                            name: name,
+                            faculties: []
+                        });
+                    }
+                });
+
+                // persist to localStorage and update UI
+                localStorage.setItem('ffs_classes', JSON.stringify(existing));
+                allClasses = existing;
+                populateAllDropdowns();
+                window.showAlert('✅ Created classes from Departments and updated dropdown', 'success');
+            } catch (err) {
+                console.error('Failed to create classes from departments', err);
+                window.showAlert('❌ Could not create classes from departments', 'danger');
+            }
+        }
+
+        // Apply new filters
+        async function applyNewFilters() {
+            // faculty holds the selected faculty ID
+            const faculty = document.getElementById('facultyFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            const classId = document.getElementById('classFilter').value;
+
+            if (!faculty || !year || !classId) {
+                window.showAlert('⚠️ Please select Faculty, Year, and Class', 'warning');
+                return;
+            }
+
+            // Persist selected filters so they survive page reloads
+            try {
+                localStorage.setItem('ffs_facultyPerformanceFilters', JSON.stringify({
+                    faculty: faculty,
+                    year: year,
+                    classId: classId
+                }));
+            } catch (e) {
+                console.warn('Could not save filters', e);
+            }
+
+            console.log('🔍 Applying filters:', {
+                faculty,
+                year,
+                classId
+            });
+            console.log('📊 Total feedbacks to filter:', allFeedbacks.length);
+
+            // Log what we're looking for
+            const facultySelect = document.getElementById('facultyFilter');
+            const classSelect = document.getElementById('classFilter');
+            console.log('🎯 Looking for:', {
+                facultyId: faculty,
+                facultyName: facultySelect.selectedOptions[0] ? facultySelect.selectedOptions[0].textContent : '',
+                year: year,
+                yearText: year === '1' ? 'First Year' : year === '2' ? 'Second Year' : year === '3' ? 'Third Year' : 'All Years',
+                classId: classId,
+                className: classSelect.selectedOptions[0] ? classSelect.selectedOptions[0].textContent : ''
+            });
+
+            // Filter feedbacks
+            const filteredFeedbacks = allFeedbacks.filter(feedback => {
+                // Debug logging for each feedback
+                console.log('Checking feedback:', {
+                    id: feedback.id,
+                    studentName: feedback.studentName,
+                    studentYear: feedback.studentYear,
+                    studentClassId: feedback.studentClassId,
+                    studentClassName: feedback.studentClassName,
+                    selectedTeachers: feedback.selectedTeachers,
+                    responses: feedback.responses
+                });
+
+                // Class may be stored as surveyClassId, studentClassId, or studentClass
+                const feedbackClassId = feedback.surveyClassId || feedback.studentClassId || feedback.classId || (feedback.studentClass && feedback.studentClass.id) || '';
+
+                // If specific class selected (not 'all'), filter by that class
+                if (classId !== 'all' && classId && String(classId) !== String(feedbackClassId)) {
+                    console.log('  ❌ Class mismatch:', {
+                        expected: classId,
+                        got: feedbackClassId
+                    });
+                    return false;
+                }
+
+                // Year match - if 'all' is selected, accept all years
+                const feedbackYear = feedback.studentYear || feedback.year || 0;
+                const yearMatch = year === 'all' || String(feedbackYear) === String(year);
+                if (!yearMatch) {
+                    console.log('  ❌ Year mismatch:', {
+                        expected: year,
+                        got: feedbackYear
+                    });
+                    return false;
+                }
+
+                // Faculty match: Check both selectedTeachers and responses
+                let hasFaculty = false;
+
+                // Check selectedTeachers array
+                if (feedback.selectedTeachers && Array.isArray(feedback.selectedTeachers)) {
+                    console.log('  📋 selectedTeachers:', JSON.stringify(feedback.selectedTeachers));
+                    hasFaculty = feedback.selectedTeachers.some(t => {
+                        const teacherId = t.id || t;
+                        const match = String(teacherId) === String(faculty);
+                        console.log('    Checking selectedTeacher:', {
+                            teacher: t,
+                            teacherId: teacherId,
+                            expectedFacultyId: faculty,
+                            match: match
+                        });
+                        return match;
+                    });
+                }
+
+                // Also check responses array as fallback
+                if (!hasFaculty && feedback.responses && Array.isArray(feedback.responses)) {
+                    console.log('  📋 responses:', feedback.responses.map(r => ({
+                        teacherId: r.teacherId,
+                        teacherName: r.teacherName
+                    })));
+                    hasFaculty = feedback.responses.some(r => {
+                        const match = String(r.teacherId) === String(faculty);
+                        console.log('    Checking response teacherId:', {
+                            teacherId: r.teacherId,
+                            teacherName: r.teacherName,
+                            expectedFacultyId: faculty,
+                            match: match
+                        });
+                        return match;
+                    });
+                }
+
+                if (!hasFaculty) {
+                    console.log('  ❌ Faculty not found in feedback');
+                    return false;
+                }
+
+                console.log('  ✅ Feedback matches all filters');
+                return true;
+            });
+
+            console.log('✅ Filtered feedbacks:', filteredFeedbacks.length, 'out of', allFeedbacks.length);
+            displayResults(faculty, year, classId, filteredFeedbacks);
+        }
+
+        // Display results in formatted table
+        function displayResults(facultyId, year, classId, feedbacks) {
+            const resultsContainer = document.getElementById('resultsContainer');
+
+            console.log('displayResults called with:', {
+                facultyId,
+                year,
+                classId,
+                feedbacksCount: feedbacks.length
+            });
+
+            if (feedbacks.length === 0) {
+                resultsContainer.innerHTML = `
+            <div class="empty-state" style="text-align: center; padding: 40px;">
+                <div class="empty-state-icon" style="font-size: 64px; margin-bottom: 20px;">🔍</div>
+                <h3>No Results Found</h3>
+                <p>No student ratings found for the selected filters</p>
+            </div>
+        `;
+                return;
+            }
+
+            // Resolve faculty name
+            let facultyName = 'Unknown Faculty';
+            for (const dept of allDepartments) {
+                for (const f of (dept.faculties || [])) {
+                    if (String(f.id) === String(facultyId)) {
+                        facultyName = f.name;
+                        break;
+                    }
+                }
+                if (facultyName !== 'Unknown Faculty') break;
+            }
+
+            // Determine which scenario we're in
+            const isAllYears = (year === 'all');
+            const isAllClasses = (classId === 'all');
+
+            if (isAllYears && isAllClasses) {
+                // Scenario 4: All Years + All Classes - Year-wise summary
+                displayYearWiseSummary(facultyId, facultyName, feedbacks, resultsContainer);
+            } else if (isAllYears && !isAllClasses) {
+                // Scenario 3: All Years + Specific Class - Year-wise summary for one class
+                const className = resolveClassName(classId, feedbacks[0]);
+                displayYearWiseSummaryForClass(facultyId, facultyName, className, feedbacks, resultsContainer);
+            } else if (!isAllYears && isAllClasses) {
+                // Scenario 2: Specific Year + All Classes - Multiple tables (one per class)
+                const yearText = year === '1' ? 'First Year' : year === '2' ? 'Second Year' : 'Third Year';
+                displayMultipleClassTables(facultyId, facultyName, year, yearText, feedbacks, resultsContainer);
             } else {
-                facultyNameFilter.value = '';
+                // Scenario 1: Specific Year + Specific Class - Student-wise table
+                const className = resolveClassName(classId, feedbacks[0]);
+                const yearText = year === '1' ? 'First Year' : year === '2' ? 'Second Year' : 'Third Year';
+                displayStudentWiseTable(facultyId, facultyName, className, yearText, feedbacks, resultsContainer);
             }
         }
 
-        function resetFilters() {
-            document.getElementById('deptFilter').value = '';
-            document.getElementById('facultyNameFilter').value = '';
-            updateFacultyDropdown(''); // Reset faculty dropdown to show all
-            loadPerformanceData();
+        // Scenario 1: Student-wise table for specific class and year
+        function displayStudentWiseTable(facultyId, facultyName, className, yearText, feedbacks, container) {
+            // Build question map
+            const questionMap = new Map();
+            feedbacks.forEach(feedback => {
+                (feedback.responses || []).forEach(r => {
+                    if (String(r.teacherId) === String(facultyId) && r.questionId) {
+                        if (!questionMap.has(r.questionId)) {
+                            questionMap.set(r.questionId, r.questionText || `Q${questionMap.size + 1}`);
+                        }
+                    }
+                });
+            });
+
+            const questionIds = Array.from(questionMap.keys());
+
+            // Build student rows
+            const studentRows = [];
+            feedbacks.forEach((feedback) => {
+                const ratingsMap = {};
+                (feedback.responses || []).forEach(r => {
+                    if (String(r.teacherId) === String(facultyId) && r.questionId) {
+                        ratingsMap[r.questionId] = Number(r.rating);
+                    }
+                });
+
+                let avg = null;
+                const tr = (feedback.teacherRatings || []).find(t => String(t.teacherId) === String(facultyId));
+                if (tr && tr.averageRating !== undefined && tr.averageRating !== null) {
+                    avg = Number(tr.averageRating);
+                } else {
+                    const vals = Object.values(ratingsMap).filter(v => v !== undefined && v !== null).map(Number);
+                    if (vals.length > 0) {
+                        avg = parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2));
+                    }
+                }
+
+                if (avg !== null && Object.keys(ratingsMap).length > 0) {
+                    studentRows.push({
+                        studentId: feedback.studentId,
+                        ratings: ratingsMap,
+                        avg
+                    });
+                }
+            });
+
+            const totalRating = studentRows.reduce((sum, sr) => sum + (sr.avg || 0), 0);
+            const averageRating = studentRows.length > 0 ? (totalRating / studentRows.length).toFixed(2) : 0;
+
+            let html = `
+        <div style="margin-bottom: 30px;">
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px; border-radius: 12px; color: white; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 15px 0; font-size: 28px;">👨‍🏫 ${facultyName}</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 16px;">
+                    <div>📚 <strong>Class:</strong> ${className}</div>
+                    <div>📅 <strong>Year:</strong> ${yearText}</div>
+                    <div>👥 <strong>Students:</strong> ${studentRows.length}</div>
+                    <div>⭐ <strong>Average Rating:</strong> ${averageRating}/10</div>
+                </div>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                        <th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">S.No</th>
+                        ${questionIds.map((q, i) => `<th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Q${i+1}</th>`).join('')}
+                        <th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Average</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            studentRows.forEach((sr, index) => {
+                html += `
+                    <tr style="border-bottom: 1px solid #e0e0e0;">
+                        <td style="padding: 14px; text-align: center; font-weight: 600; color: #7c3aed; border: 1px solid #e0e0e0;">${index + 1}</td>`;
+
+                questionIds.forEach(qId => {
+                    const v = sr.ratings[qId];
+                    if (v !== undefined && v !== null) {
+                        const color = v >= 8 ? '#10b981' : v >= 6 ? '#f59e0b' : '#ef4444';
+                        html += `<td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;"><span style="background: ${color}; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700;">${v}</span></td>`;
+                    } else {
+                        html += `<td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0; color: #718096;">-</td>`;
+                    }
+                });
+
+                html += `<td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;"><span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 8px 12px; border-radius: 6px; font-weight: 700;">${sr.avg}</span></td>
+                    </tr>`;
+            });
+
+            html += `
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f7fafc; font-weight: 700;">
+                        <td colspan="${1 + questionIds.length}" style="padding: 12px; text-align: right; color: #1a202c; border: 1px solid #e0e0e0;">Average Rating:</td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #e0e0e0;">
+                            <span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 8px 12px; border-radius: 6px; font-size: 16px;">${averageRating}</span>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>`;
+
+            container.innerHTML = html;
+            window.showAlert(`✅ Found ${studentRows.length} records (Average: ${averageRating})`, 'success');
         }
 
-        function printPerformanceTable() {
-            // Get current filters
-            const deptFilter = document.getElementById('deptFilter').value;
-            const facultyName = document.getElementById('facultyNameFilter').value;
-            // Create print window
-            const printWindow = window.open('', '', 'height=600,width=900');
-            // Get table HTML
-            const table = document.getElementById('performanceTable').outerHTML;
-            // Create print document
-            const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Faculty Performance Report<\/title>
-            <style>
-                body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: white;
+        // Scenario 2: Multiple class tables for specific year
+        function displayMultipleClassTables(facultyId, facultyName, year, yearText, feedbacks, container) {
+            // Group feedbacks by class
+            const classFeedbacks = {};
+            feedbacks.forEach(feedback => {
+                const feedbackClassId = feedback.surveyClassId || feedback.studentClassId || feedback.classId || (feedback.studentClass && feedback.studentClass.id) || 'unknown';
+                if (!classFeedbacks[feedbackClassId]) {
+                    classFeedbacks[feedbackClassId] = [];
                 }
-                .print-header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #7c3aed;
-            padding-bottom: 20px;
+                classFeedbacks[feedbackClassId].push(feedback);
+            });
+
+            let html = `
+        <div style="margin-bottom: 30px;">
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px; border-radius: 12px; color: white; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 15px 0; font-size: 28px;">👨‍🏫 ${facultyName}</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 16px;">
+                    <div>📚 <strong>Classes:</strong> All Classes</div>
+                    <div>📅 <strong>Year:</strong> ${yearText}</div>
+                    <div>👥 <strong>Total Students:</strong> ${feedbacks.length}</div>
+                </div>
+            </div>`;
+
+            // Create a table for each class with proper wrapper for export detection
+            Object.keys(classFeedbacks).forEach(classId => {
+                const classFeedbackList = classFeedbacks[classId];
+                const className = resolveClassName(classId, classFeedbackList[0]);
+
+                html += `<div style="margin-bottom: 30px; padding: 20px; background: #f9fafb; border-radius: 12px; border-left: 5px solid #7c3aed;">
+                    <h3 style="margin-top: 0; margin-bottom: 15px; color: #1a202c; font-size: 18px;">📚 ${className}</h3>`;
+                html += generateClassTable(facultyId, classFeedbackList);
+                html += `</div>`;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+            window.showAlert(`✅ Found ${feedbacks.length} records across ${Object.keys(classFeedbacks).length} classes`, 'success');
+        }
+
+        // Helper to generate a class table
+        function generateClassTable(facultyId, feedbacks) {
+            const questionMap = new Map();
+            feedbacks.forEach(feedback => {
+                (feedback.responses || []).forEach(r => {
+                    if (String(r.teacherId) === String(facultyId) && r.questionId) {
+                        if (!questionMap.has(r.questionId)) {
+                            questionMap.set(r.questionId, r.questionText || `Q${questionMap.size + 1}`);
+                        }
+                    }
+                });
+            });
+
+            const questionIds = Array.from(questionMap.keys());
+            const studentRows = [];
+
+            feedbacks.forEach((feedback) => {
+                const ratingsMap = {};
+                (feedback.responses || []).forEach(r => {
+                    if (String(r.teacherId) === String(facultyId) && r.questionId) {
+                        ratingsMap[r.questionId] = Number(r.rating);
+                    }
+                });
+
+                let avg = null;
+                const tr = (feedback.teacherRatings || []).find(t => String(t.teacherId) === String(facultyId));
+                if (tr && tr.averageRating !== undefined) {
+                    avg = Number(tr.averageRating);
+                } else {
+                    const vals = Object.values(ratingsMap).filter(v => v !== undefined && v !== null).map(Number);
+                    if (vals.length > 0) {
+                        avg = parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2));
+                    }
                 }
-                .print-header h1 {
-            margin: 0 0 10px 0;
-            color: #1a202c;
-            font-size: 24px;
+
+                if (avg !== null && Object.keys(ratingsMap).length > 0) {
+                    studentRows.push({
+                        ratings: ratingsMap,
+                        avg
+                    });
                 }
-                .print-header p {
-            margin: 5px 0;
-            color: #718096;
-            font-size: 13px;
+            });
+
+            const totalRating = studentRows.reduce((sum, sr) => sum + sr.avg, 0);
+            const averageRating = studentRows.length > 0 ? (totalRating / studentRows.length).toFixed(2) : 0;
+
+            let html = `
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <thead>
+                <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                    <th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">S.No</th>
+                    ${questionIds.map((q, i) => `<th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Q${i+1}</th>`).join('')}
+                    <th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Average</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+            studentRows.forEach((sr, index) => {
+                html += `<tr><td style="padding: 14px; text-align: center; font-weight: 600; color: #7c3aed; border: 1px solid #e0e0e0;">${index + 1}</td>`;
+                questionIds.forEach(qId => {
+                    const v = sr.ratings[qId];
+                    if (v !== undefined && v !== null) {
+                        const color = v >= 8 ? '#10b981' : v >= 6 ? '#f59e0b' : '#ef4444';
+                        html += `<td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;"><span style="background: ${color}; color: white; padding: 6px 12px; border-radius: 6px; font-weight: 700;">${v}</span></td>`;
+                    } else {
+                        html += `<td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0; color: #718096;">-</td>`;
+                    }
+                });
+                html += `<td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;"><span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 8px 12px; border-radius: 6px; font-weight: 700;">${sr.avg}</span></td></tr>`;
+            });
+
+            html += `
+            </tbody>
+            <tfoot>
+                <tr style="background: #f7fafc; font-weight: 700;">
+                    <td colspan="${1 + questionIds.length}" style="padding: 12px; text-align: right; color: #1a202c; border: 1px solid #e0e0e0;">Class Average:</td>
+                    <td style="padding: 12px; text-align: center; border: 1px solid #e0e0e0;">
+                        <span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 8px 12px; border-radius: 6px;">${averageRating}</span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>`;
+
+            return html;
+        }
+
+        // Scenario 3: Year-wise summary for specific class
+        function displayYearWiseSummaryForClass(facultyId, facultyName, className, feedbacks, container) {
+            const yearData = {
+                '1': [],
+                '2': [],
+                '3': []
+            };
+
+            feedbacks.forEach(feedback => {
+                const feedbackYear = String(feedback.studentYear || feedback.year || '');
+                if (yearData[feedbackYear]) {
+                    const tr = (feedback.teacherRatings || []).find(t => String(t.teacherId) === String(facultyId));
+                    if (tr && tr.averageRating !== undefined) {
+                        yearData[feedbackYear].push(Number(tr.averageRating));
+                    }
                 }
-                .print-filters {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9ff;
-            border-radius: 8px;
-            font-size: 13px;
+            });
+
+            const yearAverages = {};
+            let overallSum = 0;
+            let overallCount = 0;
+
+            Object.keys(yearData).forEach(yr => {
+                if (yearData[yr].length > 0) {
+                    const sum = yearData[yr].reduce((a, b) => a + b, 0);
+                    yearAverages[yr] = (sum / yearData[yr].length).toFixed(2);
+                    overallSum += sum;
+                    overallCount += yearData[yr].length;
                 }
-                .print-filters p {
-            margin: 5px 0;
-            color: #1a202c;
+            });
+
+            const overallAverage = overallCount > 0 ? (overallSum / overallCount).toFixed(2) : 0;
+
+            let html = `
+        <div style="margin-bottom: 30px;">
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px; border-radius: 12px; color: white; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 15px 0; font-size: 28px;">👨‍🏫 ${facultyName}</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 16px;">
+                    <div>📚 <strong>Class:</strong> ${className}</div>
+                    <div>📅 <strong>Years:</strong> All Years Combined</div>
+                    <div>⭐ <strong>Overall Average:</strong> ${overallAverage}/10</div>
+                </div>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                        <th style="padding: 12px; text-align: left; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Year</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Average Rating</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            const yearNames = {
+                '1': '1st Year',
+                '2': '2nd Year',
+                '3': '3rd Year'
+            };
+            Object.keys(yearAverages).forEach(yr => {
+                const avg = yearAverages[yr];
+                const color = avg >= 8 ? '#10b981' : avg >= 6 ? '#f59e0b' : '#ef4444';
+                html += `
+                    <tr>
+                        <td style="padding: 14px; font-weight: 600; color: #1a202c; border: 1px solid #e0e0e0;">${yearNames[yr]}</td>
+                        <td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                            <span style="background: ${color}; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 700;">${avg} / 10</span>
+                        </td>
+                    </tr>`;
+            });
+
+            html += `
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f7fafc; font-weight: 700;">
+                        <td style="padding: 14px; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Overall</td>
+                        <td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                            <span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 8px 16px; border-radius: 6px; font-size: 16px;">${overallAverage} / 10</span>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>`;
+
+            container.innerHTML = html;
+            window.showAlert(`✅ Year-wise summary for ${className} (Overall: ${overallAverage})`, 'success');
+        }
+
+        // Scenario 4: Year-wise summary for all classes
+        function displayYearWiseSummary(facultyId, facultyName, feedbacks, container) {
+            const yearData = {
+                '1': [],
+                '2': [],
+                '3': []
+            };
+
+            feedbacks.forEach(feedback => {
+                const feedbackYear = String(feedback.studentYear || feedback.year || '');
+                if (yearData[feedbackYear]) {
+                    const tr = (feedback.teacherRatings || []).find(t => String(t.teacherId) === String(facultyId));
+                    if (tr && tr.averageRating !== undefined) {
+                        yearData[feedbackYear].push(Number(tr.averageRating));
+                    }
                 }
-                table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            font-size: 11px;
+            });
+
+            const yearAverages = {};
+            let overallSum = 0;
+            let overallCount = 0;
+
+            Object.keys(yearData).forEach(yr => {
+                if (yearData[yr].length > 0) {
+                    const sum = yearData[yr].reduce((a, b) => a + b, 0);
+                    yearAverages[yr] = (sum / yearData[yr].length).toFixed(2);
+                    overallSum += sum;
+                    overallCount += yearData[yr].length;
                 }
-                th {
-            background: #7c3aed;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-weight: 700;
-            border: 1px solid #7c3aed;
-                }
-                td {
-            padding: 8px;
-            border: 1px solid #e0e0e0;
-            text-align: center;
-                }
-                td:first-child {
-            text-align: left;
-                }
-                tr:nth-child(even) {
-            background: #f8f9ff;
-                }
-                .avg-row {
-            background: #f0f0f0;
-            font-weight: 700;
-            border-top: 2px solid #7c3aed;
-                }
-                .print-footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 12px;
-            color: #718096;
-            border-top: 1px solid #e0e0e0;
-            padding-top: 15px;
-                }
-                @media print {
-            body {
-                margin: 0;
-            }
-            .print-header {
-                page-break-after: avoid;
-            }
-            table {
-                page-break-inside: avoid;
-            }
-                }
-            <\/style>
-        <\/head>
-        <body>
-            <div class="print-header">
-                <h1>📊 Faculty Performance Report<\/h1>
-                <p>Generated on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}<\/p>
-            <\/div>
-                 <div class="print-filters">
-                <p><strong>Filters Applied:<\/strong><\/p>
-                <p>Department: ${deptFilter || 'All Departments'}<\/p>
-                <p>Faculty: ${facultyName || 'All Faculty'}<\/p>
-            <\/div>
-                 ${table}
-                 <div class="print-footer">
-                <p>This is an automatically generated report from the Faculty Feedback System<\/p>
-            <\/div>
-        <\/body>
-        <\/html>
+            });
+
+            const overallAverage = overallCount > 0 ? (overallSum / overallCount).toFixed(2) : 0;
+
+            let html = `
+        <div style="margin-bottom: 30px;">
+            <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px; border-radius: 12px; color: white; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 15px 0; font-size: 28px;">👨‍🏫 ${facultyName}</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 16px;">
+                    <div>📚 <strong>Classes:</strong> All Classes</div>
+                    <div>📅 <strong>Years:</strong> All Years Combined</div>
+                    <div>👥 <strong>Total Students:</strong> ${feedbacks.length}</div>
+                    <div>⭐ <strong>Overall Average:</strong> ${overallAverage}/10</div>
+                </div>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                        <th style="padding: 12px; text-align: left; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Year</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Average Rating</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            const yearNames = {
+                '1': '1st Year',
+                '2': '2nd Year',
+                '3': '3rd Year'
+            };
+            Object.keys(yearAverages).forEach(yr => {
+                const avg = yearAverages[yr];
+                const color = avg >= 8 ? '#10b981' : avg >= 6 ? '#f59e0b' : '#ef4444';
+                html += `
+                    <tr>
+                        <td style="padding: 14px; font-weight: 600; color: #1a202c; border: 1px solid #e0e0e0;">${yearNames[yr]}</td>
+                        <td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                            <span style="background: ${color}; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 700;">${avg} / 10</span>
+                        </td>
+                    </tr>`;
+            });
+
+            html += `
+                </tbody>
+                <tfoot>
+                    <tr style="background: #f7fafc; font-weight: 700;">
+                        <td style="padding: 14px; font-weight: 700; color: #1a202c; border: 1px solid #e0e0e0;">Overall</td>
+                        <td style="padding: 14px; text-align: center; border: 1px solid #e0e0e0;">
+                            <span style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 8px 16px; border-radius: 6px; font-size: 16px;">${overallAverage} / 10</span>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>`;
+
+            container.innerHTML = html;
+            window.showAlert(`✅ Complete summary across all years and classes (Overall: ${overallAverage})`, 'success');
+        }
+
+        // Reset filters
+        function resetNewFilters() {
+            document.getElementById('facultyFilter').value = '';
+            document.getElementById('yearFilter').value = '';
+            document.getElementById('classFilter').value = '';
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: 40px;">
+                    <div class="empty-state-icon" style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                    <h3>No Data Yet</h3>
+                    <p>Select a faculty, year, and class to view ratings</p>
+                </div>
             `;
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            // Wait for content to load then print
-            setTimeout(() => {
-                printWindow.print();
-            }, 250);
+
+            // Clear persisted filters
+            try {
+                localStorage.removeItem('ffs_facultyPerformanceFilters');
+            } catch (e) {
+                console.warn('Could not clear saved filters', e);
+            }
+        }
+
+        // Refresh data from Firebase (clear cache and reload)
+        async function refreshData() {
+            try {
+                window.showAlert('🔄 Refreshing data from Firebase...', 'info');
+
+                // Clear all caches to force fresh data
+                if (typeof Storage !== 'undefined' && Storage.CacheManager) {
+                    Storage.CacheManager.clearAll();
+                    console.log('🗑️ Cleared all caches');
+                }
+
+                // Reload data
+                await initializeData();
+
+                window.showAlert('✅ Data refreshed successfully!', 'success');
+
+                // Re-apply filters if they exist
+                const faculty = document.getElementById('facultyFilter').value;
+                const year = document.getElementById('yearFilter').value;
+                const classId = document.getElementById('classFilter').value;
+
+                if (faculty && year && classId) {
+                    setTimeout(() => applyNewFilters(), 100);
+                }
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                window.showAlert('❌ Failed to refresh data', 'danger');
+            }
+        }
+
+        // Make functions globally accessible
+        window.applyNewFilters = applyNewFilters;
+        window.resetNewFilters = resetNewFilters;
+        window.refreshData = refreshData;
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeData();
+        });
+
+        // Export current results table to Excel
+        function exportPerformanceToExcel() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const classSection = resultsContainer.querySelectorAll('div[style*="border-left: 5px solid"]');
+            const facultySelect = document.getElementById('facultyFilter');
+            const yearSelect = document.getElementById('yearFilter');
+            const facultyName = facultySelect && facultySelect.selectedOptions && facultySelect.selectedOptions[0] ?
+                facultySelect.selectedOptions[0].textContent.trim() :
+                '';
+            const yearVal = yearSelect ? yearSelect.value : '';
+            const yearText = yearVal === 'all' ? 'All Years' : yearVal === '1' ? 'First Year' : yearVal === '2' ? 'Second Year' : yearVal === '3' ? 'Third Year' : yearVal;
+            const rows = [];
+
+            // Check if we have multiple class sections
+            if (classSection.length > 1) {
+                // Multi-class display
+                rows.push(['ALL CLASSES']);
+                rows.push(['Faculty', facultyName]);
+                rows.push(['Year', yearText]);
+                rows.push([]); // empty row
+
+                classSection.forEach((section) => {
+                    const h3 = section.querySelector('h3');
+                    const className = h3 ? h3.textContent.replace(/^📚\s*/, '').trim() : 'Unknown Class';
+                    const table = section.querySelector('table');
+                    if (table) {
+                        const studentCount = table.querySelectorAll('tbody tr').length || 0;
+                        // Add class header
+                        rows.push([className]);
+                        rows.push(['Faculty', facultyName]);
+                        rows.push(['Students', String(studentCount)]);
+                        rows.push([]); // empty row before table
+
+                        // Add table data
+                        const headerRow = table.querySelector('thead tr');
+                        const headerColCount = headerRow ? headerRow.querySelectorAll('th,td').length : 0;
+                        table.querySelectorAll('tr').forEach(tr => {
+                            const firstCell = tr.querySelector('th,td');
+                            if (firstCell && firstCell.hasAttribute && firstCell.hasAttribute('colspan')) {
+                                const avgCell = tr.querySelector('td:last-child') || tr.querySelector('th:last-child');
+                                const avgText = avgCell ? avgCell.textContent.replace(/\u00A0/g, ' ').trim() : '';
+                                const emptyRow = new Array(headerColCount).fill('');
+                                if (headerColCount >= 2) {
+                                    emptyRow[headerColCount - 2] = 'Average Rating';
+                                    emptyRow[headerColCount - 1] = avgText;
+                                }
+                                rows.push(emptyRow);
+                            } else {
+                                const cols = [];
+                                tr.querySelectorAll('th,td').forEach(td => {
+                                    cols.push(td.textContent.replace(/\u00A0/g, ' ').trim());
+                                });
+                                rows.push(cols);
+                            }
+                        });
+                        rows.push([]); // empty row between classes
+                        rows.push([]);
+                    }
+                });
+            } else {
+                // Single class display or yearly averages
+                const table = resultsContainer.querySelector('table');
+                if (!table) {
+                    window.showAlert('No results to export. Please run a search first.', 'warning');
+                    return;
+                }
+
+                const classSelect = document.getElementById('classFilter');
+                const className = classSelect && classSelect.selectedOptions && classSelect.selectedOptions[0] ?
+                    classSelect.selectedOptions[0].textContent.trim() :
+                    '';
+                const studentCount = table.querySelectorAll('tbody tr').length || 0;
+
+                // Single class or yearly averages header
+                rows.push(['ALL CLASSES']);
+                rows.push(['Class', className]);
+                rows.push(['Faculty', facultyName]);
+                rows.push(['Year', yearText]);
+                rows.push(['Students', String(studentCount)]);
+                rows.push([]); // empty row between header and table
+
+                // Add table rows
+                const headerRow = table.querySelector('thead tr');
+                const headerColCount = headerRow ? headerRow.querySelectorAll('th,td').length : 0;
+                table.querySelectorAll('tr').forEach(tr => {
+                    const firstCell = tr.querySelector('th,td');
+                    if (firstCell && firstCell.hasAttribute && firstCell.hasAttribute('colspan')) {
+                        const avgCell = tr.querySelector('td:last-child') || tr.querySelector('th:last-child');
+                        const avgText = avgCell ? avgCell.textContent.replace(/\u00A0/g, ' ').trim() : '';
+                        const emptyRow = new Array(headerColCount).fill('');
+                        if (headerColCount >= 2) {
+                            emptyRow[headerColCount - 2] = 'Average Rating';
+                            emptyRow[headerColCount - 1] = avgText;
+                        }
+                        rows.push(emptyRow);
+                    } else {
+                        const cols = [];
+                        tr.querySelectorAll('th,td').forEach(td => {
+                            cols.push(td.textContent.replace(/\u00A0/g, ' ').trim());
+                        });
+                        rows.push(cols);
+                    }
+                });
+            }
+
+            if (typeof XLSX !== 'undefined') {
+                const ws = XLSX.utils.aoa_to_sheet(rows);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Performance');
+                const filename = `faculty_performance_${facultyName}_${new Date().getTime()}.xlsx`;
+                XLSX.writeFile(wb, filename);
+                window.showAlert('Exported performance data to Excel', 'success');
+            } else {
+                exportPerformanceToCSV();
+            }
         }
 
         function exportPerformanceToCSV() {
-            const deptFilter = document.getElementById('deptFilter').value;
-            const facultyName = document.getElementById('facultyNameFilter').value;
-            // Get the table
-            const table = document.getElementById('performanceTable');
-            let csv = [];
-            // Add header info
-            csv.push('Faculty Performance Report');
-            csv.push(`Generated on: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`);
-            csv.push('');
-            csv.push(`Department Filter: ${deptFilter || 'All Departments'}`);
-            csv.push(`Faculty Filter: ${facultyName || 'All Faculty'}`);
-            csv.push('');
-            // Add table headers
-            const headers = [];
-            table.querySelectorAll('thead th').forEach(th => {
-                headers.push('"' + th.textContent.trim() + '"');
-            });
-            csv.push(headers.join(','));
-            // Add table rows
-            table.querySelectorAll('tbody tr').forEach(tr => {
-                const row = [];
-                tr.querySelectorAll('td').forEach(td => {
-                    row.push('"' + td.textContent.trim() + '"');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const classSection = resultsContainer.querySelectorAll('div[style*="border-left: 5px solid"]');
+            const facultySelect = document.getElementById('facultyFilter');
+            const yearSelect = document.getElementById('yearFilter');
+            const facultyName = facultySelect && facultySelect.selectedOptions && facultySelect.selectedOptions[0] ?
+                facultySelect.selectedOptions[0].textContent.trim() :
+                '';
+            const yearVal = yearSelect ? yearSelect.value : '';
+            const yearText = yearVal === 'all' ? 'All Years' : yearVal === '1' ? 'First Year' : yearVal === '2' ? 'Second Year' : yearVal === '3' ? 'Third Year' : yearVal;
+            const rows = [];
+
+            if (classSection.length > 1) {
+                // Multi-class display
+                rows.push(['ALL CLASSES']);
+                rows.push(['Faculty', facultyName]);
+                rows.push(['Year', yearText]);
+                rows.push(['']);
+
+                classSection.forEach((section) => {
+                    const h3 = section.querySelector('h3');
+                    const className = h3 ? h3.textContent.replace(/^📚\s*/, '').trim() : 'Unknown Class';
+                    const table = section.querySelector('table');
+                    if (table) {
+                        const studentCount = table.querySelectorAll('tbody tr').length || 0;
+                        rows.push([className]);
+                        rows.push(['Faculty', facultyName]);
+                        rows.push(['Students', String(studentCount)]);
+                        rows.push(['']);
+
+                        const colCount = table.querySelector('thead tr') ? table.querySelector('thead tr').querySelectorAll('th,td').length : 0;
+                        table.querySelectorAll('tr').forEach(tr => {
+                            const firstCell = tr.querySelector('th,td');
+                            if (firstCell && firstCell.hasAttribute && firstCell.hasAttribute('colspan')) {
+                                const avgCell = tr.querySelector('td:last-child') || tr.querySelector('th:last-child');
+                                const avgText = avgCell ? avgCell.textContent.replace(/"/g, '""').trim() : '';
+                                const emptyCols = new Array(colCount).fill('""');
+                                if (colCount >= 2) {
+                                    emptyCols[colCount - 2] = '"Average Rating"';
+                                    emptyCols[colCount - 1] = '"' + avgText + '"';
+                                }
+                                rows.push(emptyCols.join(','));
+                            } else {
+                                const cols = Array.from(tr.querySelectorAll('th,td')).map(td => '"' + td.textContent.replace(/"/g, '""').trim() + '"');
+                                rows.push(cols.join(','));
+                            }
+                        });
+                        rows.push(['']);
+                        rows.push(['']);
+                    }
                 });
-                csv.push(row.join(','));
-            });
-            // Create blob and download
-            const csvContent = csv.join('\n');
-            const blob = new Blob([csvContent], {
+            } else {
+                // Single class display
+                const table = resultsContainer.querySelector('table');
+                if (!table) {
+                    window.showAlert('No results to export. Please run a search first.', 'warning');
+                    return;
+                }
+
+                const classSelect = document.getElementById('classFilter');
+                const className = classSelect && classSelect.selectedOptions && classSelect.selectedOptions[0] ?
+                    classSelect.selectedOptions[0].textContent.trim() :
+                    '';
+                const studentCount = table.querySelectorAll('tbody tr').length || 0;
+
+                rows.push(['ALL CLASSES']);
+                rows.push(['Class', className]);
+                rows.push(['Faculty', facultyName]);
+                rows.push(['Year', yearText]);
+                rows.push(['Students', String(studentCount)]);
+                rows.push(['']);
+
+                const colCount = table.querySelector('thead tr') ? table.querySelector('thead tr').querySelectorAll('th,td').length : 0;
+                table.querySelectorAll('tr').forEach(tr => {
+                    const firstCell = tr.querySelector('th,td');
+                    if (firstCell && firstCell.hasAttribute && firstCell.hasAttribute('colspan')) {
+                        const avgCell = tr.querySelector('td:last-child') || tr.querySelector('th:last-child');
+                        const avgText = avgCell ? avgCell.textContent.replace(/"/g, '""').trim() : '';
+                        const emptyCols = new Array(colCount).fill('""');
+                        if (colCount >= 2) {
+                            emptyCols[colCount - 2] = '"Average Rating"';
+                            emptyCols[colCount - 1] = '"' + avgText + '"';
+                        }
+                        rows.push(emptyCols.join(','));
+                    } else {
+                        const cols = Array.from(tr.querySelectorAll('th,td')).map(td => '"' + td.textContent.replace(/"/g, '""').trim() + '"');
+                        rows.push(cols.join(','));
+                    }
+                });
+            }
+
+            const csv = rows.join('\n');
+            const blob = new Blob([csv], {
                 type: 'text/csv;charset=utf-8;'
             });
             const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `Faculty_Performance_${new Date().getTime()}.csv`);
-            link.style.visibility = 'hidden';
+            link.href = URL.createObjectURL(blob);
+            link.download = `faculty_performance_${facultyName}_${new Date().getTime()}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showAlert('✅ CSV exported successfully!', 'success');
+            window.showAlert('Exported performance data to CSV', 'success');
         }
-        // Make functions globally accessible for onclick handlers
-        window.applyFilters = applyFilters;
-        window.resetFilters = resetFilters;
-        window.printPerformanceTable = printPerformanceTable;
+
+        window.exportPerformanceToExcel = exportPerformanceToExcel;
         window.exportPerformanceToCSV = exportPerformanceToCSV;
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            await waitForModules();
-            await loadFacultyPerformanceData();
-            await loadPerformanceData();
-            // Populate department filter with ALL departments and ALL year levels
-            const allDepartments = await Storage.getDepartments() || [];
-            const deptFilter = document.getElementById('deptFilter');
-            // Create a Set to store unique department+year combinations
-            const deptYearSet = new Set();
-            // Add all possible combinations for all departments
-            allDepartments.forEach(dept => {
-                for (let year = 1; year <= 3; year++) {
-                    const yearSuffix = year === 1 ? 'st' : year === 2 ? 'nd' : 'rd';
-                    const displayText = `${year}${yearSuffix} Year - ${dept.name}`;
-                    deptYearSet.add(displayText);
-                }
-            });
-            // Convert to array and sort
-            const deptOptions = Array.from(deptYearSet).sort((a, b) => {
-                // Extract year from both strings
-                const yearA = parseInt(a.charAt(0));
-                const yearB = parseInt(b.charAt(0));
-                // Sort by year first
-                if (yearA !== yearB) return yearA - yearB;
-                // Then by department name
-                return a.localeCompare(b);
-            });
-            // Add options to dropdown
-            deptOptions.forEach(optionText => {
-                const optionElement = document.createElement('option');
-                optionElement.value = optionText;
-                optionElement.textContent = optionText;
-                deptFilter.appendChild(optionElement);
-            });
-            // Populate faculty name filter with faculty from feedback data
-            updateFacultyDropdown(''); // Initialize with all faculty
-        });
+
+        // Print function
+        function printPerformanceTable() {
+            window.print();
+        }
+        window.printPerformanceTable = printPerformanceTable;
     </script>
 </body>
 

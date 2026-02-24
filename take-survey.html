@@ -193,10 +193,9 @@
 
         .teacher-controls {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             margin-bottom: 15px;
-            gap: 10px;
             padding: 12px;
             background: #f9f9f9;
             border-radius: 8px;
@@ -207,28 +206,6 @@
             color: #4a5568;
             font-size: 14px;
             font-weight: 600;
-        }
-
-        .btn-select-all-teachers {
-            padding: 8px 16px;
-            font-size: 14px;
-            white-space: nowrap;
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-select-all-teachers:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-        }
-
-        .btn-select-all-teachers:active {
-            transform: translateY(0);
         }
 
         /* Question Section */
@@ -543,17 +520,13 @@
             }
 
             .teacher-controls {
-                flex-direction: column;
-                gap: 12px;
+                flex-direction: row;
+                justify-content: flex-start;
             }
 
             .teacher-counter {
-                width: 100%;
-                text-align: center;
-            }
-
-            .btn-select-all-teachers {
-                width: 100%;
+                width: auto;
+                text-align: left;
             }
 
             .question-section {
@@ -619,20 +592,14 @@
             }
 
             .teacher-controls {
-                flex-direction: column;
-                gap: 10px;
+                flex-direction: row;
+                justify-content: flex-start;
                 padding: 10px;
             }
 
             .teacher-counter {
                 font-size: 13px;
-                text-align: center;
-            }
-
-            .btn-select-all-teachers {
-                width: 100%;
-                padding: 10px 14px;
-                font-size: 13px;
+                text-align: left;
             }
 
             .teacher-list {
@@ -739,6 +706,13 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="classDisplay">Class <span style="color: red;">*</span></label>
+                    <input type="text" id="classDisplay" readonly style="background: #f5f5f5; cursor: not-allowed;">
+                    <input type="hidden" id="classSelect" value="">
+                    <small style="color: #999; margin-top: 5px; display: block;">Auto-populated from your registration</small>
+                </div>
+
+                <div class="form-group">
                     <label for="yearSelect">Year of Study <span style="color: red;">*</span></label>
                     <select id="yearSelect" required>
                         <option value="">-- Select Year --</option>
@@ -746,15 +720,7 @@
                         <option value="2">2nd Year</option>
                         <option value="3">3rd Year</option>
                     </select>
-                    <small style="color: #999; margin-top: 5px; display: block;">Please select your year of study</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="classSelect">Class <span style="color: red;">*</span></label>
-                    <select id="classSelect" required onchange="loadTeachersForClass()">
-                        <option value="">-- Select Class --</option>
-                    </select>
-                    <small style="color: #999; margin-top: 5px; display: block;">Please select your class/department</small>
+                    <small style="color: #999; margin-top: 5px; display: block;">Please select your current year of study</small>
                 </div>
 
                 <div class="button-group">
@@ -769,11 +735,8 @@
             <p style="color: #666; margin-bottom: 20px;">Check all the teachers who have taught you:</p>
             <div id="step2Errors" class="validation-errors" style="display: none;"></div>
             <form id="teacherSelectionForm">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px;">
-                    <span style="color: #4a5568; font-size: 14px; font-weight: 600;" id="teacherCounter">0 selected</span>
-                    <button type="button" class="btn btn-secondary" onclick="toggleSelectAllTeachers()" style="padding: 8px 16px; font-size: 14px; white-space: nowrap;">
-                        <span id="selectAllText">☑️ Select All</span>
-                    </button>
+                <div class="teacher-controls">
+                    <span class="teacher-counter" id="teacherCounter">0 selected</span>
                 </div>
                 <div class="teacher-list" id="teacherList">
                     <!-- Teachers will be loaded here -->

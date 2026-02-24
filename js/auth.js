@@ -302,29 +302,19 @@ if (document.getElementById('studentLoginForm')) {
                 password
             } = formData;
 
-            // ADMIN LOGIN CHECK - Allow admin to login through student page
-            if (email === 'superadmin@system.edu' && password === 'SuperAdmin2024!') {
-                // Create or get admin user
-                let adminUser = Storage.findUserByEmail(email);
+            // Try to find user in database first
+            let user = Storage.findUserByEmail(email);
 
-                if (!adminUser) {
-                    // Create admin user automatically
-                    adminUser = {
-                        id: Storage.generateId(),
-                        name: 'Super Administrator',
-                        email: 'superadmin@system.edu',
-                        username: 'superadmin',
-                        employeeId: 'SADM001',
-                        department: 'System Administration',
-                        password: 'SuperAdmin2024!',
-                        role: 'admin',
-                        registeredAt: new Date().toISOString()
-                    };
-                    Storage.saveUser(adminUser);
+            // Check if user exists and is admin
+            if (user && user.role === 'admin') {
+                // Verify password
+                if (user.password !== password) {
+                    showAlert('Incorrect password. Please try again.');
+                    return;
                 }
 
                 // Login as admin - redirect to admin dashboard
-                Storage.setCurrentUser(adminUser);
+                Storage.setCurrentUser(user);
                 showAlert('Admin login successful! Redirecting to Admin Dashboard...', 'success', 1500);
                 setTimeout(() => {
                     window.location.href = 'admin-dashboard.html';
@@ -340,10 +330,8 @@ if (document.getElementById('studentLoginForm')) {
             }
 
             // Regular student login
-            const user = Storage.findUserByEmail(email);
-
             if (!user) {
-                ErrorHandler ? .handleError(
+                ErrorHandler?.handleError(
                     ErrorHandler.createError(
                         ErrorHandler.ErrorTypes.AUTHENTICATION,
                         'Login attempt with non-existent email', {
@@ -357,7 +345,7 @@ if (document.getElementById('studentLoginForm')) {
             }
 
             if (user.role !== 'student') {
-                ErrorHandler ? .handleError(
+                ErrorHandler?.handleError(
                     ErrorHandler.createError(
                         ErrorHandler.ErrorTypes.AUTHORIZATION,
                         'Non-student attempted student login', {
@@ -372,7 +360,7 @@ if (document.getElementById('studentLoginForm')) {
             }
 
             if (user.password !== password) {
-                ErrorHandler ? .handleError(
+                ErrorHandler?.handleError(
                     ErrorHandler.createError(
                         ErrorHandler.ErrorTypes.AUTHENTICATION,
                         'Login attempt with incorrect password', {
@@ -396,7 +384,7 @@ if (document.getElementById('studentLoginForm')) {
             }
 
         } catch (error) {
-            ErrorHandler ? .handleError(
+            ErrorHandler?.handleError(
                 ErrorHandler.createError(
                     ErrorHandler.ErrorTypes.SYSTEM,
                     `Student login error: ${error.message}`
@@ -497,7 +485,7 @@ if (document.getElementById('studentRegisterForm')) {
             }
 
         } catch (error) {
-            ErrorHandler ? .handleError(
+            ErrorHandler?.handleError(
                 ErrorHandler.createError(
                     ErrorHandler.ErrorTypes.SYSTEM,
                     `Student registration error: ${error.message}`
@@ -549,7 +537,7 @@ if (document.getElementById('adminLoginForm')) {
                 window.location.href = 'admin-dashboard.html';
             }, 1000);
         } catch (error) {
-            ErrorHandler ? .handleError(
+            ErrorHandler?.handleError(
                 ErrorHandler.createError(
                     ErrorHandler.ErrorTypes.SYSTEM,
                     `Admin login error: ${error.message}`

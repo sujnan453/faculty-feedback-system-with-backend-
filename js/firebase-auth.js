@@ -1,9 +1,17 @@
 /**
- * Firebase Authentication Logic with Async/Await Support
- * Updated to work with Firebase Realtime Database
+ * Firebase Authentication Logic with Firebase Auth Integration
+ * Admin login uses Firebase Authentication for secure password handling
+ * Student login uses database authentication (backward compatible)
  */
 
 import Storage from './firebase-storage.js';
+import {
+    auth,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    sendPasswordResetEmail
+} from './firebase-config.js';
 
 // Admin Secret Code (in production, this should be server-side)
 const ADMIN_SECRET_CODE = 'ADMIN2024';
@@ -79,29 +87,22 @@ if (document.getElementById('studentLoginForm')) {
                 return;
             }
 
-            // ADMIN LOGIN CHECK
-            if (email === 'superadmin@system.edu' && password === 'SuperAdmin2024!') {
-                console.log('👑 Admin login detected');
-                let adminUser = await Storage.findUserByEmail(email);
+            // Try to find user in database first
+            console.log('Looking up user:', email);
+            let user = await Storage.findUserByEmail(email);
 
-                if (!adminUser) {
-                    console.log('Creating admin user...');
-                    adminUser = {
-                        id: Storage.generateId(),
-                        name: 'Super Administrator',
-                        email: 'superadmin@system.edu',
-                        username: 'superadmin',
-                        employeeId: 'SADM001',
-                        department: 'System Administration',
-                        password: 'SuperAdmin2024!',
-                        role: 'admin',
-                        registeredAt: new Date().toISOString()
-                    };
-                    await Storage.saveUser(adminUser);
-                    console.log('✅ Admin user created');
+            // Check if user exists and is admin
+            if (user && user.role === 'admin') {
+                console.log('👑 Admin login detected');
+
+                // Verify password
+                if (user.password !== password) {
+                    console.log('❌ Incorrect admin password');
+                    showAlert('Incorrect password. Please try again.');
+                    return;
                 }
 
-                await Storage.setCurrentUser(adminUser, true);
+                await Storage.setCurrentUser(user, true);
                 console.log('✅ Admin logged in successfully');
                 showAlert('Admin login successful! Redirecting to Admin Dashboard...', 'success', 1500);
                 setTimeout(() => {
@@ -111,9 +112,6 @@ if (document.getElementById('studentLoginForm')) {
             }
 
             // Regular student login
-            console.log('Looking up user:', email);
-            const user = await Storage.findUserByEmail(email);
-
             if (!user) {
                 console.log('❌ User not found');
                 showAlert('User not found. Please check your email or register first.');
@@ -199,8 +197,27 @@ if (document.getElementById('studentRegisterForm')) {
                 return;
             }
 
-            if (password.length < 6) {
-                showAlert('Password must be at least 6 characters long');
+            // Enhanced password validation
+            if (password.length < 8) {
+                showAlert('Password must be at least 8 characters long');
+                return;
+            }
+
+            // Check for uppercase letter
+            if (!/[A-Z]/.test(password)) {
+                showAlert('Password must contain at least one uppercase letter');
+                return;
+            }
+
+            // Check for lowercase letter
+            if (!/[a-z]/.test(password)) {
+                showAlert('Password must contain at least one lowercase letter');
+                return;
+            }
+
+            // Check for number or symbol
+            if (!/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+                showAlert('Password must contain at least one number or symbol');
                 return;
             }
 
@@ -275,7 +292,7 @@ if (document.getElementById('studentRegisterForm')) {
     });
 }
 
-// Admin Login
+// Admin Login with Firebase Authentication
 if (document.getElementById('adminLoginForm')) {
     document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -289,43 +306,85 @@ if (document.getElementById('adminLoginForm')) {
         }
 
         try {
-            console.log('🔐 Admin login attempt...');
+            console.log('🔐 Admin login attempt with Firebase Auth...');
             const formData = extractFormData(this);
             const {
                 email: emailOrUsername,
                 password
             } = formData;
 
-            // Try to find user by email or username
-            let user = await Storage.findUserByEmail(emailOrUsername);
-            if (!user) {
-                user = await Storage.findUserByUsername(emailOrUsername);
-            }
-
-            if (!user) {
-                showAlert('User not found.');
+            if (!emailOrUsername || !password) {
+                showAlert('Please enter both email and password');
                 return;
             }
 
-            if (user.role !== 'admin') {
-                showAlert('Invalid credentials for admin login.');
+            // Check if input is email or username
+            let email = emailOrUsername;
+
+            // If not an email format, try to find user by username in database
+            if (!emailOrUsername.includes('@')) {
+                console.log('🔍 Looking up username in database...');
+                const user = await Storage.findUserByUsername(emailOrUsername);
+                if (user && user.role === 'admin') {
+                    email = user.email;
+                    console.log('✅ Found admin email from username');
+                } else {
+                    showAlert('Admin account not found with this username');
+                    return;
+                }
+            }
+
+            // Authenticate with Firebase Auth
+            console.log('🔐 Authenticating with Firebase Auth...');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const firebaseUser = userCredential.user;
+
+            console.log('✅ Firebase Auth successful:', firebaseUser.email);
+
+            // Get admin data from Firestore
+            const adminData = await Storage.findUserByEmail(firebaseUser.email);
+
+            if (!adminData) {
+                showAlert('Admin account not found in database. Please contact administrator.');
+                await signOut(auth);
                 return;
             }
 
-            if (user.password !== password) {
-                showAlert('Incorrect password.');
+            if (adminData.role !== 'admin') {
+                showAlert('This account does not have admin privileges.');
+                await signOut(auth);
                 return;
             }
 
-            await Storage.setCurrentUser(user, true);
+            // Set session with admin data
+            await Storage.setCurrentUser(adminData, true);
+
             console.log('✅ Admin logged in successfully');
             showAlert('Login successful! Redirecting to dashboard...', 'success', 1500);
+
             setTimeout(() => {
                 window.location.href = 'admin-dashboard.html';
             }, 1000);
+
         } catch (error) {
             console.error('❌ Admin login error:', error);
-            showAlert('An error occurred during login. Please try again.');
+
+            // Handle specific Firebase Auth errors
+            let errorMessage = 'An error occurred during login. Please try again.';
+
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+                errorMessage = 'Incorrect email or password.';
+            } else if (error.code === 'auth/user-not-found') {
+                errorMessage = 'No admin account found with this email.';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Invalid email format.';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'Too many failed login attempts. Please try again later.';
+            } else if (error.code === 'auth/network-request-failed') {
+                errorMessage = 'Network error. Please check your internet connection.';
+            }
+
+            showAlert(errorMessage);
         } finally {
             // Remove loading state
             if (submitBtn) {
@@ -369,11 +428,20 @@ async function checkAuth(requiredRole) {
     }
 }
 
-// Logout function
+// Logout function with Firebase Auth support
 async function logout() {
     try {
         console.log('👋 Logging out...');
+
+        // Sign out from Firebase Auth if authenticated
+        if (auth.currentUser) {
+            await signOut(auth);
+            console.log('✅ Signed out from Firebase Auth');
+        }
+
+        // Clear local session
         await Storage.logout();
+
         console.log('✅ User logged out');
         window.location.href = 'index.html';
     } catch (error) {

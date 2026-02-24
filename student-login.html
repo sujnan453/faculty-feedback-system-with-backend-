@@ -14,6 +14,7 @@
 
     <!-- Perfect Design System -->
     <link rel="stylesheet" href="css/perfect-design.css">
+    <link rel="stylesheet" href="css/input-selection-fix.css">
 
     <style>
         /* Page-specific styles */
@@ -843,6 +844,59 @@
                 padding: var(--space-6) var(--space-4);
             }
         }
+
+        /* CRITICAL: Force text selection on all inputs - MUST BE LAST */
+        input,
+        textarea,
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        .form-input,
+        .modern-input-container input {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            cursor: text !important;
+        }
+
+        input:focus,
+        textarea:focus {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+            cursor: text !important;
+        }
+
+        /* Override any parent containers */
+        .modern-input-container,
+        .password-wrapper,
+        .form-group {
+            user-select: text !important;
+            -webkit-user-select: text !important;
+        }
+
+        /* Make text selection visible in input fields */
+        input::selection,
+        textarea::selection,
+        input[type="text"]::selection,
+        input[type="email"]::selection,
+        input[type="password"]::selection,
+        input[type="number"]::selection {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+
+        /* Firefox support */
+        input::-moz-selection,
+        textarea::-moz-selection,
+        input[type="text"]::-moz-selection,
+        input[type="email"]::-moz-selection,
+        input[type="password"]::-moz-selection,
+        input[type="number"]::-moz-selection {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
     </style>
 </head>
 
@@ -1032,52 +1086,52 @@
                         setTimeout(() => reject(new Error('Database timeout - check your internet connection')), 10000)
                     );
 
-                    // ADMIN LOGIN CHECK
-                    if (email === 'superadmin@system.edu' && password === 'SuperAdmin2024!') {
-                        console.log('👑 Admin login detected');
-                        
-                        let adminUser = await Promise.race([
-                            Storage.findUserByEmail(email),
-                            timeoutPromise
-                        ]);
-
-                        if (!adminUser) {
-                            console.log('Creating admin user...');
-                            adminUser = {
-                                id: Storage.generateId(),
-                                name: 'Super Administrator',
-                                email: 'superadmin@system.edu',
-                                username: 'superadmin',
-                                employeeId: 'SADM001',
-                                department: 'System Administration',
-                                password: 'SuperAdmin2024!',
-                                role: 'admin',
-                                registeredAt: new Date().toISOString()
-                            };
-                            await Promise.race([
-                                Storage.saveUser(adminUser),
-                                timeoutPromise
-                            ]);
-                            console.log('✅ Admin user created and saved to database');
-                        }
-
-                        await Storage.setCurrentUser(adminUser, true);
-                        console.log('✅ Admin logged in successfully');
-                        // Removed alert - direct redirect
-                        
-                        setTimeout(() => {
-                            window.location.href = 'admin-dashboard.html';
-                        }, 100);
-                        return;
-                    }
-
-                    // Regular student login
+                    // Try to find user in database first
                     console.log('Looking up user:', email);
-                    const user = await Promise.race([
+                    let user = await Promise.race([
                         Storage.findUserByEmail(email),
                         timeoutPromise
                     ]);
 
+                    // Check if user exists and is admin - use Firebase Auth
+                    if (user && user.role === 'admin') {
+                        console.log('👑 Admin login detected - using Firebase Auth');
+                        
+                        try {
+                            // Import Firebase Auth dynamically
+                            const { auth, signInWithEmailAndPassword } = await import('./js/firebase-config.js');
+                            
+                            // Authenticate with Firebase Auth
+                            console.log('🔐 Authenticating admin with Firebase Auth...');
+                            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                            console.log('✅ Firebase Auth successful');
+                            
+                            // Set session with admin data
+                            await Storage.setCurrentUser(user, true);
+                            console.log('✅ Admin logged in successfully');
+                            
+                            setTimeout(() => {
+                                window.location.href = 'admin-dashboard.html';
+                            }, 100);
+                            return;
+                        } catch (authError) {
+                            console.error('❌ Firebase Auth error:', authError);
+                            
+                            let errorMessage = 'Incorrect password. Please try again.';
+                            if (authError.code === 'auth/invalid-credential' || authError.code === 'auth/wrong-password') {
+                                errorMessage = 'Incorrect email or password.';
+                            } else if (authError.code === 'auth/user-not-found') {
+                                errorMessage = 'Admin account not found in Firebase Authentication. Please create account using create-admin-with-firebase-auth.html';
+                            } else if (authError.code === 'auth/too-many-requests') {
+                                errorMessage = 'Too many failed login attempts. Please try again later.';
+                            }
+                            
+                            showAlert(errorMessage, 'danger');
+                            return;
+                        }
+                    }
+
+                    // Regular student login
                     if (!user) {
                         console.log('❌ User not found');
                         showAlert('User not found. Please check your email or register first.', 'danger');
@@ -1175,6 +1229,27 @@
             });
 
             console.log('✨ Perfect student login page loaded successfully');
+        });
+    </script>
+
+    <!-- Force Text Selection Fix -->
+    <script src="js/force-text-selection-fix.js"></script>
+    <script>
+        // Ensure all input fields allow text selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.style.userSelect = 'text';
+                input.style.webkitUserSelect = 'text';
+                input.style.MozUserSelect = 'text';
+                input.style.msUserSelect = 'text';
+                input.style.cursor = 'text';
+
+                // Remove any blocking attributes
+                input.removeAttribute('unselectable');
+                input.removeAttribute('onselectstart');
+                input.onselectstart = null;
+            });
         });
     </script>
 </body>

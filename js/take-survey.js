@@ -35,8 +35,17 @@ async function initializeSurvey() {
         return;
     }
 
-    // Verify survey is for student's department using flexible matching
-    if (currentSurvey.department && currentUser_Survey.department) {
+    // Verify survey is for student's class or department
+    // First, check if it's a class-based survey
+    if (currentSurvey.classId && currentUser_Survey.classId) {
+        // Class-based survey - check if classIds match
+        if (currentSurvey.classId !== currentUser_Survey.classId) {
+            alert('This survey is not available for your class');
+            window.location.href = 'student-dashboard.html';
+            return;
+        }
+    } else if (currentSurvey.department && currentUser_Survey.department) {
+        // Legacy department-based survey - use flexible matching
         const normalize = (str) => {
             return str.trim().toLowerCase()
                 .replace(/\s+/g, ' ')
@@ -69,6 +78,11 @@ async function initializeSurvey() {
             window.location.href = 'student-dashboard.html';
             return;
         }
+    } else {
+        // No matching identifiers found
+        alert('Survey validity could not be verified');
+        window.location.href = 'student-dashboard.html';
+        return;
     }
 
     // Check if already submitted (await the async function)
@@ -93,51 +107,27 @@ async function initializeSurvey() {
 async function autoPopulateStudentInfo() {
     // Get current logged-in student's data
     if (currentUser_Survey) {
-        // Set roll number only (auto-filled, readonly)
+        // Set roll number (auto-filled, readonly)
         if (currentUser_Survey.rollNumber) {
             document.getElementById('rollNo').value = currentUser_Survey.rollNumber;
         }
 
-        // Year and Class must be selected by student
-        // Don't auto-populate these fields
+        // Auto-populate class from user's registration (classId and className)
+        if (currentUser_Survey.classId && currentUser_Survey.className) {
+            document.getElementById('classDisplay').value = currentUser_Survey.className;
+            document.getElementById('classSelect').value = currentUser_Survey.classId;
 
-        console.log('✅ Student roll number auto-populated:', {
-            rollNumber: currentUser_Survey.rollNumber
-        });
-    }
-
-    // Load departments from storage
-    await loadDepartmentsForClass();
-}
-
-async function loadDepartmentsForClass() {
-    const classSelect = document.getElementById('classSelect');
-
-    try {
-        // Get all departments from storage
-        const departments = await Storage.getDepartments();
-
-        if (!departments || departments.length === 0) {
-            console.warn('⚠️ No departments found in storage');
-            classSelect.innerHTML = '<option value="">-- No departments available --</option>';
-            return;
+            console.log('✅ Student info auto-populated:', {
+                rollNumber: currentUser_Survey.rollNumber,
+                className: currentUser_Survey.className,
+                classId: currentUser_Survey.classId
+            });
+        } else {
+            console.warn('⚠️ No class found for user');
+            document.getElementById('classDisplay').value = 'Not set';
         }
 
-        // Clear existing options except the first one
-        classSelect.innerHTML = '<option value="">-- Select Class --</option>';
-
-        // Add departments from storage
-        departments.forEach(dept => {
-            const option = document.createElement('option');
-            option.value = dept.name;
-            option.textContent = dept.name;
-            classSelect.appendChild(option);
-        });
-
-        console.log(`✅ Loaded ${departments.length} departments from storage`);
-    } catch (error) {
-        console.error('❌ Error loading departments:', error);
-        classSelect.innerHTML = '<option value="">-- Error loading departments --</option>';
+        // Year must be selected by student
     }
 }
 
@@ -160,7 +150,6 @@ async function validateStudentInfo() {
     errorContainer.classList.remove('show');
     document.getElementById('rollNo').classList.remove('error');
     document.getElementById('yearSelect').classList.remove('error');
-    document.getElementById('classSelect').classList.remove('error');
 
     // Validation checks
     if (!rollNo) {
@@ -168,9 +157,14 @@ async function validateStudentInfo() {
         document.getElementById('rollNo').classList.add('error');
     }
 
+    if (!year) {
+        errors.push('Please select your year of study');
+        document.getElementById('yearSelect').classList.add('error');
+    }
+
     if (!classSelect) {
-        errors.push('Please select your class/department');
-        document.getElementById('classSelect').classList.add('error');
+        errors.push('Class is missing. Please ensure your profile has a class assigned.');
+        // No error styling needed as it's readonly
     }
 
     // Show errors if any
@@ -190,6 +184,7 @@ async function validateStudentInfo() {
         rollNo: rollNo,
         year: year ? parseInt(year) : null,
         class: classSelect,
+        department: classSelect, // Same as class for backward compatibility
         classSection: rollNo.charAt(1) // Get second digit as class section
     };
 
@@ -199,38 +194,55 @@ async function validateStudentInfo() {
 }
 
 async function loadTeachersForClass() {
-    const classSelect = document.getElementById('classSelect').value;
+    const classId = document.getElementById('classSelect').value;
     const teacherList = document.getElementById('teacherList');
     teacherList.innerHTML = '';
 
-    if (!classSelect) return;
+    if (!classId) return;
 
-    // Get faculties from storage (dynamically) instead of survey snapshot
-    // This ensures newly added faculty appear in the survey
+    // Get faculties from Firebase (classes collection)
     let availableTeachers = [];
+    let className = '';
 
     try {
-        const departments = await Storage.getDepartments();
-        if (departments && departments.length > 0) {
-            // Find the department matching the selected class
-            const selectedDept = departments.find(dept => dept.name === classSelect);
-            if (selectedDept && selectedDept.faculties) {
-                availableTeachers = selectedDept.faculties;
-            }
+        const classes = await Storage.getClasses();
+        const selectedClass = classes.find(c => c.id === classId);
+
+        if (selectedClass) {
+            availableTeachers = selectedClass.faculties || [];
+            className = selectedClass.name;
+        } else {
+            // Fallback to survey faculties if class not found
+            availableTeachers = currentSurvey.faculties || [];
+            className = 'Unknown Class';
         }
     } catch (error) {
-        console.error('Error loading teachers from storage:', error);
+        console.error('Error loading faculties from localStorage:', error);
         // Fallback to survey faculties if storage fails
         availableTeachers = currentSurvey.faculties || [];
+        className = 'Unknown Class';
     }
 
     if (availableTeachers.length === 0) {
-        teacherList.innerHTML = '<p style="color: #999; padding: 20px; text-align: center; background: #f9f9f9; border-radius: 8px; border: 2px dashed #e0e0e0;">⚠️ No teachers available for ' + classSelect + ' department</p>';
+        teacherList.innerHTML = '<p style="color: #999; padding: 20px; text-align: center; background: #f9f9f9; border-radius: 8px; border: 2px dashed #e0e0e0;">⚠️ No teachers available for ' + className + ' class</p>';
         return;
     }
 
-    // Display all available teachers
+    // Remove duplicates based on faculty ID
+    const uniqueTeachers = [];
+    const seenIds = new Set();
+
     availableTeachers.forEach(teacher => {
+        if (!seenIds.has(teacher.id)) {
+            seenIds.add(teacher.id);
+            uniqueTeachers.push(teacher);
+        }
+    });
+
+    console.log(`📋 Total teachers: ${availableTeachers.length}, Unique teachers: ${uniqueTeachers.length}`);
+
+    // Display all unique teachers (faculties)
+    uniqueTeachers.forEach(teacher => {
         const checkboxDiv = document.createElement('label');
         checkboxDiv.className = 'teacher-checkbox';
         checkboxDiv.innerHTML = `
@@ -245,7 +257,7 @@ async function loadTeachersForClass() {
 
     // Reset counter and select all button
     updateTeacherCounter();
-    console.log(`✅ Loaded ${availableTeachers.length} teachers for ${classSelect} department`);
+    console.log(`✅ Loaded ${uniqueTeachers.length} unique teachers for ${className} class (${availableTeachers.length} total before deduplication)`);
 }
 
 function validateTeacherSelection() {
@@ -566,24 +578,38 @@ async function submitSurvey() {
         return;
     }
 
-    // VALIDATION: Verify all selected teachers still exist in department
-    const department = await Storage.getDepartmentByName(currentUser_Survey.department);
-    if (!department) {
+    // VALIDATION: Verify all selected teachers still exist in class
+    const classId = currentUser_Survey.classId;
+    let classFacultyIds = [];
+
+    if (classId) {
+        try {
+            const classes = await Storage.getClasses();
+            const studentClass = classes.find(c => c.id === classId);
+
+            if (studentClass && studentClass.faculties) {
+                classFacultyIds = studentClass.faculties.map(f => f.id);
+            }
+        } catch (error) {
+            console.error('Error loading class faculties from Firebase:', error);
+        }
+    }
+
+    if (classFacultyIds.length === 0) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = 'Submit Survey ✓';
-        showCustomAlert('❌ Error: Your department no longer exists. Please contact administrator.', 'error');
+        showCustomAlert('❌ Error: Your class has no assigned faculty members. Please contact administrator.', 'error');
         setTimeout(() => {
             window.location.href = 'student-dashboard.html';
         }, 2000);
         return;
     }
 
-    const departmentFacultyIds = (department.faculties || []).map(f => f.id);
-    const invalidTeachers = selectedTeachers.filter(t => !departmentFacultyIds.includes(t.id));
+    const invalidTeachers = selectedTeachers.filter(t => !classFacultyIds.includes(t.id));
     if (invalidTeachers.length > 0) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = 'Submit Survey ✓';
-        showCustomAlert(`❌ Error: Some selected faculty members no longer exist in your department: ${invalidTeachers.map(t => t.name).join(', ')}`, 'error');
+        showCustomAlert(`❌ Error: Some selected faculty members no longer exist in your class: ${invalidTeachers.map(t => t.name).join(', ')}`, 'error');
         setTimeout(() => {
             window.location.href = 'student-dashboard.html';
         }, 2000);
@@ -662,14 +688,18 @@ async function submitSurvey() {
 
         // Survey information
         surveyTitle: 'Faculty Feedback Survey',
-        surveyDepartment: currentSurvey.department,
-        surveyCreatedAt: currentSurvey.createdAt,
+        surveyClassId: currentSurvey.classId || '',
+        surveyClassName: currentSurvey.className || currentSurvey.department || 'Unknown',
+        surveyDepartment: currentSurvey.department || '', // For legacy support - use empty string instead of undefined
+        surveyCreatedAt: currentSurvey.createdAt || new Date().toISOString(),
 
         // Student information
-        studentName: currentUser_Survey.name,
-        studentYear: studentYear,
-        studentDepartment: currentUser_Survey.department,
-        studentClass: (window.studentInfo && window.studentInfo.class) || currentUser_Survey.department,
+        studentName: currentUser_Survey.name || 'Unknown',
+        studentYear: studentYear || 0,
+        studentClassId: currentUser_Survey.classId || '',
+        studentClassName: currentUser_Survey.className || 'Unknown',
+        studentDepartment: currentUser_Survey.className || currentUser_Survey.department || '', // Use className as department
+        studentClass: (window.studentInfo && window.studentInfo.class) || currentUser_Survey.className || currentUser_Survey.department || 'Unknown',
         studentEmail: currentUser_Survey.email || '',
 
         // Teachers evaluated
@@ -702,9 +732,9 @@ async function submitSurvey() {
         // Metadata for admin
         _metadata: {
             surveyExists: true,
-            departmentExists: true,
+            classExists: true,
             facultiesExist: true,
-            version: '1.0'
+            version: '2.0'
         }
     };
 

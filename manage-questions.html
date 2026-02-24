@@ -44,6 +44,17 @@
             }
         }
 
+        /* Spin animation for loading buttons */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .form-section h3::after {
             content: '';
             position: absolute;
@@ -1770,6 +1781,10 @@
                     <span class="icon">👨‍💼</span>
                     <span>Manage Faculties</span>
                 </a>
+                <a href="select-faculties.html" class="nav-item">
+                    <span class="icon">🏫</span>
+                    <span>Class Survey</span>
+                </a>
                 <a href="manage-questions.html" class="nav-item active">
                     <span class="icon">❓</span>
                     <span>Manage Questions</span>
@@ -1778,17 +1793,17 @@
                     <span class="icon">➕</span>
                     <span>Create Survey</span>
                 </a>
-                <a href="visualization.html" class="nav-item">
-                    <span class="icon">📈</span>
-                    <span>Visualizations</span>
-                </a>
                 <a href="faculty-performance.html" class="nav-item">
                     <span class="icon">👨‍🏫</span>
                     <span>Faculty Performance</span>
                 </a>
                 <a href="submitted-students.html" class="nav-item">
-                    <span class="icon">📝</span>
+                    <span class="icon">✅</span>
                     <span>Submitted Students</span>
+                </a>
+                <a href="clear-duplicates.html" class="nav-item">
+                    <span class="icon">✨</span>
+                    <span>Clear Duplicates</span>
                 </a>
                 <a href="reset-data.html" class="nav-item">
                     <span class="icon">🔄</span>
@@ -1903,6 +1918,10 @@
         window.checkAuth = checkAuth;
         window.logout = logout;
         window.showAlert = showAlert;
+        
+        // Signal that Storage is ready
+        window.storageReady = true;
+        window.dispatchEvent(new Event('storageReady'));
     </script>
     <script src="js/mobile-nav.js"></script>
     <script src="js/manage-questions.js"></script>

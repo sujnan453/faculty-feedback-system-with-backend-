@@ -3,19 +3,50 @@
 // Check authentication
 let currentUser = null;
 
+// Show loading overlay on page load
+function showLoading() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('hidden');
+    }
+}
+
+// Hide loading overlay
+function hideLoading() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+}
+
 (async function() {
-    currentUser = await checkAuth('student');
-    if (!currentUser) {
-        // User will be redirected by checkAuth function
-    } else {
-        await initializeDashboard();
+    showLoading();
+    try {
+        currentUser = await checkAuth('student');
+        if (!currentUser) {
+            // User will be redirected by checkAuth function
+            hideLoading();
+        } else {
+            await initializeDashboard();
+            hideLoading();
+        }
+    } catch (error) {
+        console.error('Error initializing dashboard:', error);
+        hideLoading();
     }
 })();
 
 async function initializeDashboard() {
     // Display user information
     document.getElementById('studentName').textContent = currentUser.name;
-    document.getElementById('studentSemester').textContent = currentUser.department;
+
+    // Display class name (or department as fallback)
+    const className = currentUser.className || currentUser.department || 'N/A';
+    document.getElementById('studentClass').textContent = className;
+
+    // Display roll number
+    const rollNumber = currentUser.rollNumber || 'N/A';
+    document.getElementById('studentRollNumber').textContent = rollNumber;
 
     // Set user initials
     const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -33,30 +64,49 @@ async function initializeDashboard() {
 }
 
 async function loadSurveys() {
+    // Show loading for data refresh (optional - only if you want loading on refresh)
+    // Uncomment the line below if you want loading animation during refresh
+    // showLoading();
+
     // Get ALL surveys first for debugging
     const allSurveysUnfiltered = await Storage.getSurveys();
 
     // Enhanced debug logging BEFORE filtering
     console.log('=== SURVEY LOADING DEBUG (BEFORE FILTER) ===');
     console.log('Student Department:', currentUser.department);
+    console.log('Student ClassId:', currentUser.classId);
     console.log('Student Department Type:', typeof currentUser.department);
+    console.log('Student ClassId Type:', typeof currentUser.classId);
     console.log('Total Surveys in DB:', allSurveysUnfiltered.length);
     console.log('All Surveys:', allSurveysUnfiltered.map(s => ({
         id: s.id,
+        classId: s.classId,
+        className: s.className,
         dept: s.department,
         active: s.isActive
     })));
 
-    // Get surveys filtered by student's department
+    // Prefer filtering by student's class (new flow). Hide legacy department-only surveys unless user has no class.
     let surveys = [];
+    const studentClassId = currentUser.classId || null;
 
-    if (currentUser.department) {
+    if (studentClassId) {
+        // Only show surveys explicitly created for this class
+        // FIX: Use String() to ensure type consistency
+        surveys = allSurveysUnfiltered.filter(s => {
+            const isActive = s.isActive !== false;
+            const classMatch = String(s.classId) === String(studentClassId);
+            console.log(`Survey ${s.id}: active=${isActive}, classMatch=${classMatch} (survey.classId="${s.classId}" vs student.classId="${studentClassId}")`);
+            return isActive && classMatch;
+        });
+    } else if (currentUser.department) {
+        // Fallback for older accounts: show department-scoped surveys that do NOT have a classId
         const filteredSurveys = await Storage.getSurveysByDepartment(currentUser.department);
-        surveys = filteredSurveys.filter(s => s.isActive !== false);
+        surveys = filteredSurveys.filter(s => s.isActive !== false && !s.classId);
     } else {
-        console.warn('⚠️ Student has no department set!');
-        // Fallback: show all active surveys if no department
-        surveys = allSurveysUnfiltered.filter(s => s.isActive !== false);
+        console.warn('⚠️ Student has no class or department set!');
+        // Default: show no surveys to avoid exposing old data
+        surveys = [];
     }
 
     // Enhanced debug logging AFTER filtering
@@ -64,6 +114,8 @@ async function loadSurveys() {
     console.log('Filtered Surveys Count:', surveys.length);
     console.log('Matched Surveys:', surveys.map(s => ({
         id: s.id,
+        classId: s.classId,
+        className: s.className,
         dept: s.department,
         active: s.isActive
     })));
@@ -92,7 +144,8 @@ async function loadSurveys() {
             <div class="empty-state">
                 <span>📭</span>
                 <h3>No Surveys Available</h3>
-                <p>There are no active surveys for your department at the moment.</p>
+                <p>There are no active surveys for your class at the moment.</p>
+                ${!studentClassId ? '<p style="color: #dc3545; margin-top: 10px;"><strong>Note:</strong> Your account doesn\'t have a class assigned. Please contact your administrator.</p>' : ''}
             </div>
         `;
         return;
@@ -118,8 +171,8 @@ async function createSurveyCard(survey, isCompleted) {
         day: 'numeric'
     });
 
-    // Determine department display text
-    let departmentDisplay = survey.department;
+    // Determine display text (class or department)
+    let departmentDisplay = survey.className || survey.department || '';
 
     // Get current faculty count from storage (dynamically updated)
     let facultyCount = (survey.faculties || []).length;

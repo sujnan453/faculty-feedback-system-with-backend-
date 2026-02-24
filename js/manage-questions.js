@@ -129,14 +129,30 @@ function showConfirmDialog(title, message, confirmText = 'Confirm', cancelText =
 
 // Wait for modules to be loaded
 function waitForModules() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max wait
+
         const checkModules = () => {
+            attempts++;
+
             if (typeof window.Storage !== 'undefined' &&
                 typeof window.checkAuth !== 'undefined') {
                 console.log('✅ Modules loaded successfully');
+                console.log('✅ Storage available:', typeof window.Storage);
+                console.log('✅ checkAuth available:', typeof window.checkAuth);
                 resolve();
             } else {
-                console.log('⏳ Waiting for modules...');
+                console.log(`⏳ Waiting for modules... (attempt ${attempts}/${maxAttempts})`);
+                console.log('   Storage:', typeof window.Storage);
+                console.log('   checkAuth:', typeof window.checkAuth);
+
+                if (attempts >= maxAttempts) {
+                    console.error('❌ Modules failed to load after 5 seconds');
+                    reject(new Error('Modules failed to load'));
+                    return;
+                }
+
                 setTimeout(checkModules, 100);
             }
         };
@@ -148,23 +164,28 @@ function waitForModules() {
 (async function() {
     console.log('🔄 Initializing Manage Questions...');
 
-    // Wait for DOM
-    if (document.readyState === 'loading') {
-        await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
-    }
+    try {
+        // Wait for DOM
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
+        }
 
-    // Wait for modules
-    await waitForModules();
+        // Wait for modules
+        await waitForModules();
 
-    console.log('🔐 Checking authentication...');
-    const currentUser = await checkAuth('admin');
+        console.log('🔐 Checking authentication...');
+        const currentUser = await checkAuth('admin');
 
-    if (!currentUser) {
-        console.log('❌ Not authenticated - redirecting...');
-        // User will be redirected by checkAuth function
-    } else {
-        console.log('✅ Authenticated as:', currentUser.email);
-        initializeManageQuestions();
+        if (!currentUser) {
+            console.log('❌ Not authenticated - redirecting...');
+            // User will be redirected by checkAuth function
+        } else {
+            console.log('✅ Authenticated as:', currentUser.email);
+            initializeManageQuestions();
+        }
+    } catch (error) {
+        console.error('❌ Initialization error:', error);
+        alert('Failed to initialize page. Please refresh the page.');
     }
 })();
 
@@ -192,23 +213,46 @@ async function initializeManageQuestions() {
 
 async function loadQuestions() {
     console.log('📋 Loading questions from Firestore...');
-    allQuestions = await Storage.getQuestions();
-    console.log(`✅ Loaded ${allQuestions.length} questions from Firestore`);
 
-    // If no search term, show all questions
-    const searchTerm = document.getElementById('searchQuestions').value.toLowerCase().trim();
-    if (searchTerm === '') {
-        filteredQuestions = [...allQuestions];
-    }
+    try {
+        allQuestions = await Storage.getQuestions();
+        console.log(`✅ Loaded ${allQuestions.length} questions from Firestore`);
+        console.log('Questions data:', allQuestions);
 
-    const container = document.getElementById('questionsGrid');
-    const countBadge = document.getElementById('questionCountBadge');
+        // If no search term, show all questions
+        const searchInput = document.getElementById('searchQuestions');
+        if (!searchInput) {
+            console.error('❌ searchQuestions input not found!');
+            return;
+        }
 
-    // Update count badge
-    countBadge.textContent = allQuestions.length;
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        if (searchTerm === '') {
+            filteredQuestions = [...allQuestions];
+        }
 
-    if (allQuestions.length === 0) {
-        container.innerHTML = `
+        const container = document.getElementById('questionsGrid');
+        const countBadge = document.getElementById('questionCountBadge');
+
+        if (!container) {
+            console.error('❌ questionsGrid container not found!');
+            return;
+        }
+
+        if (!countBadge) {
+            console.error('❌ questionCountBadge not found!');
+            return;
+        }
+
+        console.log('✅ All DOM elements found');
+
+        // Update count badge
+        countBadge.textContent = allQuestions.length;
+        console.log(`✅ Updated count badge to: ${allQuestions.length}`);
+
+        if (allQuestions.length === 0) {
+            console.log('ℹ️ No questions found, showing empty state');
+            container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">
                     <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
@@ -226,25 +270,22 @@ async function loadQuestions() {
                         </svg>
                         Create First Question
                     </button>
-                    <button type="button" class="btn-secondary" onclick="loadSpecific10Questions()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14M5 12h14"></path>
-                        </svg>
-                        Load Sample Questions
-                    </button>
                 </div>
             </div>
         `;
-        document.getElementById('paginationControls').style.display = 'none';
-        return;
-    }
+            const paginationControls = document.getElementById('paginationControls');
+            if (paginationControls) {
+                paginationControls.style.display = 'none';
+            }
+            return;
+        }
 
-    // Show all questions without pagination
-    const paginatedQuestions = filteredQuestions;
+        // Show all questions without pagination
+        const paginatedQuestions = filteredQuestions;
 
-    // Handle no search results
-    if (searchTerm !== '' && paginatedQuestions.length === 0) {
-        container.innerHTML = `
+        // Handle no search results
+        if (searchTerm !== '' && paginatedQuestions.length === 0) {
+            container.innerHTML = `
             <div class="no-search-results">
                 <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                     <circle cx="11" cy="11" r="8"></circle>
@@ -254,23 +295,23 @@ async function loadQuestions() {
                 <p>No questions match your search term "<strong>${searchTerm}</strong>". Try searching with different keywords.</p>
             </div>
         `;
-        return;
-    }
+            return;
+        }
 
-    // Render questions
-    container.innerHTML = '';
-    paginatedQuestions.forEach((question, index) => {
-        const questionCard = document.createElement('div');
-        questionCard.className = 'question-card';
-        questionCard.style.animationDelay = `${index * 0.1}s`;
+        // Render questions
+        container.innerHTML = '';
+        paginatedQuestions.forEach((question, index) => {
+            const questionCard = document.createElement('div');
+            questionCard.className = 'question-card';
+            questionCard.style.animationDelay = `${index * 0.1}s`;
 
-        const createdDate = new Date(question.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
+            const createdDate = new Date(question.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
 
-        questionCard.innerHTML = `
+            questionCard.innerHTML = `
             <div class="question-header">
                 <div class="question-number">${index + 1}</div>
                 <div class="question-content">
@@ -306,13 +347,34 @@ async function loadQuestions() {
             </div>
         `;
 
-        container.appendChild(questionCard);
-    });
+            container.appendChild(questionCard);
+        });
 
-    // Hide pagination controls since we're showing all questions
-    const paginationControls = document.getElementById('paginationControls');
-    if (paginationControls) {
-        paginationControls.style.display = 'none';
+        // Hide pagination controls since we're showing all questions
+        const paginationControls = document.getElementById('paginationControls');
+        if (paginationControls) {
+            paginationControls.style.display = 'none';
+        }
+
+        console.log('✅ Questions rendered successfully');
+
+    } catch (error) {
+        console.error('❌ Error in loadQuestions:', error);
+        console.error('Error stack:', error.stack);
+
+        const container = document.getElementById('questionsGrid');
+        if (container) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">❌</div>
+                    <h3>Error Loading Questions</h3>
+                    <p>${error.message}</p>
+                    <button type="button" class="btn-primary" onclick="location.reload()">
+                        Reload Page
+                    </button>
+                </div>
+            `;
+        }
     }
 }
 
@@ -321,6 +383,11 @@ async function handleAddQuestion(e) {
 
     const questionInput = document.getElementById('questionText');
     const questionText = questionInput.value.trim();
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Store original button text
+    const originalBtnText = submitBtn.innerHTML;
+    const isEditing = editingQuestionId !== null;
 
     // Clear previous error
     questionInput.style.borderColor = '';
@@ -351,7 +418,7 @@ async function handleAddQuestion(e) {
     // Check for duplicate question (excluding the one being edited)
     const existingQuestions = await Storage.getQuestions();
     const isDuplicate = existingQuestions.some(q =>
-        q.text.toLowerCase() === questionText.toLowerCase() && q.id !== editingQuestionId
+        q.text.toLowerCase().trim() === questionText.toLowerCase().trim() && q.id !== editingQuestionId
     );
     if (isDuplicate) {
         showAlert('❌ This question already exists', 'danger');
@@ -359,60 +426,133 @@ async function handleAddQuestion(e) {
         return;
     }
 
-    if (editingQuestionId) {
-        // Update existing question
-        const question = await Storage.getQuestionById(editingQuestionId);
+    // Add loading animation to button
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.7';
+    submitBtn.style.cursor = 'not-allowed';
+    submitBtn.innerHTML = `
+        <span style="display: inline-flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+            </svg>
+            ${isEditing ? 'Updating...' : 'Adding...'}
+        </span>
+    `;
 
-        if (question) {
-            question.text = questionText;
-            question.updatedAt = new Date().toISOString();
-            await Storage.saveQuestion(question);
+    try {
+        if (editingQuestionId) {
+            // Update existing question
+            const question = await Storage.getQuestionById(editingQuestionId);
 
-            showAlert('✅ Question updated successfully!', 'success');
+            if (question) {
+                question.text = questionText;
+                question.updatedAt = new Date().toISOString();
+                await Storage.saveQuestion(question);
 
-            // Clear form and reset style
-            questionInput.value = '';
-            questionInput.style.borderColor = '';
+                // Success animation
+                submitBtn.innerHTML = `
+                    <span style="display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6L9 17l-5-5"></path>
+                        </svg>
+                        Updated!
+                    </span>
+                `;
+                submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
 
-            // Cancel edit mode
-            cancelEdit();
+                showAlert('✅ Question updated successfully!', 'success');
 
-            // Reload questions to show updated list
-            await loadQuestions();
-            return;
-        }
-    } else {
-        // Create new question
-        console.log('📝 Creating new question...');
-        const question = {
-            id: Storage.generateId(),
-            text: questionText,
-            allowComments: true,
-            createdAt: new Date().toISOString()
-        };
+                // Clear form and reset style
+                questionInput.value = '';
+                questionInput.style.borderColor = '';
 
-        console.log('Question object created:', question);
+                // Cancel edit mode
+                cancelEdit();
 
-        // Save question
-        const savedQuestion = await Storage.saveQuestion(question);
+                // Reload questions to show updated list
+                await loadQuestions();
 
-        if (savedQuestion) {
-            console.log('✅ Question saved successfully:', savedQuestion);
-            showAlert('✅ Question added successfully!', 'success');
+                // Reset button after delay
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.style.background = '';
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }, 1500);
+
+                return;
+            }
         } else {
-            console.error('❌ Failed to save question - Storage.saveQuestion returned null');
-            showAlert('❌ Failed to save question. Check console for details.', 'danger');
-            return;
+            // Create new question
+            console.log('📝 Creating new question...');
+            const question = {
+                id: Storage.generateId(),
+                text: questionText,
+                allowComments: true,
+                createdAt: new Date().toISOString()
+            };
+
+            console.log('Question object created:', question);
+
+            // Save question
+            const savedQuestion = await Storage.saveQuestion(question);
+
+            if (savedQuestion) {
+                console.log('✅ Question saved successfully:', savedQuestion);
+
+                // Success animation
+                submitBtn.innerHTML = `
+                        <span style="display: inline-flex; align-items: center; gap: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 6L9 17l-5-5"></path>
+                            </svg>
+                            Added!
+                        </span>
+                    `;
+                submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+
+                showAlert('✅ Question added successfully!', 'success');
+
+                // Clear form and reset style
+                questionInput.value = '';
+                questionInput.style.borderColor = '';
+
+                // Reload questions
+                console.log('🔄 Reloading questions list...');
+                await loadQuestions();
+
+                // Reset button after delay
+                setTimeout(() => {
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.style.background = '';
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }, 1500);
+            } else {
+                console.error('❌ Failed to save question - Storage.saveQuestion returned null');
+                showAlert('❌ Failed to save question. Check console for details.', 'danger');
+
+                // Reset button on error
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+                return;
+            }
         }
+    } catch (error) {
+        console.error('❌ Error in handleAddQuestion:', error);
+        showAlert('❌ An error occurred. Please try again.', 'danger');
+
+        // Reset button on error
+        submitBtn.innerHTML = originalBtnText;
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
     }
-
-    // Clear form and reset style
-    questionInput.value = '';
-    questionInput.style.borderColor = '';
-
-    // Reload questions
-    console.log('🔄 Reloading questions list...');
-    await loadQuestions();
 }
 
 async function editQuestion(questionId) {
@@ -535,13 +675,6 @@ function showAlert(message, type = 'danger') {
             alertDiv.className = 'alert';
         }, 5000);
     }
-}
-
-// Load specific 10 questions function - REMOVED (sample-data.js deleted)
-// Admin should manually create questions through the "Add Question" form
-async function loadSpecific10Questions() {
-    console.log('⚠️ loadSpecific10Questions function has been removed');
-    showAlert('This feature has been removed. Please add questions manually using the "Add Question" button.', 'info');
 }
 
 // Debug function removed - no longer needed

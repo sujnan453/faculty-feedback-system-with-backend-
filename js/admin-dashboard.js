@@ -68,6 +68,17 @@ async function initializeAdminDashboard() {
     // Load recent surveys
     await loadRecentSurveys();
 
+    // Enable/disable Select Faculties button based on existing classes in Firebase
+    try {
+        const classes = await Storage.getClasses();
+        const btn = document.getElementById('selectFacultiesBtn');
+        if (btn && classes && classes.length > 0) {
+            btn.disabled = false;
+        }
+    } catch (e) {
+        // ignore
+    }
+
     // Refresh data when page becomes visible (user returns to tab)
     document.addEventListener('visibilitychange', async () => {
         if (!document.hidden) {
@@ -92,6 +103,45 @@ function addBreadcrumb() {
 }
 
 async function loadStatistics() {
+    try {
+        // Use optimized statistics function
+        const stats = await Storage.getStatistics();
+
+        if (stats) {
+            // Main stat values
+            document.getElementById('totalSurveys').textContent = stats.totalSurveys;
+            document.getElementById('totalResponses').textContent = stats.totalFeedbacks;
+            document.getElementById('totalStudents').textContent = stats.totalStudents;
+            document.getElementById('activeSurveys').textContent = stats.activeSurveys;
+
+            // Survey Card Details
+            document.getElementById('activeSurveysCount').textContent = stats.activeSurveys;
+            document.getElementById('inactiveSurveysCount').textContent = stats.inactiveSurveys;
+
+            // Response Card Details
+            document.getElementById('avgResponsesPerSurvey').textContent = stats.avgResponsesPerSurvey;
+
+            // Student Card Details
+            document.getElementById('totalAdmins').textContent = stats.totalAdmins;
+            document.getElementById('totalUsers').textContent = stats.totalUsers;
+
+            // Active Surveys Card Details
+            document.getElementById('totalDepartments').textContent = stats.totalDepartments;
+
+            console.log('✅ Statistics loaded from optimized function');
+        } else {
+            // Fallback to old method if optimized fails
+            await loadStatisticsLegacy();
+        }
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+        // Fallback to legacy method
+        await loadStatisticsLegacy();
+    }
+}
+
+// Legacy statistics function (fallback)
+async function loadStatisticsLegacy() {
     const surveys = await Storage.getSurveys();
     const feedbacks = await Storage.getFeedbacks();
     const users = await Storage.getUsers();
@@ -123,34 +173,11 @@ async function loadStatistics() {
     // Active Surveys Card Details
     document.getElementById('totalDepartments').textContent = departments.length;
 
-    // Add tooltips for additional information
-    if (typeof TooltipManager !== 'undefined') {
-        const surveyCard = document.querySelector('.stat-surveys');
-        const responseCard = document.querySelector('.stat-responses');
-        const studentCard = document.querySelector('.stat-students');
-        const activeCard = document.querySelector('.stat-active');
-
-        if (surveyCard) {
-            TooltipManager.add(surveyCard, `Total Surveys: ${surveys.length} | Active: ${activeSurveys.length} | Inactive: ${inactiveSurveys.length}`);
-        }
-
-        if (responseCard) {
-            const responseRate = surveys.length > 0 && students.length > 0 ? ((feedbacks.length / (surveys.length * students.length)) * 100).toFixed(2) : 0;
-            TooltipManager.add(responseCard, `Total Responses: ${feedbacks.length} | Avg: ${avgResponsesPerSurvey} | Rate: ${responseRate}%`);
-        }
-
-        if (studentCard) {
-            TooltipManager.add(studentCard, `Students: ${students.length} | Admins: ${admins.length} | Total: ${users.length}`);
-        }
-
-        if (activeCard) {
-            TooltipManager.add(activeCard, `Active: ${activeSurveys.length} | Inactive: ${inactiveSurveys.length} | Departments: ${departments.length}`);
-        }
-    }
+    console.log('✅ Statistics loaded (legacy method)');
 }
 
 async function loadRecentSurveys() {
-    const surveys = await Storage.getSurveys();
+    const surveys = await Storage.getRecentSurveys(50); // Load only 50 most recent
     const container = document.getElementById('recentSurveysContainer');
     const selectAllBtn = document.getElementById('selectAllBtn');
     const bulkActionBtn = document.getElementById('bulkActionBtn');
@@ -172,18 +199,11 @@ async function loadRecentSurveys() {
         return;
     }
 
-    // Sort by creation date (most recent first)
-    const sortedSurveys = surveys.sort((a, b) =>
-        new Date(b.createdAt) - new Date(a.createdAt)
-    );
-
-    // Show all surveys (not just 5)
-    const recentSurveys = sortedSurveys;
-
     container.innerHTML = '';
 
-    for (let index = 0; index < recentSurveys.length; index++) {
-        const survey = recentSurveys[index];
+    // Create survey items with stagger animation
+    for (let index = 0; index < surveys.length; index++) {
+        const survey = surveys[index];
         const item = await createSurveyItem(survey);
         item.classList.add('stagger-item');
         item.style.animationDelay = (index * 0.05) + 's';
@@ -191,7 +211,7 @@ async function loadRecentSurveys() {
     }
 
     // Reset to initial state - always show Select All button, hide Delete button
-    if (recentSurveys.length > 0) {
+    if (surveys.length > 0) {
         selectAllBtn.style.display = 'flex';
         selectAllBtn.innerHTML = '<span>☑️</span><span>Select All</span>';
         bulkActionBtn.style.display = 'none';
@@ -203,6 +223,8 @@ async function loadRecentSurveys() {
 
     // Always reset selection mode to false on load
     isSelectionMode = false;
+
+    console.log(`✅ Loaded ${surveys.length} recent surveys`);
 }
 
 async function createSurveyItem(survey) {
@@ -216,7 +238,17 @@ async function createSurveyItem(survey) {
         day: 'numeric'
     });
 
-    const feedbackCount = (await Storage.getFeedbacksBySurveyId(survey.id)).length;
+    // Use optimized statistics function
+    let feedbackCount = 0;
+    try {
+        const stats = await Storage.getSurveyStatistics(survey.id);
+        feedbackCount = stats ? stats.totalResponses : 0;
+    } catch (error) {
+        console.warn('Failed to get survey stats, using fallback');
+        const feedbacks = await Storage.getFeedbacksBySurveyId(survey.id);
+        feedbackCount = feedbacks.length;
+    }
+
     const isActive = survey.isActive !== false;
 
     item.innerHTML = `
@@ -224,7 +256,7 @@ async function createSurveyItem(survey) {
             <input type="checkbox" class="survey-checkbox" data-survey-id="${survey.id}" 
                    style="width: 20px; height: 20px; cursor: pointer; accent-color: #7c3aed; display: none;">
             <div class="survey-item-info" style="flex: 1;">
-                <h4>${survey.department} - Department</h4>
+                <h4>${survey.className || survey.department || 'Untitled'} - Class</h4>
                 <div class="survey-item-meta">
                     <span>📅 Created: ${createdDate}</span>
                     <span>❓ ${(survey.questions || []).length} Questions</span>
@@ -463,3 +495,90 @@ window.viewSurveyDetails = viewSurveyDetails;
 window.deleteSurvey = deleteSurvey;
 window.toggleSelectMode = toggleSelectMode;
 window.handleBulkAction = handleBulkAction;
+
+// ===== Class Survey helpers =====
+async function _getClasses() {
+    try {
+        // Fetch from Firebase (with caching)
+        const classes = await Storage.getClasses();
+        return classes;
+    } catch (e) {
+        console.error('Failed to load classes from Firebase', e);
+        return [];
+    }
+}
+
+async function _saveClasses(classes) {
+    // This function is deprecated - use Storage.saveClass() directly
+    console.warn('_saveClasses is deprecated. Use Storage.saveClass() for individual classes.');
+    return false;
+}
+
+async function createClass() {
+    const name = prompt('Enter a name for the class (e.g. BSc CS - 3rd Year):');
+    if (!name || !name.trim()) return;
+
+    try {
+        const classes = await _getClasses();
+
+        // Simple uniqueness check
+        if (classes.some(c => c.name.toLowerCase() === name.trim().toLowerCase())) {
+            showAlert('A class with this name already exists', 'warning');
+            return;
+        }
+
+        // Create new class object
+        const newClass = {
+            id: Storage.generateId(),
+            name: name.trim(),
+            faculties: [],
+            createdAt: new Date().toISOString()
+        };
+
+        // Save to Firebase
+        await Storage.saveClass(newClass);
+
+        showAlert(`Class "${name.trim()}" created successfully! Redirecting...`, 'success');
+
+        // Enable select faculties button
+        const selectBtn = document.getElementById('selectFacultiesBtn');
+        if (selectBtn) {
+            selectBtn.disabled = false;
+        }
+
+        // Redirect to selection page for immediate selection
+        setTimeout(() => {
+            window.location.href = `select-faculties.html?classId=${encodeURIComponent(newClass.id)}`;
+        }, 1500);
+    } catch (error) {
+        console.error('Error creating class:', error);
+        showAlert('Failed to create class: ' + error.message, 'danger');
+    }
+}
+
+async function selectFaculties(classId) {
+    try {
+        // If invoked without id, try to read from UI
+        const classes = await _getClasses();
+        let idToOpen = classId || null;
+
+        if (!idToOpen) {
+            if (classes.length === 0) {
+                showAlert('Please create a class first', 'warning');
+                return;
+            } else if (classes.length === 1) {
+                idToOpen = classes[0].id;
+            }
+        }
+
+        const url = idToOpen ? `select-faculties.html?classId=${encodeURIComponent(idToOpen)}` : 'select-faculties.html';
+        window.location.href = url;
+    } catch (error) {
+        console.error('Error selecting faculties:', error);
+        showAlert('Failed to load classes: ' + error.message, 'danger');
+    }
+}
+
+// Expose to global scope
+window.createClass = createClass;
+window.selectFaculties = selectFaculties;
