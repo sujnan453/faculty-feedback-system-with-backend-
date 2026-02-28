@@ -273,23 +273,57 @@ function updateFacultiesCounter(count) {
 }
 
 function updateProgressBar() {
-    const progressBarFill = document.getElementById('progressBarFill');
-    if (!progressBarFill) return;
+    const progressStepsFill = document.getElementById('progressStepsFill');
+    if (!progressStepsFill) {
+        console.warn('Progress steps fill element not found');
+        return;
+    }
 
-    const classId = document.getElementById('classForSurvey').value;
+    const classId = document.getElementById('classForSurvey')?.value || '';
     const selectedQuestions = selectedQuestionIds.length;
 
+    // Get step elements
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+
+    // Verify all step elements exist
+    if (!step1 || !step2 || !step3) {
+        console.warn('One or more step elements not found');
+        return;
+    }
+
+    // Calculate which step we're on
     let progress = 0;
 
+    // Reset all steps first
+    [step1, step2, step3].forEach(step => {
+        step.classList.remove('active', 'completed');
+    });
+
+    // Step 1: Class selected
     if (classId) {
-        progress = 50;
+        progress = 33;
+        step1.classList.add('completed');
+    } else {
+        step1.classList.add('active');
     }
 
+    // Step 2: Questions selected
+    if (classId && selectedQuestions > 0) {
+        progress = 66;
+        step2.classList.add('completed');
+    } else if (classId) {
+        step2.classList.add('active');
+    }
+
+    // Step 3: Ready to create
     if (classId && selectedQuestions > 0) {
         progress = 100;
+        step3.classList.add('active');
     }
 
-    progressBarFill.style.width = progress + '%';
+    progressStepsFill.style.width = progress + '%';
 }
 
 async function loadAvailableQuestions() {

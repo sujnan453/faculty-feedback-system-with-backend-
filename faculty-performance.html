@@ -1204,6 +1204,10 @@
                                     <span>📊</span>
                                     <span>Export</span>
                                 </button>
+                                <button class="btn-csv" onclick="exportComprehensiveReport()" title="Export comprehensive department-wise report" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); margin-left: 8px;">
+                                    <span>📑</span>
+                                    <span>Full Report</span>
+                                </button>
                             </div>
                         </div>
                         <div id="resultsContainer" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
@@ -2319,16 +2323,26 @@
         });
 
         // Export current results table to Excel
-        function exportPerformanceToExcel() {
+        async function exportPerformanceToExcel() {
             const resultsContainer = document.getElementById('resultsContainer');
             const classSection = resultsContainer.querySelectorAll('div[style*="border-left: 5px solid"]');
             const facultySelect = document.getElementById('facultyFilter');
             const yearSelect = document.getElementById('yearFilter');
+            const classSelect = document.getElementById('classFilter');
             const facultyName = facultySelect && facultySelect.selectedOptions && facultySelect.selectedOptions[0] ?
                 facultySelect.selectedOptions[0].textContent.trim() :
                 '';
+            const facultyId = facultySelect ? facultySelect.value : '';
             const yearVal = yearSelect ? yearSelect.value : '';
+            const classVal = classSelect ? classSelect.value : '';
             const yearText = yearVal === 'all' ? 'All Years' : yearVal === '1' ? 'First Year' : yearVal === '2' ? 'Second Year' : yearVal === '3' ? 'Third Year' : yearVal;
+            
+            // Special case: Faculty selected + All Years + All Classes = Department-wise summary
+            if (facultyId && facultyId !== 'all' && yearVal === 'all' && classVal === 'all') {
+                await exportFacultyDepartmentSummary(facultyId, facultyName);
+                return;
+            }
+            
             const rows = [];
 
             // Check if we have multiple class sections
@@ -2425,6 +2439,99 @@
 
             if (typeof XLSX !== 'undefined') {
                 const ws = XLSX.utils.aoa_to_sheet(rows);
+                
+                // Set column widths
+                const colWidths = [];
+                if (rows.length > 0) {
+                    const maxCols = Math.max(...rows.map(r => Array.isArray(r) ? r.length : 0));
+                    for (let i = 0; i < maxCols; i++) {
+                        colWidths.push({ wch: i === 0 ? 20 : 12 });
+                    }
+                }
+                ws['!cols'] = colWidths;
+
+                // Apply styling and borders to all cells
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!ws[cellAddress]) continue;
+                        
+                        const cellValue = ws[cellAddress].v;
+                        
+                        // Initialize cell style
+                        if (!ws[cellAddress].s) ws[cellAddress].s = {};
+                        
+                        // Default border style
+                        const defaultBorder = {
+                            top: { style: 'thin', color: { rgb: '000000' } },
+                            bottom: { style: 'thin', color: { rgb: '000000' } },
+                            left: { style: 'thin', color: { rgb: '000000' } },
+                            right: { style: 'thin', color: { rgb: '000000' } }
+                        };
+                        
+                        // Apply borders
+                        ws[cellAddress].s.border = defaultBorder;
+                        
+                        // Style headers and special rows
+                        if (typeof cellValue === 'string') {
+                            if (cellValue === 'ALL CLASSES') {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: '1F2937' } };
+                                ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 14 };
+                                ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                            } else if (cellValue === 'Faculty' || cellValue === 'Class' || 
+                                       cellValue === 'Year' || cellValue === 'Students') {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: '7C3AED' } };
+                                ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 };
+                                ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                            } else if (cellValue === 'Question' || cellValue === 'Average Rating' || 
+                                       cellValue.startsWith('Q')) {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: '6D28D9' } };
+                                ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 };
+                                ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                            } else if (cellValue === 'Average' || cellValue === 'Total') {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: 'E0E7FF' } };
+                                ws[cellAddress].s.font = { bold: true, color: { rgb: '1F2937' }, sz: 11 };
+                                ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                            } else if (cellValue.includes('📚')) {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: 'A78BFA' } };
+                                ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 12 };
+                                ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                            }
+                        }
+                        
+                        // Style numeric cells
+                        if (typeof cellValue === 'number') {
+                            ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                            ws[cellAddress].s.font = { sz: 10 };
+                            
+                            // Color code ratings
+                            if (cellValue >= 8) {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: 'D1FAE5' } }; // Green
+                                ws[cellAddress].s.font = { color: { rgb: '065F46' }, bold: true };
+                            } else if (cellValue >= 6) {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: 'FEF3C7' } }; // Yellow
+                                ws[cellAddress].s.font = { color: { rgb: '92400E' }, bold: true };
+                            } else if (cellValue >= 1) {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: 'FEE2E2' } }; // Red
+                                ws[cellAddress].s.font = { color: { rgb: '991B1B' }, bold: true };
+                            }
+                        }
+                        
+                        // Add spacing for empty rows
+                        if (!cellValue || cellValue === '') {
+                            ws[cellAddress].s.border = {
+                                top: { style: 'thin', color: { rgb: 'F3F4F6' } },
+                                bottom: { style: 'thin', color: { rgb: 'F3F4F6' } },
+                                left: { style: 'thin', color: { rgb: 'F3F4F6' } },
+                                right: { style: 'thin', color: { rgb: 'F3F4F6' } }
+                            };
+                            ws[cellAddress].s.fill = { fgColor: { rgb: 'FFFFFF' } };
+                        }
+                    }
+                }
+
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, 'Performance');
                 const filename = `faculty_performance_${facultyName}_${new Date().getTime()}.xlsx`;
@@ -2541,6 +2648,659 @@
 
         window.exportPerformanceToExcel = exportPerformanceToExcel;
         window.exportPerformanceToCSV = exportPerformanceToCSV;
+
+        // Export Faculty Department-wise Summary
+        async function exportFacultyDepartmentSummary(facultyId, facultyName) {
+            try {
+                window.showAlert('🔄 Generating department summary...', 'info');
+
+                const feedbacks = await Storage.getFeedbacks();
+                
+                // Group feedbacks by department/class for this faculty
+                const departmentAverages = {};
+                
+                feedbacks.forEach(feedback => {
+                    if (feedback.responses && Array.isArray(feedback.responses)) {
+                        feedback.responses.forEach(response => {
+                            if (String(response.teacherId) === String(facultyId)) {
+                                const rating = parseFloat(response.rating);
+                                if (!isNaN(rating) && rating >= 1 && rating <= 10) {
+                                    // Get department/class name
+                                    let deptName = feedback.studentDepartment || 
+                                                  feedback.studentClassName || 
+                                                  feedback.department || 
+                                                  feedback.className || 
+                                                  'Unknown Department';
+                                    
+                                    if (!departmentAverages[deptName]) {
+                                        departmentAverages[deptName] = {
+                                            ratings: [],
+                                            sum: 0,
+                                            count: 0
+                                        };
+                                    }
+                                    
+                                    departmentAverages[deptName].ratings.push(rating);
+                                    departmentAverages[deptName].sum += rating;
+                                    departmentAverages[deptName].count++;
+                                }
+                            }
+                        });
+                    }
+                });
+
+                // Calculate averages
+                const summaryData = [];
+                Object.keys(departmentAverages).sort().forEach(deptName => {
+                    const data = departmentAverages[deptName];
+                    const avg = (data.sum / data.count).toFixed(2);
+                    summaryData.push({
+                        department: deptName,
+                        average: parseFloat(avg)
+                    });
+                });
+
+                if (summaryData.length === 0) {
+                    window.showAlert('❌ No data found for this faculty', 'danger');
+                    return;
+                }
+
+                // Create Excel with styling
+                if (typeof XLSX !== 'undefined') {
+                    const rows = [];
+                    
+                    // Header with faculty name
+                    rows.push([facultyName]);
+                    rows.push([]); // Empty row
+                    
+                    // Data rows
+                    summaryData.forEach(item => {
+                        rows.push([item.department, item.average]);
+                    });
+
+                    const ws = XLSX.utils.aoa_to_sheet(rows);
+                    
+                    // Set column widths
+                    ws['!cols'] = [
+                        { wch: 25 }, // Department column
+                        { wch: 15 }  // Average column
+                    ];
+
+                    // Apply styling
+                    const range = XLSX.utils.decode_range(ws['!ref']);
+                    
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        for (let C = range.s.c; C <= range.e.c; ++C) {
+                            const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                            if (!ws[cellAddress]) continue;
+                            
+                            const cellValue = ws[cellAddress].v;
+                            
+                            // Initialize cell style
+                            if (!ws[cellAddress].s) ws[cellAddress].s = {};
+                            
+                            // Default border style
+                            const defaultBorder = {
+                                top: { style: 'thin', color: { rgb: '000000' } },
+                                bottom: { style: 'thin', color: { rgb: '000000' } },
+                                left: { style: 'thin', color: { rgb: '000000' } },
+                                right: { style: 'thin', color: { rgb: '000000' } }
+                            };
+                            
+                            // Apply borders
+                            ws[cellAddress].s.border = defaultBorder;
+                            
+                            // Style faculty name header (first row)
+                            if (R === 0) {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: '10B981' } }; // Green
+                                ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 14 };
+                                ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                                ws[cellAddress].s.border = {
+                                    top: { style: 'medium', color: { rgb: '000000' } },
+                                    bottom: { style: 'medium', color: { rgb: '000000' } },
+                                    left: { style: 'medium', color: { rgb: '000000' } },
+                                    right: { style: 'medium', color: { rgb: '000000' } }
+                                };
+                            }
+                            // Style department names (column A, rows after header)
+                            else if (R > 1 && C === 0 && typeof cellValue === 'string') {
+                                ws[cellAddress].s.fill = { fgColor: { rgb: 'FFFFFF' } };
+                                ws[cellAddress].s.font = { bold: false, color: { rgb: '000000' }, sz: 11 };
+                                ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                            }
+                            // Style numeric averages
+                            else if (typeof cellValue === 'number') {
+                                ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                                ws[cellAddress].s.font = { sz: 11, bold: true };
+                                
+                                // Color code ratings
+                                if (cellValue >= 8) {
+                                    ws[cellAddress].s.fill = { fgColor: { rgb: 'D1FAE5' } }; // Green
+                                    ws[cellAddress].s.font = { color: { rgb: '065F46' }, bold: true, sz: 11 };
+                                } else if (cellValue >= 6) {
+                                    ws[cellAddress].s.fill = { fgColor: { rgb: 'FEF3C7' } }; // Yellow
+                                    ws[cellAddress].s.font = { color: { rgb: '92400E' }, bold: true, sz: 11 };
+                                } else if (cellValue >= 1) {
+                                    ws[cellAddress].s.fill = { fgColor: { rgb: 'FEE2E2' } }; // Red
+                                    ws[cellAddress].s.font = { color: { rgb: '991B1B' }, bold: true, sz: 11 };
+                                }
+                            }
+                            // Empty rows
+                            else if (!cellValue || cellValue === '') {
+                                ws[cellAddress].s.border = {
+                                    top: { style: 'thin', color: { rgb: 'FFFFFF' } },
+                                    bottom: { style: 'thin', color: { rgb: 'FFFFFF' } },
+                                    left: { style: 'thin', color: { rgb: 'FFFFFF' } },
+                                    right: { style: 'thin', color: { rgb: 'FFFFFF' } }
+                                };
+                                ws[cellAddress].s.fill = { fgColor: { rgb: 'FFFFFF' } };
+                            }
+                        }
+                    }
+
+                    // Merge cells for faculty name header
+                    if (!ws['!merges']) ws['!merges'] = [];
+                    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } });
+
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Department Summary');
+                    const filename = `${facultyName}_Department_Summary_${new Date().getTime()}.xlsx`;
+                    XLSX.writeFile(wb, filename);
+                    window.showAlert('✅ Department summary exported successfully!', 'success');
+                } else {
+                    window.showAlert('❌ Excel library not loaded', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error generating department summary:', error);
+                window.showAlert('❌ Error generating summary: ' + error.message, 'danger');
+            }
+        }
+
+        // Comprehensive Export Function - Separate sheet per department with detailed student ratings
+        async function exportComprehensiveReport() {
+            try {
+                window.showAlert('🔄 Generating comprehensive report...', 'info');
+
+                // Get all data
+                const feedbacks = await Storage.getFeedbacks();
+                const departments = await Storage.getDepartments();
+                const questions = await Storage.getQuestions();
+
+                if (feedbacks.length === 0) {
+                    window.showAlert('❌ No feedback data available', 'danger');
+                    return;
+                }
+
+                // Organize data by department, then by faculty, then by students
+                const departmentData = {};
+
+                feedbacks.forEach(feedback => {
+                    if (feedback.responses && Array.isArray(feedback.responses)) {
+                        const studentName = feedback.studentName || 'Unknown Student';
+                        const studentId = feedback.studentId || 'unknown';
+                        const year = feedback.studentYear || 'Unknown';
+                        
+                        feedback.responses.forEach(response => {
+                            const facultyId = response.teacherId || 'unknown';
+                            const facultyName = response.teacherName || 'Unknown Faculty';
+                            const questionId = response.questionId || 'unknown';
+                            const questionText = response.questionText || 'Unknown Question';
+                            const rating = parseFloat(response.rating);
+
+                            // Determine department from feedback or faculty data
+                            let department = 'Unknown Department';
+                            
+                            if (feedback.studentDepartment) {
+                                department = feedback.studentDepartment;
+                            } else if (feedback.studentClassName) {
+                                department = feedback.studentClassName;
+                            } else if (feedback.department) {
+                                department = feedback.department;
+                            }
+
+                            // Try to match faculty to department from departments data
+                            if (department === 'Unknown Department') {
+                                const dept = departments.find(d => 
+                                    d.faculties && d.faculties.some(f => f.id === facultyId || f.name === facultyName)
+                                );
+                                if (dept) {
+                                    department = dept.name;
+                                }
+                            }
+
+                            if (isNaN(rating) || rating < 1 || rating > 10) return;
+
+                            // Initialize department
+                            if (!departmentData[department]) {
+                                departmentData[department] = {};
+                            }
+
+                            // Create unique key for faculty + year combination
+                            const facultyYearKey = `${facultyId}|${year}`;
+
+                            // Initialize faculty-year combination
+                            if (!departmentData[department][facultyYearKey]) {
+                                departmentData[department][facultyYearKey] = {
+                                    name: facultyName,
+                                    year: year,
+                                    students: {},
+                                    questions: {}
+                                };
+                            }
+
+                            // Initialize question for this faculty-year
+                            if (!departmentData[department][facultyYearKey].questions[questionId]) {
+                                departmentData[department][facultyYearKey].questions[questionId] = {
+                                    text: questionText,
+                                    ratings: []
+                                };
+                            }
+
+                            // Initialize student for this faculty-year
+                            if (!departmentData[department][facultyYearKey].students[studentId]) {
+                                departmentData[department][facultyYearKey].students[studentId] = {
+                                    name: studentName,
+                                    questionRatings: {}
+                                };
+                            }
+
+                            // Add rating
+                            departmentData[department][facultyYearKey].questions[questionId].ratings.push(rating);
+                            departmentData[department][facultyYearKey].students[studentId].questionRatings[questionId] = rating;
+                        });
+                    }
+                });
+
+                // Get all unique questions
+                const allQuestionIds = new Set();
+                Object.values(departmentData).forEach(deptFaculties => {
+                    Object.values(deptFaculties).forEach(faculty => {
+                        Object.keys(faculty.questions).forEach(qId => allQuestionIds.add(qId));
+                    });
+                });
+
+                const questionList = Array.from(allQuestionIds).map(qId => {
+                    for (const deptFaculties of Object.values(departmentData)) {
+                        for (const faculty of Object.values(deptFaculties)) {
+                            if (faculty.questions[qId]) {
+                                return {
+                                    id: qId,
+                                    text: faculty.questions[qId].text
+                                };
+                            }
+                        }
+                    }
+                    return { id: qId, text: 'Unknown Question' };
+                });
+
+                questionList.sort((a, b) => a.text.localeCompare(b.text));
+
+                // Generate Excel file with separate sheets per department
+                if (typeof XLSX !== 'undefined') {
+                    const wb = XLSX.utils.book_new();
+
+                    // Sort departments
+                    const sortedDepartments = Object.keys(departmentData).sort();
+
+                    sortedDepartments.forEach(deptName => {
+                        const facultyYears = departmentData[deptName];
+                        const sheetData = [];
+
+                        // Department header
+                        sheetData.push([`${deptName} - Faculty Performance Report`]);
+                        sheetData.push([`Generated on: ${new Date().toLocaleString()}`]);
+                        sheetData.push([]);
+
+                        // Group by faculty to calculate combined averages
+                        const facultyGroups = {};
+                        Object.entries(facultyYears).forEach(([key, facultyYear]) => {
+                            const facultyName = facultyYear.name;
+                            if (!facultyGroups[facultyName]) {
+                                facultyGroups[facultyName] = [];
+                            }
+                            facultyGroups[facultyName].push({ key, data: facultyYear });
+                        });
+
+                        // Sort faculty groups by name
+                        const sortedFacultyGroups = Object.entries(facultyGroups).sort((a, b) => 
+                            a[0].localeCompare(b[0])
+                        );
+
+                        // Process each faculty group
+                        sortedFacultyGroups.forEach(([facultyName, yearEntries], facultyIndex) => {
+                            if (facultyIndex > 0) {
+                                // Add spacing between different faculties
+                                sheetData.push([]);
+                                sheetData.push([]);
+                                sheetData.push(['═══════════════════════════════════════════════════════════']);
+                                sheetData.push([]);
+                                sheetData.push([]);
+                            }
+
+                            // Sort year entries by year
+                            yearEntries.sort((a, b) => String(a.data.year).localeCompare(String(b.data.year)));
+
+                            // Track all ratings for this faculty across all years
+                            let allFacultyRatingsAcrossYears = [];
+
+                            // Process each year for this faculty
+                            yearEntries.forEach((yearEntry, yearIndex) => {
+                                const facultyYear = yearEntry.data;
+
+                                if (yearIndex > 0) {
+                                    // Add spacing between different years for same faculty
+                                    sheetData.push([]);
+                                    sheetData.push(['───────────────────────────────────────────────────────────']);
+                                    sheetData.push([]);
+                                }
+
+                                // Format year text
+                                const yearText = facultyYear.year === 1 ? '1st Year' :
+                                               facultyYear.year === 2 ? '2nd Year' :
+                                               facultyYear.year === 3 ? '3rd Year' :
+                                               facultyYear.year === 'all' ? 'All Years' :
+                                               `Year ${facultyYear.year}`;
+
+                                // Faculty header with year in department
+                                sheetData.push([`FACULTY: ${facultyYear.name}`]);
+                                sheetData.push([`Department: ${deptName} - ${yearText}`]);
+                                sheetData.push([]);
+
+                            // Table header
+                            const headerRow = ['Student'];
+                            questionList.forEach((q, idx) => {
+                                headerRow.push(`Q${idx + 1}`);
+                            });
+                            headerRow.push('Total');
+                            headerRow.push('Avg');
+                            sheetData.push(headerRow);
+
+                            sheetData.push([]); // Empty row
+
+                            // Student rows
+                            const students = Object.entries(facultyYear.students);
+                            students.sort((a, b) => a[1].name.localeCompare(b[1].name));
+
+                            students.forEach(([studentId, studentData], studentIndex) => {
+                                const row = [`S${studentIndex + 1}`];
+
+                                let studentTotal = 0;
+                                let studentCount = 0;
+
+                                // Add rating for each question
+                                questionList.forEach(q => {
+                                    if (studentData.questionRatings[q.id] !== undefined) {
+                                        const rating = studentData.questionRatings[q.id];
+                                        row.push(rating);
+                                        studentTotal += rating;
+                                        studentCount++;
+                                    } else {
+                                        row.push('-');
+                                    }
+                                });
+
+                                // Add student total
+                                row.push(studentCount > 0 ? studentTotal : '-');
+                                
+                                // Add student average
+                                const studentAvg = studentCount > 0 ? (studentTotal / studentCount).toFixed(2) : '-';
+                                row.push(studentAvg);
+
+                                sheetData.push(row);
+                            });
+
+                            // Add totals row
+                            sheetData.push([]);
+                            const totalsRow = ['TOTAL'];
+                            let grandTotal = 0;
+                            questionList.forEach(q => {
+                                if (facultyYear.questions[q.id]) {
+                                    const ratings = facultyYear.questions[q.id].ratings;
+                                    const sum = ratings.reduce((acc, r) => acc + r, 0);
+                                    totalsRow.push(sum.toFixed(2));
+                                    grandTotal += sum;
+                                } else {
+                                    totalsRow.push('-');
+                                }
+                            });
+
+                            // Add grand total
+                            totalsRow.push(grandTotal.toFixed(2));
+                            
+                            // Total of all ratings for this faculty-year
+                            let allFacultyYearRatings = [];
+                            Object.values(facultyYear.questions).forEach(q => {
+                                allFacultyYearRatings = allFacultyYearRatings.concat(q.ratings);
+                            });
+                            const totalAvg = allFacultyYearRatings.length > 0 
+                                ? (allFacultyYearRatings.reduce((acc, r) => acc + r, 0) / allFacultyYearRatings.length).toFixed(2)
+                                : '-';
+                            totalsRow.push(totalAvg);
+                            sheetData.push(totalsRow);
+
+                            // Add averages row
+                            const averagesRow = ['AVERAGE'];
+                            questionList.forEach(q => {
+                                if (facultyYear.questions[q.id] && facultyYear.questions[q.id].ratings.length > 0) {
+                                    const ratings = facultyYear.questions[q.id].ratings;
+                                    const avg = (ratings.reduce((sum, r) => sum + r, 0) / ratings.length).toFixed(2);
+                                    averagesRow.push(avg);
+                                } else {
+                                    averagesRow.push('-');
+                                }
+                            });
+
+                            // Average of totals
+                            const avgOfTotals = students.length > 0 
+                                ? (grandTotal / students.length).toFixed(2)
+                                : '-';
+                            averagesRow.push(avgOfTotals);
+                            
+                            // Overall average for this faculty-year
+                            averagesRow.push(totalAvg);
+                            sheetData.push(averagesRow);
+
+                            // Add response count
+                            sheetData.push(['TOTAL RESPONSES', students.length]);
+                            
+                            // Add spacing before year average
+                            sheetData.push([]);
+                            
+                            // Add faculty year average
+                            const facultyYearTotalAvg = allFacultyYearRatings.length > 0 
+                                ? (allFacultyYearRatings.reduce((sum, r) => sum + r, 0) / allFacultyYearRatings.length).toFixed(2)
+                                : '-';
+                            sheetData.push([`${yearText} OVERALL AVERAGE`, '', '', facultyYearTotalAvg]);
+
+                            // Collect ratings for combined average
+                            allFacultyRatingsAcrossYears = allFacultyRatingsAcrossYears.concat(allFacultyYearRatings);
+                        });
+
+                        // Add spacing before combined average
+                        sheetData.push([]);
+                        sheetData.push([]);
+                        sheetData.push(['───────────────────────────────────────────────────────────']);
+                        sheetData.push([]);
+                        
+                        // Add combined average across all years for this faculty
+                        const combinedAvg = allFacultyRatingsAcrossYears.length > 0
+                            ? (allFacultyRatingsAcrossYears.reduce((sum, r) => sum + r, 0) / allFacultyRatingsAcrossYears.length).toFixed(2)
+                            : '-';
+                        sheetData.push([`${facultyName} - COMBINED AVERAGE (ALL YEARS)`, '', '', combinedAvg]);
+                        
+                        // Add spacing after combined average
+                        sheetData.push([]);
+                    });
+
+                        // Create worksheet for this department
+                        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+                        
+                        // Set column widths
+                        const colWidths = [{ wch: 20 }]; // Student column
+                        for (let i = 1; i < (questionList.length + 2); i++) {
+                            colWidths.push({ wch: 12 });
+                        }
+                        ws['!cols'] = colWidths;
+
+                        // Apply styling and borders to all cells
+                        const range = XLSX.utils.decode_range(ws['!ref']);
+                        
+                        for (let R = range.s.r; R <= range.e.r; ++R) {
+                            for (let C = range.s.c; C <= range.e.c; ++C) {
+                                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                                if (!ws[cellAddress]) continue;
+                                
+                                const cellValue = ws[cellAddress].v;
+                                
+                                // Initialize cell style
+                                if (!ws[cellAddress].s) ws[cellAddress].s = {};
+                                
+                                // Default border style
+                                const defaultBorder = {
+                                    top: { style: 'thin', color: { rgb: '000000' } },
+                                    bottom: { style: 'thin', color: { rgb: '000000' } },
+                                    left: { style: 'thin', color: { rgb: '000000' } },
+                                    right: { style: 'thin', color: { rgb: '000000' } }
+                                };
+                                
+                                // Apply borders
+                                ws[cellAddress].s.border = defaultBorder;
+                                
+                                // Style headers (FACULTY, Department, Student row)
+                                if (typeof cellValue === 'string') {
+                                    if (cellValue.startsWith('FACULTY:')) {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: '7C3AED' } };
+                                        ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 14 };
+                                        ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                                    } else if (cellValue.startsWith('Department:')) {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'A78BFA' } };
+                                        ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 12 };
+                                        ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                                    } else if (cellValue === 'Student' || cellValue.startsWith('Q') || 
+                                               cellValue === 'Total' || cellValue === 'Avg') {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: '6D28D9' } };
+                                        ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 };
+                                        ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                                    } else if (cellValue === 'TOTAL' || cellValue === 'AVERAGE' || 
+                                               cellValue === 'TOTAL RESPONSES' || cellValue.includes('AVERAGE')) {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'E0E7FF' } };
+                                        ws[cellAddress].s.font = { bold: true, color: { rgb: '1F2937' }, sz: 11 };
+                                        ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                                    } else if (cellValue.includes('COMBINED AVERAGE')) {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: '10B981' } };
+                                        ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 12 };
+                                        ws[cellAddress].s.alignment = { horizontal: 'left', vertical: 'center' };
+                                        ws[cellAddress].s.border = {
+                                            top: { style: 'medium', color: { rgb: '000000' } },
+                                            bottom: { style: 'medium', color: { rgb: '000000' } },
+                                            left: { style: 'medium', color: { rgb: '000000' } },
+                                            right: { style: 'medium', color: { rgb: '000000' } }
+                                        };
+                                    } else if (cellValue.startsWith('S') && /^S\d+$/.test(cellValue)) {
+                                        // Student identifiers (S1, S2, etc.)
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'F3F4F6' } };
+                                        ws[cellAddress].s.font = { bold: true, color: { rgb: '374151' } };
+                                        ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                                    } else if (cellValue.includes('───')) {
+                                        // Year separator lines
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'E5E7EB' } };
+                                        ws[cellAddress].s.border = {
+                                            top: { style: 'medium', color: { rgb: 'A78BFA' } },
+                                            bottom: { style: 'medium', color: { rgb: 'A78BFA' } },
+                                            left: { style: 'thin', color: { rgb: 'E5E7EB' } },
+                                            right: { style: 'thin', color: { rgb: 'E5E7EB' } }
+                                        };
+                                    } else if (cellValue.includes('═══')) {
+                                        // Faculty separator lines
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'F3F4F6' } };
+                                        ws[cellAddress].s.border = {
+                                            top: { style: 'thick', color: { rgb: '7C3AED' } },
+                                            bottom: { style: 'thick', color: { rgb: '7C3AED' } },
+                                            left: { style: 'medium', color: { rgb: '7C3AED' } },
+                                            right: { style: 'medium', color: { rgb: '7C3AED' } }
+                                        };
+                                    }
+                                }
+                                
+                                // Style numeric cells
+                                if (typeof cellValue === 'number') {
+                                    ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                                    ws[cellAddress].s.font = { sz: 10 };
+                                    
+                                    // Color code ratings
+                                    if (cellValue >= 8) {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'D1FAE5' } }; // Green
+                                        ws[cellAddress].s.font = { color: { rgb: '065F46' }, bold: true };
+                                    } else if (cellValue >= 6) {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'FEF3C7' } }; // Yellow
+                                        ws[cellAddress].s.font = { color: { rgb: '92400E' }, bold: true };
+                                    } else if (cellValue >= 1) {
+                                        ws[cellAddress].s.fill = { fgColor: { rgb: 'FEE2E2' } }; // Red
+                                        ws[cellAddress].s.font = { color: { rgb: '991B1B' }, bold: true };
+                                    }
+                                }
+                                
+                                // Style title rows
+                                if (R === 0) {
+                                    ws[cellAddress].s.fill = { fgColor: { rgb: '1F2937' } };
+                                    ws[cellAddress].s.font = { bold: true, color: { rgb: 'FFFFFF' }, sz: 16 };
+                                    ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                                    ws[cellAddress].s.border = {
+                                        top: { style: 'thick', color: { rgb: '000000' } },
+                                        bottom: { style: 'thick', color: { rgb: '000000' } },
+                                        left: { style: 'thick', color: { rgb: '000000' } },
+                                        right: { style: 'thick', color: { rgb: '000000' } }
+                                    };
+                                } else if (R === 1) {
+                                    ws[cellAddress].s.fill = { fgColor: { rgb: '374151' } };
+                                    ws[cellAddress].s.font = { italic: true, color: { rgb: 'FFFFFF' }, sz: 10 };
+                                    ws[cellAddress].s.alignment = { horizontal: 'center', vertical: 'center' };
+                                    ws[cellAddress].s.border = {
+                                        top: { style: 'medium', color: { rgb: '000000' } },
+                                        bottom: { style: 'medium', color: { rgb: '000000' } },
+                                        left: { style: 'medium', color: { rgb: '000000' } },
+                                        right: { style: 'medium', color: { rgb: '000000' } }
+                                    };
+                                }
+                                
+                                // Add extra spacing for empty rows
+                                if (!cellValue || cellValue === '') {
+                                    ws[cellAddress].s.border = {
+                                        top: { style: 'thin', color: { rgb: 'F3F4F6' } },
+                                        bottom: { style: 'thin', color: { rgb: 'F3F4F6' } },
+                                        left: { style: 'thin', color: { rgb: 'F3F4F6' } },
+                                        right: { style: 'thin', color: { rgb: 'F3F4F6' } }
+                                    };
+                                    ws[cellAddress].s.fill = { fgColor: { rgb: 'FFFFFF' } };
+                                }
+                            }
+                        }
+
+                        // Merge cells for title and timestamp
+                        if (!ws['!merges']) ws['!merges'] = [];
+                        ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: Math.min(questionList.length + 1, 10) } });
+                        ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: Math.min(questionList.length + 1, 10) } });
+
+                        // Add sheet with department name (limit to 31 chars for Excel)
+                        const sheetName = deptName.substring(0, 31);
+                        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                    });
+
+                    const filename = `Faculty_Performance_By_Department_${new Date().getTime()}.xlsx`;
+                    XLSX.writeFile(wb, filename);
+                    window.showAlert('✅ Department-wise report exported successfully!', 'success');
+                } else {
+                    window.showAlert('❌ Excel library not loaded. Please refresh the page.', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Error generating comprehensive report:', error);
+                window.showAlert('❌ Error generating report: ' + error.message, 'danger');
+            }
+        }
+
+        window.exportComprehensiveReport = exportComprehensiveReport;
 
         // Print function
         function printPerformanceTable() {
